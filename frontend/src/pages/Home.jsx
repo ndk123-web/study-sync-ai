@@ -3,7 +3,7 @@ import { Search, Play, BookOpen, Brain, FileText, TrendingUp, Moon, Sun, Menu, X
 
 const Home = () => {
   // In your actual project, replace this with localStorage
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(localStorage.getItem('mode') || 'light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState({});
   const [animatedStats, setAnimatedStats] = useState(false);
@@ -11,9 +11,9 @@ const Home = () => {
   // In your actual project, use this instead:
   // const [theme, setTheme] = useState(() => localStorage.getItem('mode') || 'light');
   
-  // useEffect(() => {
-  //   localStorage.setItem('mode', theme);
-  // }, [theme]);
+  useEffect(() => {
+    setTheme(localStorage.getItem('mode') || 'light');
+  }, [theme]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -44,7 +44,9 @@ const Home = () => {
   };
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    const mode = localStorage.getItem('mode') === 'dark' ? 'light' : 'dark';
+    setTheme(mode);
+    localStorage.setItem('mode', mode);
   };
 
   const toggleMenu = () => {
