@@ -1,20 +1,17 @@
-import express from 'express';
+import app from './main.js'
+import connectDB from './db/db.js'
 
-const app = express();
+connectDB()
+    .then(()=> {
+        app.on('error',(err)=>{
+            console.log("Error in creating Express App: ",err);
+        })
 
-app.get('/', (req, res) => {
-    return res.status(200).json({
-        value: "Hello This is Home Page"
-    });
-});
-
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-    return res.status(500).json({
-        value: "Error Page"
-    });
-});
-
-app.listen(3000, () => {
-    console.log("Express Listening on port 3000");
-});
+        app.listen(process.env.DEV_PORT || 3000 , () => {
+            console.log("Express running on http://localhost:",process.env.DEV_PORT || 3000);
+        })
+    })
+    .catch((err)=>{
+        console.log('Error in Creating Express App Check Database: ', err);
+        process.exit(1);
+    })
