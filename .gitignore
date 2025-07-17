@@ -19,3 +19,46 @@ venv/
 .DS_Store
 
 study-sync-ai-1cbc2-firebase-adminsdk-fbsvc-74bc02dd8e.json
+
+# Environment folders
+myenv/
+venv/
+.env
+.env.*  # like .env.local, .env.production etc.
+
+# Editor/IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Node.js (for frontend if React/Next.js etc.)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (JS/CSS/Cache)
+dist/
+build/
+.cache/
+.next/
+
+# Optional: If you're using WeasyPrint or storing PDFs locally
+*.pdf
+
+# Optional: If you save SQLite or similar local DBs
+*.sqlite3
+*.db
+
+# Optional: Coverage / test / temp
+coverage/
+*.cover
+*.py,cover
+*.tmp
+*.bak
+*.old   
