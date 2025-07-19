@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Play, BookOpen, Brain, FileText, TrendingUp, Moon, Sun, Menu, X, ArrowRight, Check, Zap, Sparkles, Target, Users, Award, Globe } from 'lucide-react';
 import { useThemeStore } from '../store/slices/useThemeStore';
+import CryptoJs from 'crypto-js'
 
 const Home = () => {
   // const [theme, setMode] = useState(() => {
@@ -11,7 +12,7 @@ const Home = () => {
   // });
 
   // Zustand Config
-  const theme = useThemeStore( (state) => state.mode ) 
+  const theme = useThemeStore( (state) => CryptoJs.AES.decrypt(state.mode,import.meta.env.VITE_ENCRYPTION_SECRET).toString(CryptoJs.enc.Utf8) ) 
   const setMode = useThemeStore( (state) => state.setMode)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
