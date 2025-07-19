@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Play, BookOpen, Brain, FileText, TrendingUp, Moon, Sun, Menu, X, ArrowRight, Check, Zap, Sparkles, Target, Users, Award, Globe } from 'lucide-react';
+import { useThemeStore } from '../store/slices/useThemeStore';
 
 const Home = () => {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('mode') || 'light';
-    }
-    return 'light';
-  });
+  // const [theme, setMode] = useState(() => {
+  //   if (typeof window !== 'undefined') {
+  //     return localStorage.getItem('mode') || 'light';
+  //   }
+  //   return 'light';
+  // });
+
+  // Zustand Config
+  const theme = useThemeStore( (state) => state.mode ) 
+  const setMode = useThemeStore( (state) => state.setMode)
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState({});
   const [animatedStats, setAnimatedStats] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('mode', theme);
-    }
-  }, [theme]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -46,8 +46,9 @@ const Home = () => {
     }
   };
 
+  // This setMode is function is from zustand  
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setMode();
   };
 
   const toggleMenu = () => {
