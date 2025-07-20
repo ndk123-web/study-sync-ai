@@ -4,6 +4,7 @@ import { useThemeStore } from '../store/slices/useThemeStore';
 import CryptoJs from 'crypto-js';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   // const [theme, setMode] = useState(() => {
@@ -137,6 +138,7 @@ const Home = () => {
             StudySync AI turns YouTube videos and study content into personalized learning experiences. 
             Get summaries, quizzes, and track your progress with the power of Gemini AI.
           </p>
+            <Link to={'/signin'}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2 font-medium">
               <span>Start Learning</span>
@@ -147,6 +149,7 @@ const Home = () => {
               <span>Watch Demo</span>
             </button>
           </div>
+            </Link>
         </div>
       </section>
 
