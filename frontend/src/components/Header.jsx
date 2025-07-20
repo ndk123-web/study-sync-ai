@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Moon, Sun, Menu, X, Zap, User, LogOut } from "lucide-react";
+import { Moon, Sun, Menu, X, Zap, User, LogOut, Home, Search, BookOpen, MessageCircle } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
@@ -59,23 +59,24 @@ const Header = () => {
             : "bg-white/95 border-gray-200"
         } backdrop-blur-md`}
       >
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
+            {/* Logo Section */}
             <div className="flex items-center space-x-3">
               <Link to={"/"}>
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden ${
+                  className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center relative overflow-hidden ${
                     isDark
                       ? "bg-gradient-to-br from-emerald-600 to-teal-600"
                       : "bg-gradient-to-br from-emerald-500 to-teal-500"
                   } shadow-lg`}
                 >
-                  <Zap className="w-7 h-7 text-white" />
+                  <Zap className="w-5 h-5 md:w-7 md:h-7 text-white" />
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-pulse"></div>
                 </div>
               </Link>
-              <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <div className="hidden sm:block">
+                <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                   StudySync AI
                 </span>
                 <div className="text-xs text-gray-500">Learn Smarter</div>
@@ -83,7 +84,7 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-8">
               <Link to="/features">
                 <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
                   isDark ? "text-gray-300" : "text-gray-600"
@@ -107,23 +108,26 @@ const Header = () => {
               </Link>
             </nav>
 
-            <div className="flex items-center space-x-4">
+            {/* Right Side Controls */}
+            <div className="flex items-center space-x-2 md:space-x-4">
+              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
+                className={`p-2 md:p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
                   isDark
                     ? "hover:bg-gray-800 bg-gray-800/50 text-gray-300"
                     : "hover:bg-gray-100 bg-gray-100/50 text-gray-600"
                 }`}
               >
                 {isDark ? (
-                  <Sun className="w-5 h-5" />
+                  <Sun className="w-4 h-4 md:w-5 md:h-5" />
                 ) : (
-                  <Moon className="w-5 h-5" />
+                  <Moon className="w-4 h-4 md:w-5 md:h-5" />
                 )}
               </button>
 
-              <div className="hidden md:flex items-center space-x-3">
+              {/* Desktop Auth Section */}
+              <div className="hidden lg:flex items-center space-x-3">
                 {isAuth && user.name ? (
                   <>
                     {/* User Profile Section */}
@@ -194,9 +198,32 @@ const Header = () => {
                 )}
               </div>
 
+              {/* Mobile User Avatar (Only show if authenticated) */}
+              {isAuth && user.name && (
+                <div className="flex lg:hidden items-center space-x-2">
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-emerald-500"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  <div className="hidden sm:block">
+                    <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
+                      {user.name.split(' ')[0]}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Menu Button */}
               <button
                 onClick={toggleMenu}
-                className={`md:hidden p-3 rounded-xl transition-all duration-300 ${
+                className={`lg:hidden p-2 md:p-3 rounded-xl transition-all duration-300 ${
                   isDark
                     ? "hover:bg-gray-800 text-gray-300"
                     : "hover:bg-gray-100 text-gray-600"
@@ -215,7 +242,7 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-500 ${
+        className={`fixed inset-0 z-40 lg:hidden transition-all duration-500 ${
           isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
       >
@@ -233,6 +260,7 @@ const Header = () => {
           }`}
         >
           <div className="p-6">
+            {/* Mobile Header */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-3">
                 <div
@@ -290,7 +318,38 @@ const Header = () => {
               </div>
             )}
 
+            {/* Mobile Navigation */}
             <nav className="space-y-2">
+              <Link to="/">
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Home className="w-5 h-5 text-emerald-500" />
+                  <span>Home</span>
+                </button>
+              </Link>
+
+              {isAuth && user.name && (
+                <Link to="/dashboard">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                      isDark
+                        ? "text-gray-300 hover:text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <User className="w-5 h-5 text-emerald-500" />
+                    <span>Dashboard</span>
+                  </button>
+                </Link>
+              )}
+
               <Link to="/features">
                 <button
                   onClick={() => setIsMenuOpen(false)}
@@ -300,7 +359,7 @@ const Header = () => {
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  <span className="text-emerald-500">🚀</span>
+                  <Search className="w-5 h-5 text-emerald-500" />
                   <span>Features</span>
                 </button>
               </Link>
@@ -313,7 +372,7 @@ const Header = () => {
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  <span className="text-emerald-500">💡</span>
+                  <BookOpen className="w-5 h-5 text-emerald-500" />
                   <span>About</span>
                 </button>
               </Link>
@@ -326,28 +385,13 @@ const Header = () => {
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  <span className="text-emerald-500">📞</span>
+                  <MessageCircle className="w-5 h-5 text-emerald-500" />
                   <span>Contact</span>
                 </button>
               </Link>
-              
-              {isAuth && user.name && (
-                <Link to="/dashboard">
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
-                      isDark
-                        ? "text-gray-300 hover:text-white"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <span className="text-emerald-500">📊</span>
-                    <span>Dashboard</span>
-                  </button>
-                </Link>
-              )}
             </nav>
 
+            {/* Mobile Auth Section */}
             <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
               {isAuth && user.name ? (
                 <button
@@ -362,7 +406,7 @@ const Header = () => {
                   <span>Logout</span>
                 </button>
               ) : (
-                <>
+                <div className="space-y-3">
                   <Link to="/signin">
                     <button
                       onClick={() => setIsMenuOpen(false)}
@@ -379,13 +423,13 @@ const Header = () => {
                   <Link to="/signup">
                     <button 
                       onClick={() => setIsMenuOpen(false)}
-                      className="w-full mt-3 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 font-medium flex items-center justify-center space-x-2"
+                      className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 font-medium flex items-center justify-center space-x-2"
                     >
                       <Zap className="w-5 h-5" />
                       <span>Get Started</span>
                     </button>
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
