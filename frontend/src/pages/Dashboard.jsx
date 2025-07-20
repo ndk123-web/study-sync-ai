@@ -605,7 +605,7 @@ const Dashboard = () => {
 
   // Desktop Sidebar
   const DesktopSidebar = () => (
-    <aside className={`hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 ${
+    <aside className={`hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 mt-10 ${
       isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
     } border-r transition-all duration-300`}>
       <div className="flex flex-col flex-1 pt-20 pb-4 overflow-y-auto">
@@ -743,7 +743,7 @@ const Dashboard = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className={`${stat.bgColor} w-10 h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center mb-3 transform hover:rotate-12 transition-transform`}>
-                  <div className={`bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                  <div className={`bg-gradient-to-r ${stat.color} text-white p-2 rounded-lg`}>
                     {stat.icon}
                   </div>
                 </div>
