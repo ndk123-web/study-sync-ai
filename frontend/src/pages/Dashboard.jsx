@@ -22,7 +22,7 @@ const Dashboard = () => {
   const isAuth  = useIsAuth((state) => state.isAuth);
   const user = ''
 
-  const isDark = theme === 'light'
+  const isDark = theme === 'dark'
 
   useEffect( () => {
     console.log("Theme: ",theme)
