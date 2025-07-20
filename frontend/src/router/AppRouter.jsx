@@ -4,11 +4,26 @@ import SignIn from "../pages/SignIn.jsx";
 import SignUp from "../pages/SignUp.jsx";
 import Home from "../pages/Home.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
+import Features from "../components/Features.jsx";
+import About from "../components/About.jsx";
+import Contact from "../components/Contact.jsx";
 
 const AppRouter = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/features",
+    element: <Features />,
+  },
+  {
+    path: "/about",
+    element: <About />,
+  },
+  {
+    path: "/contact",
+    element: <Contact />,
   },
   {
     path: "/signin",
