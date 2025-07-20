@@ -113,6 +113,7 @@ const Header = () => {
               </button>
 
               <div className="hidden md:flex items-center space-x-3">
+                <Link to={'/signin'}>
                 <button
                   className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
                     isDark
@@ -122,6 +123,7 @@ const Header = () => {
                 >
                   Sign In
                 </button>
+                </Link>
 
                 <Link to={"/signup"}>
                   <button className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium">
