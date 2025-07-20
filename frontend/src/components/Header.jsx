@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Moon, Sun, Menu, X, Zap } from "lucide-react";
+import { Moon, Sun, Menu, X, Zap, User, LogOut } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
+import { useIsAuth } from "../store/slices/useIsAuth";
+import { useUserStore } from "../store/slices/useUserStore";
 import CryptoJs from "crypto-js";
 import { Link } from "react-router-dom";
 
@@ -13,6 +15,18 @@ const Header = () => {
   );
   const setMode = useThemeStore((state) => state.setMode);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Auth and User states
+  const isAuth = useIsAuth((state) => state.isAuth);
+  const removeAuth = useIsAuth((state) => state.removeAuth);
+  const user = useUserStore((state) => state);
+  const logoutUser = useUserStore((state) => state.logoutUser);
+
+  const handleLogout = () => {
+    removeAuth();
+    logoutUser();
+    setIsMenuOpen(false);
+  };
 
   const smoothScrollTo = (elementId) => {
     const element = document.getElementById(elementId);
@@ -70,30 +84,27 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <button
-                onClick={() => smoothScrollTo("features")}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
+              <Link to="/features">
+                <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
                   isDark ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Features
-              </button>
-              <button
-                onClick={() => smoothScrollTo("stats-section")}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
+                }`}>
+                  Features
+                </button>
+              </Link>
+              <Link to="/about">
+                <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
                   isDark ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                About
-              </button>
-              <button
-                onClick={() => smoothScrollTo("cta-section")}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
+                }`}>
+                  About
+                </button>
+              </Link>
+              <Link to="/contact">
+                <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
                   isDark ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Contact
-              </button>
+                }`}>
+                  Contact
+                </button>
+              </Link>
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -113,23 +124,74 @@ const Header = () => {
               </button>
 
               <div className="hidden md:flex items-center space-x-3">
-                <Link to={'/signin'}>
-                <button
-                  className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    isDark
-                      ? "text-gray-300 hover:bg-gray-800"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  Sign In
-                </button>
-                </Link>
+                {isAuth && user.name ? (
+                  <>
+                    {/* User Profile Section */}
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        {user.photoURL ? (
+                          <img 
+                            src={user.photoURL} 
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
+                            {user.name}
+                          </div>
+                          <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                            {user.isPremium ? "Premium" : "Free"}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Link to="/dashboard">
+                        <button className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                          isDark
+                            ? "text-gray-300 hover:bg-gray-800"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}>
+                          Dashboard
+                        </button>
+                      </Link>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className={`p-2 rounded-xl transition-all duration-300 transform hover:scale-105 ${
+                          isDark
+                            ? "text-gray-300 hover:bg-gray-800"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        title="Logout"
+                      >
+                        <LogOut className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Link to={'/signin'}>
+                      <button className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-800"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}>
+                        Sign In
+                      </button>
+                    </Link>
 
-                <Link to={"/signup"}>
-                  <button className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium">
-                    Get Started
-                  </button>
-                </Link>
+                    <Link to={"/signup"}>
+                      <button className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium">
+                        Get Started
+                      </button>
+                    </Link>
+                  </>
+                )}
               </div>
 
               <button
@@ -198,61 +260,133 @@ const Header = () => {
               </button>
             </div>
 
+            {/* User Profile in Mobile Menu */}
+            {isAuth && user.name && (
+              <div className={`mb-8 p-4 rounded-2xl ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="flex items-center space-x-3">
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                  <div>
+                    <div className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+                      {user.name}
+                    </div>
+                    <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                      {user.email}
+                    </div>
+                    <div className="text-xs text-emerald-500 font-medium">
+                      {user.isPremium ? "Premium Member" : "Free Plan"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <nav className="space-y-2">
-              <button
-                onClick={() => {
-                  smoothScrollTo("features");
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${
-                  isDark
-                    ? "text-gray-300 hover:text-white"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Features
-              </button>
-              <button
-                onClick={() => {
-                  smoothScrollTo("stats-section");
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${
-                  isDark
-                    ? "text-gray-300 hover:text-white"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                About
-              </button>
-              <button
-                onClick={() => {
-                  smoothScrollTo("cta-section");
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${
-                  isDark
-                    ? "text-gray-300 hover:text-white"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Contact
-              </button>
+              <Link to="/features">
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span className="text-emerald-500">🚀</span>
+                  <span>Features</span>
+                </button>
+              </Link>
+              <Link to="/about">
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span className="text-emerald-500">💡</span>
+                  <span>About</span>
+                </button>
+              </Link>
+              <Link to="/contact">
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span className="text-emerald-500">📞</span>
+                  <span>Contact</span>
+                </button>
+              </Link>
+              
+              {isAuth && user.name && (
+                <Link to="/dashboard">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                      isDark
+                        ? "text-gray-300 hover:text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <span className="text-emerald-500">📊</span>
+                    <span>Dashboard</span>
+                  </button>
+                </Link>
+              )}
             </nav>
 
             <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <button
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 ${
-                  isDark
-                    ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-              >
-                Sign In
-              </button>
-              <button className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 font-medium">
-                Get Started
-              </button>
+              {isAuth && user.name ? (
+                <button
+                  onClick={handleLogout}
+                  className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      : "text-red-600 hover:text-red-700 hover:bg-red-100"
+                  }`}
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Logout</span>
+                </button>
+              ) : (
+                <>
+                  <Link to="/signin">
+                    <button
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 flex items-center space-x-3 ${
+                        isDark
+                          ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      }`}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>Sign In</span>
+                    </button>
+                  </Link>
+                  <Link to="/signup">
+                    <button 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full mt-3 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 font-medium flex items-center justify-center space-x-2"
+                    >
+                      <Zap className="w-5 h-5" />
+                      <span>Get Started</span>
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
