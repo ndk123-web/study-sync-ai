@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Play, BookOpen, Brain, FileText, TrendingUp, Moon, Sun, Menu, X, ArrowRight, Check, Zap, Sparkles, Target, Users, Award, Globe } from 'lucide-react';
+import { Search, Play, BookOpen, Brain, FileText, TrendingUp, ArrowRight, Check, Sparkles, Target, Users, Award, Globe } from 'lucide-react';
 import { useThemeStore } from '../store/slices/useThemeStore';
-import CryptoJs from 'crypto-js'
+import CryptoJs from 'crypto-js';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const Home = () => {
   // const [theme, setMode] = useState(() => {
@@ -13,9 +15,7 @@ const Home = () => {
 
   // Zustand Config
   const theme = useThemeStore( (state) => CryptoJs.AES.decrypt(state.mode,import.meta.env.VITE_ENCRYPTION_SECRET).toString(CryptoJs.enc.Utf8) ) 
-  const setMode = useThemeStore( (state) => state.setMode)
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState({});
   const [animatedStats, setAnimatedStats] = useState(false);
 
@@ -45,15 +45,6 @@ const Home = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  // This setMode is function is from zustand  
-  const toggleTheme = () => {
-    setMode();
-  };
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
   };
 
   const features = [
@@ -128,137 +119,7 @@ const Home = () => {
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDark ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-slate-50 to-blue-50 text-gray-900'}`}>
-      {/* Header */}
-      <header className={`sticky top-0 z-50 border-b transition-all duration-500 ${isDark ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'} backdrop-blur-md`}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-emerald-600 to-teal-600' : 'bg-gradient-to-br from-emerald-500 to-teal-500'} shadow-lg`}>
-                <Zap className="w-7 h-7 text-white" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-pulse"></div>
-              </div>
-              <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  StudySync AI
-                </span>
-                <div className="text-xs text-gray-500">Learn Smarter</div>
-              </div>
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <button 
-                onClick={() => smoothScrollTo('features')}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}
-              >
-                Features
-              </button>
-              <button 
-                onClick={() => smoothScrollTo('stats-section')}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}
-              >
-                About
-              </button>
-              <button 
-                onClick={() => smoothScrollTo('cta-section')}
-                className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}
-              >
-                Contact
-              </button>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleTheme}
-                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${isDark ? 'hover:bg-gray-800 bg-gray-800/50' : 'hover:bg-gray-100 bg-gray-100/50'}`}
-              >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              
-              <div className="hidden md:flex items-center space-x-3">
-                <button className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  Sign In
-                </button>
-                <button className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium">
-                  Get Started
-                </button>
-              </div>
-
-              <button
-                onClick={toggleMenu}
-                className={`md:hidden p-3 rounded-xl transition-all duration-300 ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-              >
-                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-all duration-500 ${
-        isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-      }`}>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={toggleMenu}></div>
-        <div className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] transform transition-all duration-500 ease-out ${
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        } ${isDark ? 'bg-gray-900 border-l border-gray-800' : 'bg-white border-l border-gray-200'}`}>
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-emerald-600 to-teal-600' : 'bg-gradient-to-br from-emerald-500 to-teal-500'}`}>
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  StudySync AI
-                </span>
-              </div>
-              <button onClick={toggleMenu} className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <nav className="space-y-2">
-              <button 
-                onClick={() => {
-                  smoothScrollTo('features');
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                Features
-              </button>
-              <button 
-                onClick={() => {
-                  smoothScrollTo('stats-section');
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                About
-              </button>
-              <button 
-                onClick={() => {
-                  smoothScrollTo('cta-section');
-                  setIsMenuOpen(false);
-                }}
-                className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                Contact
-              </button>
-            </nav>
-
-            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <button className={`w-full py-3 px-4 text-left rounded-lg transition-all duration-300 ${isDark ? 'text-gray-300 hover:text-white hover:bg-gray-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
-                Sign In
-              </button>
-              <button className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 font-medium">
-                Get Started
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
@@ -396,99 +257,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className={`border-t-2 ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-emerald-600' : 'bg-emerald-500'}`}>
-                  <Brain className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <span className="text-xl font-bold">StudySync AI</span>
-                  <div className="text-xs text-gray-500">Learn Smarter</div>
-                </div>
-              </div>
-              <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
-                Transforming education with AI-powered learning tools for the modern student.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Twitter
-                </a>
-                <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  LinkedIn
-                </a>
-                <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  GitHub
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <div className="space-y-2">
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Features
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Pricing
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  API
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <div className="space-y-2">
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Documentation
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Help Center
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Contact
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <div className="space-y-2">
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  About
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Blog
-                </a>
-                <a href="#" className={`block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Careers
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className={`mt-8 pt-8 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                © 2025 StudySync AI. All rights reserved.
-              </p>
-              <div className="flex space-x-6 mt-4 md:mt-0">
-                <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Privacy Policy
-                </a>
-                <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                  Terms of Service
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
