@@ -23,7 +23,7 @@ app.use(express.static('public'));
 // This is a global error handler
 
 // all imports routes will be here
-import userRouter from './routers/user.routers.js';
+import userRouter from './routes/user.routes.js';
 
 // all routes
 app.use('/api/v1/user', userRouter);
