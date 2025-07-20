@@ -1,25 +1,9 @@
 import { Router } from "express";
+import { verifyJWT } from "../middleware/verifyJWT.js";
+import { signUpController } from '../controllers/user.controllers.js'
 
 const userRouter = Router();
 
-// User Router Testing 
-userRouter.get("/", (req, res, next) => {
-    console.log("This is Middleware Bro");
-    next();
-}, (req, res) => {
-    res.json({
-        valule: "This is Home user"
-    })
-})
-
-// User Router Testing 
-userRouter.get("/create-user", (req, res, next) => {
-    console.log("This is Middleware Bro")
-    next();
-}, (req, res) => {
-    res.json({
-        valule: "This is Create user"
-    })
-})
+userRouter.post("/create-user" , verifyJWT , signUpController);
 
 export default userRouter;

@@ -20,6 +20,7 @@ const Dashboard = () => {
   );
   const setMode  = useThemeStore((state) => state.setMode);
   const isAuth  = useIsAuth((state) => state.isAuth);
+  const removeAuth = useIsAuth((state) => state.removeAuth);
   const user = ''
 
   const isDark = theme === 'dark'
@@ -43,7 +44,6 @@ const Dashboard = () => {
   }, [isAuth]);
 
   const handleLogout = () => {
-    logout();
     removeAuth();
     setShowUserMenu(false);
     window.location.href = '/signin';

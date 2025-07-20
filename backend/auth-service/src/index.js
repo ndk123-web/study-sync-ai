@@ -7,8 +7,8 @@ connectDB()
             console.log("Error in creating Express App: ", err);
         })
 
-        app.listen(process.env.DEV_PORT || 3000, () => {
-            console.log(`Express running on http://localhost:${process.env.DEV_PORT || 3000}`);
+        app.listen(5000 , () => {
+            console.log(`Express running on http://localhost:5000`);
         })
     })
     .catch((err) => {
