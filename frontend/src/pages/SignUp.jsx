@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Mail,
   Lock,
@@ -13,6 +13,7 @@ import { useThemeStore } from "../store/slices/useThemeStore";
 import { useLoaders } from "../store/slices/useLoaders.js";
 import { useNavigate } from "react-router-dom";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 
 import CryptoJs from "crypto-js";
 import Header from "../components/Header";
@@ -21,7 +22,12 @@ import AuthAnimation from "../components/AuthAnimation";
 import { Link } from "react-router-dom";
 
 import { app } from "../firebase/firebase.js";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { signUpApi } from "../api/signUp.js";
 
 const SignUp = () => {
@@ -31,13 +37,24 @@ const SignUp = () => {
   const isLoading = useLoaders((state) => state.loader);
   const setLoader = useLoaders((state) => state.setLoader);
   const unsetLoader = useLoaders((state) => state.unsetLoader);
+  const googleLoader = useLoaders((state) => state.googleLoader);
+  const setGoogleLoader = useLoaders((state) => state.setGoogleLoader);
+  const unsetGoogleLoader = useLoaders((state) => state.unsetGoogleLoader);
+
   const theme = useThemeStore((state) =>
     CryptoJs.AES.decrypt(
       state.mode,
       import.meta.env.VITE_ENCRYPTION_SECRET
     ).toString(CryptoJs.enc.Utf8)
   );
-  const setAuth = useIsAuth((state) => state.setAuth)
+  const setAuth = useIsAuth((state) => state.setAuth);
+  const isAuth = useIsAuth((state) => state.isAuth);
+
+  const username = useUserStore((state) => state.username);
+  const email = useUserStore((state) => state.email);
+  const photoURL = useUserStore((state) => state.photoURL);
+  const loginUser = useUserStore((state) => state.loginUser);
+  const isPremium = useUserStore((state) => state.isPremium);
 
   const auth = getAuth(app);
   const navigate = useNavigate();
@@ -49,6 +66,10 @@ const SignUp = () => {
     confirmPassword: "",
     acceptTerms: false,
   });
+
+  useEffect(() => {
+    console.log("Username: ", username, email, photoURL, isPremium);
+  }, [isAuth]);
 
   const [errors, setErrors] = useState({});
 
@@ -110,33 +131,113 @@ const SignUp = () => {
         `Name: ${formData.name} , email: ${formData.email} , password: ${formData.password} , policy: ${formData.acceptTerms}`
       );
 
-      // Add your actual signup logic here
-      // For now, simulating async operation
-      // await new Promise(resolve => setTimeout(resolve, 2000));
-
       const firebaseResponse = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
-      const token =await firebaseResponse.user.getIdToken();
+      const token = await firebaseResponse.user.getIdToken();
 
-      const apiResponse = await signUpApi({ token });
-      console.log(apiResponse)
+      const apiResponse = await signUpApi({ username: formData.name, token });
+      console.log(apiResponse);
 
       if (apiResponse.status !== 201 && apiResponse.status !== 200) {
         await firebaseResponse.user.delete();
-        alert("Error in creating firebase email so deleting the session");
+        alert("Error in creating account. Please try again.");
         return;
       }
 
-      alert("Success Sign Up");
-      setAuth()
+      setAuth();
+      loginUser({
+        username: apiResponse.data.username,
+        email: apiResponse.data.email,
+        photoURL: apiResponse.data.photoURL,
+        bio: apiResponse.data.bio,
+        isPremium: apiResponse.data.isPremium,
+      });
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Form Validation", err);
+      alert("Signup failed. Please try again.");
     } finally {
       unsetLoader();
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        acceptTerms: false,
+      });
+    }
+  };
+
+  const signUpWithGoogle = async () => {
+    let firebaseResponse = null;
+    try {
+      setGoogleLoader();
+      
+      // Create GoogleAuthProvider with custom parameters to ensure popup stays open
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      // Use signInWithPopup with explicit error handling
+      firebaseResponse = await signInWithPopup(auth, provider);
+      
+      if (!firebaseResponse || !firebaseResponse.user) {
+        throw new Error("Google authentication failed");
+      }
+
+      const token = await firebaseResponse.user.getIdToken();
+
+      const apiResponse = await signUpApi({
+        username:
+          firebaseResponse.user.displayName ||
+          firebaseResponse.user.email.split("@")[0],
+        token,
+      });
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        await firebaseResponse.user.delete();
+        alert("Error creating account. Please try again.");
+        return;
+      }
+
+      setAuth();
+      loginUser({
+        username: apiResponse.data.username,
+        email: apiResponse.data.email,
+        photoURL: apiResponse.data.photoURL,
+        bio: apiResponse.data.bio,
+        isPremium: apiResponse.data.isPremium,
+      });
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Google signup error:", err);
+      
+      // Handle specific Firebase Auth errors
+      if (err.code === 'auth/popup-closed-by-user') {
+        alert("Sign-up cancelled. Please try again.");
+      } else if (err.code === 'auth/popup-blocked') {
+        alert("Popup was blocked. Please allow popups for this site.");
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        // This happens when multiple popups are opened, ignore silently
+        console.log("Popup request cancelled");
+      } else {
+        alert("Google sign-up failed. Please try again.");
+      }
+      
+      // Clean up Firebase user if it was created
+      if (firebaseResponse?.user) {
+        try {
+          await firebaseResponse.user.delete();
+        } catch (deleteErr) {
+          console.error("Error deleting Firebase user:", deleteErr);
+        }
+      }
+    } finally {
+      unsetGoogleLoader();
     }
   };
 
@@ -159,10 +260,6 @@ const SignUp = () => {
               title="Start Your"
               subtitle="Join thousands of students transforming their education with StudySync AI's powerful learning tools."
             />
-
-            {/* <button onClick={()=>unsetLoader()}>
-                Click Here bro
-            </button> */}
 
             {/* Right Side - SignUp Form */}
             <div className="order-1 lg:order-2">
@@ -199,31 +296,42 @@ const SignUp = () => {
                 {/* Social Login */}
                 <div className="space-y-4 mb-8">
                   <button
-                    className={`w-full py-4 px-6 rounded-2xl border-2 flex items-center justify-center space-x-3 transition-all duration-300 transform hover:scale-105 font-medium ${
+                    className={`w-full py-4 px-6 rounded-2xl border-2 flex items-center justify-center space-x-3 transition-all duration-300 transform hover:scale-105 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                       isDark
                         ? "border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-white"
                         : "border-gray-300 hover:bg-gray-50 hover:border-gray-400 text-gray-700"
                     } hover:shadow-xl`}
+                    onClick={signUpWithGoogle}
+                    disabled={googleLoader}
                   >
-                    <svg className="w-6 h-6" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    <span>Continue with Google</span>
+                    {googleLoader ? (
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current"></div>
+                        <span>Signing up...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-6 h-6" viewBox="0 0 24 24">
+                          <path
+                            fill="currentColor"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="currentColor"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="currentColor"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          />
+                          <path
+                            fill="currentColor"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          />
+                        </svg>
+                        <span>Continue with Google</span>
+                      </>
+                    )}
                   </button>
 
                   <button
