@@ -16,6 +16,7 @@ app.use(
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     }),
 );
+
 app.use(express.json({ limit: '30kb' })); // it means 30kb data will be allowed
 app.use(express.urlencoded({ limit: '30kb', extended: true }));
 app.use(cookieParser());

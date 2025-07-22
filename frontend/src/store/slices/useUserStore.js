@@ -1,22 +1,22 @@
 import { createPersistedStore } from "../store";
 
 const useUserStore = createPersistedStore("user", (set) => ({
-    name: "",
+    username: "",
     bio: "",
     photoURL: "",
     isPremium: "",
     email: "",
 
-    loginUser: (name, email, bio, photoURL, isPremium) => set((state) => ({
-        name,
+    loginUser: ({username, email, bio, photoURL, isPremium}) => set((state) => ({
+        username,
         email,
         bio,
         photoURL,
         isPremium
     })),
 
-    updateUser: (name, email, bio, photoURL, isPremium) => set((state) => ({
-        name,
+    updateUser: ({username, email, bio, photoURL, isPremium}) => set((state) => ({
+        username,   
         email,
         bio,
         photoURL,
@@ -24,7 +24,7 @@ const useUserStore = createPersistedStore("user", (set) => ({
     })),
 
     logoutUser: () => set((state) => ({
-        name: "",
+        username: "",
         bio: "",
         photoURL: "",
         isPremium: "",

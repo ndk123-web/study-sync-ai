@@ -18,16 +18,26 @@ const Dashboard = () => {
       import.meta.env.VITE_ENCRYPTION_SECRET
     ).toString(CryptoJs.enc.Utf8)
   );
+
+  const [signInNotification , setSignInNotification] = useState(false);
+
   const setMode  = useThemeStore((state) => state.setMode);
   const isAuth  = useIsAuth((state) => state.isAuth);
   const removeAuth = useIsAuth((state) => state.removeAuth);
+
+  const username = useUserStore((state) => state.username);
+  const email = useUserStore((state) => state.email);
+  const photoURL = useUserStore((state) => state.photoURL);
+  const isPremium = useUserStore((state) => state.isPremium);
+  const logoutUser = useUserStore((state) => state.logoutUser);
+
   const user = ''
 
   const isDark = theme === 'dark'
 
-  useEffect( () => {
-    console.log("Theme: ",theme)
-  } , [theme])
+  // useEffect( () => {
+  //   console.log("Theme: ",theme)
+  // } , [theme])
 
   // Component States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -45,6 +55,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     removeAuth();
+    logoutUser();
     setShowUserMenu(false);
     window.location.href = '/signin';
   };
@@ -311,10 +322,10 @@ const Dashboard = () => {
                   isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
                 }`}
               >
-                {user?.photoURL ? (
+                {photoURL ? (
                   <img 
-                    src={user.photoURL} 
-                    alt={user.name}
+                    src={photoURL} 
+                    alt={username}
                     className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
                   />
                 ) : (
@@ -324,10 +335,10 @@ const Dashboard = () => {
                 )}
                 <div className="text-left hidden lg:block">
                   <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                    {user?.name || 'User'}
+                    {username|| 'User'}
                   </div>
                   <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                    {user?.isPremium ? "Premium" : "Free Plan"}
+                    {isPremium ? "Premium" : "Free Plan"}
                   </div>
                 </div>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''} ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -455,10 +466,10 @@ const Dashboard = () => {
             </div>
             <div className="hidden sm:block">
               <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {user?.name?.split(' ')[0] || 'User'}
+                {username || 'User'}
               </p>
               <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {user?.isPremium ? 'Premium' : 'Free'}
+                {isPremium ? 'Premium' : 'Free'}
               </p>
             </div>
           </div>
@@ -513,7 +524,7 @@ const Dashboard = () => {
             isDark ? 'bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-800' : 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200'
           }`} style={{ animationDelay: '0.1s' }}>
             <h3 className={`font-semibold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
+              Welcome back, {username || 'User'}! 👋
             </h3>
             <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
               Ready to continue learning?
@@ -528,13 +539,13 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {user?.name || 'User'}
+                  {username || 'User'}
                 </p>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {user?.email || 'user@example.com'}
+                  {email || 'user@example.com'}
                 </p>
                 <span className="text-xs text-emerald-500 font-medium">
-                  {user?.isPremium ? "Premium Member" : "Free Plan"}
+                  {isPremium ? "Premium Member" : "Free Plan"}
                 </span>
               </div>
             </div>
@@ -661,7 +672,28 @@ const Dashboard = () => {
           title: 'New quiz available',
           message: 'Test your knowledge on React Hooks',
           time: '5 min ago'
-        }
+        },
+        {
+          id: 3,
+          type: 'danger',
+          title: 'New quiz available',
+          message: 'Test your knowledge on React Hooks',
+          time: '5 min ago'
+        },
+        {
+          id: 4,
+          type: 'danger',
+          title: 'New quiz available',
+          message: 'Test your knowledge on React Hooks',
+          time: '5 min ago'
+        },
+        {
+          id: 5,
+          type: 'danger',
+          title: 'New quiz available',
+          message: 'Test your knowledge on React Hooks',
+          time: '5 min ago'
+        },
       ]);
     }, 1000);
   }, []);
@@ -724,7 +756,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className={`text-3xl font-bold mb-2 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'} animate-bounce-in`}>
-                  Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
+                  Welcome back, {username || 'User'}! 👋
                 </h1>
                 <p className={`text-lg transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'} animate-fade-in`} style={{ animationDelay: '0.2s' }}>
                   Ready to continue your learning journey?

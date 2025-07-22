@@ -1,8 +1,6 @@
 import wrapper from '../utils/Wrapper.js';
-import admin from '../config/firebase-config.js'
-import ApiError from '../utils/ApiError.js'
-
-// we need to rotate the token at each request to avoid token expiration
+import admin from '../config/firebase-config.js';
+import ApiError from '../utils/ApiError.js';
 
 const verifyJWT = wrapper(async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -13,15 +11,21 @@ const verifyJWT = wrapper(async (req, res, next) => {
 
     try {
         const decoded = await admin.auth().verifyIdToken(token);
-        console.log("Decoded: ", decoded);
+        const userRecord = await admin.auth().getUser(decoded.uid); 
+        console.log('userRecord: ',userRecord)
+        
         if (!decoded) {
-            throw new ApiError(401, 'Access Tpken Expired or invalid');
+            throw new ApiError(401, 'Access Token expired or invalid');
         }
 
-        req.user = decoded;
+        req.user = {
+            ...decoded,
+            email: userRecord.email,
+        };
+
         next();
     } catch (err) {
-        throw ApiError(500, err.message);
+        throw new ApiError(500, err.message);
     }
 });
 

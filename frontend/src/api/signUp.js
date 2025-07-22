@@ -1,14 +1,18 @@
 import axios from "axios";
+import { use } from "react";
 
-const signUpApi = async ({ token }) => {
+const signUpApi = async ({ username , token }) => {
   try {
 
     const backendResponse = await axios.post(
       "http://localhost:5000/api/v1/user/create-user",
-      {},
+      {
+        username: username
+      },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       }
     );
