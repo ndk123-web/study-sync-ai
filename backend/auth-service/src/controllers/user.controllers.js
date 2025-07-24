@@ -67,4 +67,41 @@ const signUpController = wrapper(async (req, res) => {
   }
 });
 
-export { signUpController };
+const signInController = wrapper(async (req, res) => {
+  const firebaseSignUpUser = req.user;
+
+  console.log(firebaseSignUpUser);
+
+  if (!firebaseSignUpUser || !firebaseSignUpUser.uid) {
+    throw new ApiError(401, "Invalid Firebase authentication");
+  }
+
+  try {
+    const existingUser = await User.findOne({ uid: firebaseSignUpUser.uid });
+
+    if (existingUser) {
+      return res.status(200).json(new ApiResponse(200, existingUser));
+    }
+    else{
+      throw new ApiError(400,"User Doesnt exist");
+    }
+  } catch (err) {
+    console.error("❌ Error in MongoDB:", err.message);
+
+    if (err.code === 11000 || err.name === "ValidationError") {
+      throw new ApiError(400, "User data validation failed");
+    }
+
+    try {
+      await admin.auth().deleteUser(firebaseSignUpUser.uid);
+      console.log("⛔ Firebase user deleted due to MongoDB error");
+    } catch (firebaseDeleteErr) {
+      console.error("⚠️ Failed to delete Firebase user:", firebaseDeleteErr.message);
+    }
+
+    throw new ApiError(500, "Account creation failed");
+  }
+});
+
+
+export { signUpController, signInController };
