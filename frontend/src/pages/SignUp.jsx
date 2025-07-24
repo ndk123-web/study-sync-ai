@@ -27,6 +27,7 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { signUpApi } from "../api/signUp.js";
 
@@ -40,6 +41,9 @@ const SignUp = () => {
   const googleLoader = useLoaders((state) => state.googleLoader);
   const setGoogleLoader = useLoaders((state) => state.setGoogleLoader);
   const unsetGoogleLoader = useLoaders((state) => state.unsetGoogleLoader);
+  const githubLoader = useLoaders((state) => state.githubLoader);
+  const setGithubLoader = useLoaders((state) => state.setGithubLoader);
+  const unsetGithubLoader = useLoaders((state) => state.unsetGithubLoader);
 
   const theme = useThemeStore((state) =>
     CryptoJs.AES.decrypt(
@@ -174,17 +178,18 @@ const SignUp = () => {
   const signUpWithGoogle = async () => {
     let firebaseResponse = null;
     try {
+      unsetGoogleLoader();
       setGoogleLoader();
-      
+
       // Create GoogleAuthProvider with custom parameters to ensure popup stays open
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
-        prompt: 'select_account'
+        prompt: "select_account",
       });
 
       // Use signInWithPopup with explicit error handling
       firebaseResponse = await signInWithPopup(auth, provider);
-      
+
       if (!firebaseResponse || !firebaseResponse.user) {
         throw new Error("Google authentication failed");
       }
@@ -215,19 +220,19 @@ const SignUp = () => {
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
-      
+
       // Handle specific Firebase Auth errors
-      if (err.code === 'auth/popup-closed-by-user') {
+      if (err.code === "auth/popup-closed-by-user") {
         alert("Sign-up cancelled. Please try again.");
-      } else if (err.code === 'auth/popup-blocked') {
+      } else if (err.code === "auth/popup-blocked") {
         alert("Popup was blocked. Please allow popups for this site.");
-      } else if (err.code === 'auth/cancelled-popup-request') {
+      } else if (err.code === "auth/cancelled-popup-request") {
         // This happens when multiple popups are opened, ignore silently
         console.log("Popup request cancelled");
       } else {
         alert("Google sign-up failed. Please try again.");
       }
-      
+
       // Clean up Firebase user if it was created
       if (firebaseResponse?.user) {
         try {
@@ -238,6 +243,78 @@ const SignUp = () => {
       }
     } finally {
       unsetGoogleLoader();
+    }
+  };
+
+  const signUpWithGithub = async () => {
+    let firebaseResponse = null;
+    try {
+      unsetGithubLoader()
+      setGithubLoader();
+
+      // Create GoogleAuthProvider with custom parameters to ensure popup stays open
+      const provider = new GithubAuthProvider();
+      provider.setCustomParameters({
+        prompt: "select_account",
+      });
+
+      // Use signInWithPopup with explicit error handling
+      firebaseResponse = await signInWithPopup(auth, provider);
+
+      if (!firebaseResponse || !firebaseResponse.user) {
+        throw new Error("Google authentication failed");
+      }
+
+      const token = await firebaseResponse.user.getIdToken();
+
+      const apiResponse = await signUpApi({
+        username:
+          firebaseResponse.user.displayName ||
+          firebaseResponse.user.email.split("@")[0],
+        token,
+      });
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        await firebaseResponse.user.delete();
+        alert("Error creating account. Please try again.");
+        return;
+      }
+
+      setAuth();
+      loginUser({
+        username: apiResponse.data.username,
+        email: apiResponse.data.email,
+        photoURL: apiResponse.data.photoURL,
+        bio: apiResponse.data.bio,
+        isPremium: apiResponse.data.isPremium,
+      });
+      navigate("/dashboard");
+      // unsetGithubLoader();
+    } catch (err) {
+      console.error("Google signup error:", err);
+
+      // Handle specific Firebase Auth errors
+      if (err.code === "auth/popup-closed-by-user") {
+        alert("Sign-up cancelled. Please try again.");
+      } else if (err.code === "auth/popup-blocked") {
+        alert("Popup was blocked. Please allow popups for this site.");
+      } else if (err.code === "auth/cancelled-popup-request") {
+        // This happens when multiple popups are opened, ignore silently
+        console.log("Popup request cancelled");
+      } else {
+        alert("Google sign-up failed. Please try again.");
+      }
+
+      // Clean up Firebase user if it was created
+      if (firebaseResponse?.user) {
+        try {
+          await firebaseResponse.user.delete();
+        } catch (deleteErr) {
+          console.error("Error deleting Firebase user:", deleteErr);
+        }
+      }
+    } finally {
+      unsetGithubLoader();
     }
   };
 
@@ -335,14 +412,32 @@ const SignUp = () => {
                   </button>
 
                   <button
-                    className={`w-full py-4 px-6 rounded-2xl border-2 flex items-center justify-center space-x-3 transition-all duration-300 transform hover:scale-105 font-medium ${
+                    className={`w-full py-4 px-6 rounded-2xl border-2 flex items-center justify-center space-x-3 transition-all duration-300 transform hover:scale-105 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                       isDark
                         ? "border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-white"
                         : "border-gray-300 hover:bg-gray-50 hover:border-gray-400 text-gray-700"
                     } hover:shadow-xl`}
+                    onClick={signUpWithGithub}
+                    disabled={githubLoader}
                   >
-                    <Github className="w-6 h-6" />
-                    <span>Continue with GitHub</span>
+                    {githubLoader ? (
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current"></div>
+                        <span>Signing up...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* GitHub SVG Icon */}
+                        <svg
+                          className="w-6 h-6"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.207 11.387.6.112.793-.262.793-.583v-2.234c-3.338.726-4.033-1.61-4.033-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.085 1.838 1.237 1.838 1.237 1.07 1.834 2.808 1.304 3.492.997.108-.776.42-1.305.763-1.605-2.665-.304-5.466-1.332-5.466-5.93 0-1.31.468-2.382 1.235-3.222-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.3 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.29-1.552 3.296-1.23 3.296-1.23.653 1.653.241 2.873.119 3.176.77.84 1.233 1.912 1.233 3.222 0 4.61-2.804 5.624-5.475 5.921.431.37.816 1.102.816 2.222v3.293c0 .324.192.699.801.58C20.565 21.796 24 17.296 24 12c0-6.63-5.373-12-12-12z" />
+                        </svg>
+                        <span>Continue with GitHub</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
