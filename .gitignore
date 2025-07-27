@@ -62,4 +62,4 @@ coverage/
 *.py,cover
 *.tmp
 *.bak
-*.old   
+*.old   "backend/ai-service/app/config/study-sync.json" 
