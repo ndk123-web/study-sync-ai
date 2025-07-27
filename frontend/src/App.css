@@ -24,6 +24,14 @@
   animation: float 4s ease-in-out infinite;
 }
 
+/* Background grid pattern */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
 /* Dashboard animations */
 @keyframes fadeInUp {
   from {

@@ -4,10 +4,11 @@ import SignIn from "../pages/SignIn.jsx";
 import SignUp from "../pages/SignUp.jsx";
 import Home from "../pages/Home.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
+import Courses from "../pages/Courses.jsx";
 import Features from "../components/Features.jsx";
 import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
-import CoursesInterface from '../components/CoursesInterface.jsx'
+import CoursesInterface from '../components/CoursesInterface'
 
 const AppRouter = createBrowserRouter([
   {
@@ -33,6 +34,14 @@ const AppRouter = createBrowserRouter([
   {
     path: "/signup",
     element: <SignUp />,
+  },
+  {
+    path: "/courses",
+    element: (
+      <ProtectedLayout>
+        <Courses />
+      </ProtectedLayout>
+    ),
   },
   {
     path: "/dashboard",
