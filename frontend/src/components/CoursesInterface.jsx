@@ -26,6 +26,8 @@ import {
   ThumbsUp,
   Share2,
   Brain,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 import Header from "./Header";
 import { useThemeStore } from "../store/slices/useThemeStore";
@@ -664,27 +666,27 @@ const CoursesInterface = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center space-x-3 px-6 py-3 rounded-full transition-all duration-300 whitespace-nowrap flex-shrink-0 mr-3 ${
+                  className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 whitespace-nowrap flex-shrink-0 mr-2 ${
                     activeTab === tab.id
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg transform scale-105"
-                      : `${isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-600 hover:bg-gray-50"} border ${isDark ? "border-gray-700" : "border-gray-200"} hover:shadow-md`
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md"
+                      : `${isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-600 hover:bg-gray-50"} border ${isDark ? "border-gray-700" : "border-gray-200"}`
                   }`}
                 >
                   {/* Icon with colored background */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                     activeTab === tab.id ? "bg-white/20" : tab.color
                   }`}>
-                    <tab.icon className={`w-4 h-4 ${
+                    <tab.icon className={`w-3 h-3 ${
                       activeTab === tab.id ? "text-white" : "text-white"
                     }`} />
                   </div>
                   
                   {/* Label */}
-                  <span className="text-sm font-medium">{tab.label}</span>
+                  <span className="text-xs font-medium hidden sm:inline">{tab.label}</span>
                   
                   {/* Badge */}
                   {tab.badge && (
-                    <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
                       activeTab === tab.id ? "bg-white text-emerald-500" : "bg-red-500 text-white"
                     } animate-pulse shadow-lg`}>
                       {tab.badge}
@@ -706,32 +708,32 @@ const CoursesInterface = () => {
             </div>
           </div>
 
-          {/* Enhanced Tab Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          {/* Enhanced Tab Content - Optimized for horizontal scrollable tabs */}
+          <div className="flex-1 p-4 lg:p-6 overflow-y-auto overflow-x-hidden max-w-full">
             {activeTab === "chat" && (
-              <div className="h-full flex flex-col">
+              <div className="h-full flex flex-col max-w-full">
                 {/* AI Assistant Header */}
                 <div
-                  className={`p-4 rounded-xl mb-4 bg-gradient-to-r ${
+                  className={`p-4 rounded-2xl mb-4 bg-gradient-to-r max-w-full ${
                     isDark
-                      ? "from-emerald-900/30 to-teal-900/30 border border-emerald-500/30"
-                      : "from-emerald-50 to-teal-50 border border-emerald-200"
+                      ? "from-blue-900/30 to-indigo-900/30 border border-blue-500/30"
+                      : "from-blue-50 to-indigo-50 border border-blue-200"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                       <Brain className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-lg truncate">
                         AI Study Assistant
                       </h3>
                       <p
                         className={`text-sm ${
                           isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        } truncate`}
                       >
-                        Ask questions about React Hooks
+                        Ask questions about this lesson
                       </p>
                     </div>
                   </div>
@@ -862,7 +864,7 @@ const CoursesInterface = () => {
                   <button className="text-emerald-500 text-sm hover:text-emerald-600 transition-colors">
                     Export PDF
                   </button>
-                </div>
+                </div>  
                 
                 <textarea
                   placeholder="Take notes while watching the video...
@@ -918,13 +920,40 @@ Tips:
             )}
 
             {activeTab === "quiz" && (
-              <div className="space-y-4 max-w-full">
-                <h3 className="text-xl font-bold">Quiz Time! 🧠</h3>
+              <div className="space-y-6 max-w-full">
+                {/* Quiz Header */}
+                <div className={`p-4 rounded-2xl bg-gradient-to-r max-w-full ${
+                  isDark
+                    ? "from-red-900/30 to-pink-900/30 border border-red-500/30"
+                    : "from-red-50 to-pink-50 border border-red-200"
+                }`}>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                      <Award className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xl font-bold truncate">Quiz Time! 🧠</h3>
+                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} truncate`}>
+                        Test your knowledge on React Hooks
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 
                 {/* Quiz Question */}
-                <div className={`p-6 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} max-w-full`}>
-                  <h4 className="font-semibold mb-4 text-lg">Question 1 of 5</h4>
-                  <p className="mb-4 break-words">Which hook is used for managing state in functional components?</p>
+                <div className={`p-6 rounded-2xl ${isDark ? "bg-gray-800/50" : "bg-white/50"} border ${isDark ? "border-gray-700" : "border-gray-200"} max-w-full backdrop-blur-sm`}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold text-lg">Question 1 of 5</h4>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      isDark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                    }`}>
+                      Easy Level
+                    </div>
+                  </div>
+                  
+                  <p className="mb-6 text-lg leading-relaxed break-words">
+                    Which hook is used for managing state in functional components?
+                  </p>
                   
                   <div className="space-y-3">
                     {[
@@ -935,37 +964,52 @@ Tips:
                     ].map((option, index) => (
                       <button
                         key={index}
-                        className={`w-full text-left p-3 rounded-lg border transition-all duration-200 break-words ${
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02] break-words ${
                           isDark 
-                            ? "border-gray-600 hover:border-emerald-500 hover:bg-gray-600" 
-                            : "border-gray-300 hover:border-emerald-500 hover:bg-emerald-50"
+                            ? "border-gray-600 hover:border-emerald-500 hover:bg-gray-700/50 bg-gray-800/30" 
+                            : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 bg-white/80"
                         }`}
                       >
-                        <span className="font-medium mr-3 flex-shrink-0">{String.fromCharCode(65 + index)}.</span>
-                        <span className="break-words">{option}</span>
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
+                            isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                          }`}>
+                            {String.fromCharCode(65 + index)}
+                          </div>
+                          <span className="break-words font-medium">{option}</span>
+                        </div>
                       </button>
                     ))}
                   </div>
                   
-                  <div className="flex justify-between items-center mt-6 flex-wrap gap-2">
-                    <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                      Progress: 1/5
-                    </span>
-                    <button className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex-shrink-0">
+                  <div className="flex justify-between items-center mt-6 flex-wrap gap-3">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full bg-emerald-500`}></div>
+                      <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        Progress: 1/5
+                      </span>
+                    </div>
+                    <button className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium flex-shrink-0 shadow-lg transform hover:scale-105">
                       Next Question →
                     </button>
                   </div>
                 </div>
 
-                {/* Quiz Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-lg text-center ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
-                    <div className="text-2xl font-bold text-emerald-500">85%</div>
-                    <div className="text-sm">Accuracy</div>
+                {/* Enhanced Quiz Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className={`p-6 rounded-2xl text-center border ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-white/50 border-gray-200"} backdrop-blur-sm`}>
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-3xl font-bold text-emerald-500 mb-1">85%</div>
+                    <div className="text-sm font-medium">Accuracy Rate</div>
                   </div>
-                  <div className={`p-4 rounded-lg text-center ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
-                    <div className="text-2xl font-bold text-blue-500">12</div>
-                    <div className="text-sm">Completed</div>
+                  <div className={`p-6 rounded-2xl text-center border ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-white/50 border-gray-200"} backdrop-blur-sm`}>
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Award className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-3xl font-bold text-blue-500 mb-1">12</div>
+                    <div className="text-sm font-medium">Completed</div>
                   </div>
                 </div>
               </div>
