@@ -7,6 +7,7 @@ import Dashboard from "../pages/Dashboard.jsx";
 import Features from "../components/Features.jsx";
 import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
+import CoursesInterface from '../components/CoursesInterface.jsx'
 
 const AppRouter = createBrowserRouter([
   {
@@ -43,6 +44,18 @@ const AppRouter = createBrowserRouter([
       </>
     ),
   },
+  {
+    path:"/courses/:id",
+    element: (
+      <ProtectedLayout>
+        <CoursesInterface />
+      </ProtectedLayout>
+    )
+  },
+  {
+    path:"/demo-courses",
+    element: <CoursesInterface />
+  }
 ]);
 
 export default AppRouter;
