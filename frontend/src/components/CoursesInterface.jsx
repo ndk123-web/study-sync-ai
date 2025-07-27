@@ -571,6 +571,291 @@ const CoursesInterface = () => {
                 </div>
               </div>
             )}
+
+            {/* Mobile Horizontal Tabs - Below Playlist */}
+            <div className="lg:hidden p-4">
+              <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg p-4`}>
+                <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+                  <span>🎯</span>
+                  <span>Learning Tools</span>
+                </h3>
+                
+                {/* Mobile Horizontal Scrollable Tabs */}
+                <div className="flex overflow-x-auto scrollbar-hide pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <style jsx>{`
+                    .scrollbar-hide::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
+                  
+                  {[
+                    {
+                      id: "chat",
+                      label: "AI Assistant",
+                      icon: MessageCircle,
+                      badge: "3",
+                      color: "from-blue-500 to-blue-600",
+                      emoji: "🤖"
+                    },
+                    {
+                      id: "notes",
+                      label: "Notes",
+                      icon: BookOpen,
+                      badge: "2",
+                      color: "from-green-500 to-green-600",
+                      emoji: "📝"
+                    },
+                    {
+                      id: "quiz",
+                      label: "Quiz",
+                      icon: Award,
+                      badge: "5",
+                      color: "from-red-500 to-red-600",
+                      emoji: "🧠"
+                    },
+                    {
+                      id: "summary",
+                      label: "Summary",
+                      icon: FileText,
+                      badge: null,
+                      color: "from-orange-500 to-orange-600",
+                      emoji: "📚"
+                    },
+                    {
+                      id: "transcript",
+                      label: "Transcript",
+                      icon: Mic,
+                      badge: null,
+                      color: "from-purple-500 to-purple-600",
+                      emoji: "📜"
+                    },
+                  ].map((tab, index) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`relative flex flex-col items-center space-y-2 p-4 rounded-xl transition-all duration-300 min-w-[100px] flex-shrink-0 mr-3 transform hover:scale-105 ${
+                        activeTab === tab.id
+                          ? `bg-gradient-to-r ${tab.color} text-white shadow-lg`
+                          : `${isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} border ${isDark ? "border-gray-600" : "border-gray-200"}`
+                      }`}
+                    >
+                      {/* Icon with emoji */}
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        activeTab === tab.id ? "bg-white/20" : `bg-gradient-to-r ${tab.color}`
+                      }`}>
+                        <span className="text-xl">{tab.emoji}</span>
+                      </div>
+                      
+                      {/* Label */}
+                      <span className="text-xs font-medium text-center leading-tight">{tab.label}</span>
+                      
+                      {/* Badge */}
+                      {tab.badge && (
+                        <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          activeTab === tab.id ? "bg-white text-red-500" : "bg-red-500 text-white"
+                        } animate-pulse shadow-lg border-2 ${activeTab === tab.id ? "border-white" : "border-red-600"}`}>
+                          {tab.badge}
+                        </div>
+                      )}
+                      
+                      {/* Active indicator */}
+                      {activeTab === tab.id && (
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg"></div>
+                      )}
+                    </button>
+                  ))}
+                  
+                  {/* Scroll indicator */}
+                  <div className="flex items-center justify-center min-w-[60px] flex-shrink-0">
+                    <div className={`w-1 h-12 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Tab Content */}
+            <div className="lg:hidden p-4">
+              <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg p-4 min-h-[400px]`}>
+                {activeTab === "chat" && (
+                  <div className="h-full flex flex-col">
+                    {/* AI Assistant Header */}
+                    <div className={`p-4 rounded-xl mb-4 bg-gradient-to-r ${
+                      isDark
+                        ? "from-blue-900/30 to-indigo-900/30 border border-blue-500/30"
+                        : "from-blue-50 to-indigo-50 border border-blue-200"
+                    }`}>
+                      <div className="flex items-center space-x-3">
+                        <div className="text-2xl">🤖</div>
+                        <div>
+                          <h3 className="font-semibold">AI Study Assistant</h3>
+                          <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                            Ask questions about this lesson
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div className="flex-1 space-y-3 mb-4 max-h-60 overflow-y-auto">
+                      {chatMessages.slice(-3).map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex items-start space-x-2 ${
+                            message.type === "user" ? "justify-end" : ""
+                          }`}
+                        >
+                          {message.type === "ai" && (
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-xs">🤖</span>
+                            </div>
+                          )}
+
+                          <div
+                            className={`max-w-[85%] p-3 rounded-xl text-sm ${
+                              message.type === "ai"
+                                ? isDark
+                                  ? "bg-gray-700 text-white"
+                                  : "bg-gray-100 text-gray-900"
+                                : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                            }`}
+                          >
+                            <p className="leading-relaxed">{message.message}</p>
+                          </div>
+
+                          {message.type === "user" && (
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-xs">👤</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Mobile Chat Input */}
+                    <div className={`border rounded-xl p-3 ${
+                      isDark ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-gray-50"
+                    }`}>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              sendMessage();
+                            }
+                          }}
+                          placeholder="Ask about React Hooks..."
+                          className={`flex-1 px-3 py-2 rounded-lg border-0 text-sm ${
+                            isDark
+                              ? "bg-gray-800 text-white placeholder-gray-400"
+                              : "bg-white text-gray-900 placeholder-gray-500"
+                          } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                        />
+                        <button
+                          onClick={sendMessage}
+                          disabled={!chatMessage.trim()}
+                          className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "notes" && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <span className="text-2xl">📝</span>
+                      <h3 className="text-lg font-semibold">My Notes</h3>
+                    </div>
+                    <textarea
+                      placeholder="Take notes while watching..."
+                      className={`w-full h-48 p-3 rounded-lg border text-sm resize-none ${
+                        isDark
+                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                    />
+                    <div className="flex justify-between items-center mt-3">
+                      <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        Auto-saved
+                      </span>
+                      <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "quiz" && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <span className="text-2xl">🧠</span>
+                      <h3 className="text-lg font-semibold">Quiz Time</h3>
+                    </div>
+                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} mb-4`}>
+                      <p className="text-sm mb-4">Which hook is used for managing state?</p>
+                      <div className="space-y-2">
+                        {["useEffect", "useState", "useContext"].map((option, index) => (
+                          <button
+                            key={index}
+                            className={`w-full text-left p-3 text-sm rounded-lg transition-colors ${
+                              isDark ? "bg-gray-800 hover:bg-gray-600" : "bg-white hover:bg-gray-50"
+                            }`}
+                          >
+                            {String.fromCharCode(65 + index)}. {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <button className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-medium">
+                      Submit Answer
+                    </button>
+                  </div>
+                )}
+
+                {activeTab === "summary" && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <span className="text-2xl">📚</span>
+                      <h3 className="text-lg font-semibold">Lesson Summary</h3>
+                    </div>
+                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+                      <h4 className="font-medium mb-2">Key Points:</h4>
+                      <ul className="text-sm space-y-1">
+                        <li>• React Hooks enable state in functional components</li>
+                        <li>• useState is the basic hook for state management</li>
+                        <li>• Always call hooks at the top level</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "transcript" && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <span className="text-2xl">📜</span>
+                      <h3 className="text-lg font-semibold">Transcript</h3>
+                    </div>
+                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} max-h-64 overflow-y-auto`}>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-emerald-500 font-mono text-xs">00:15</span>
+                          <p>Welcome to React Hooks guide...</p>
+                        </div>
+                        <div>
+                          <span className="text-emerald-500 font-mono text-xs">01:30</span>
+                          <p>Hooks allow functional components to have state...</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
