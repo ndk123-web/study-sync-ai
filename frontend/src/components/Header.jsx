@@ -216,6 +216,15 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
+              {isAuth && (
+                <Link to="/courses">
+                  <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  } ${location.pathname === '/courses' ? 'text-emerald-500' : ''}`}>
+                    Courses
+                  </button>
+                </Link>
+              )}
               <Link to="/features">
                 <button className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
                   isDark ? "text-gray-300" : "text-gray-600"
@@ -688,6 +697,22 @@ const Header = () => {
                   >
                     <User className="w-5 h-5 text-emerald-500" />
                     <span>Dashboard</span>
+                  </button>
+                </Link>
+              )}
+
+              {isAuth && username && (
+                <Link to="/courses">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full py-3 px-4 text-left rounded-xl transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                      isDark
+                        ? "text-gray-300 hover:text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                    } ${location.pathname === '/courses' ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-500' : ''}`}
+                  >
+                    <BookOpen className="w-5 h-5 text-emerald-500" />
+                    <span>Courses</span>
                   </button>
                 </Link>
               )}
