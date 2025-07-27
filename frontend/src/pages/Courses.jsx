@@ -345,7 +345,7 @@ const Courses = () => {
             </div>
             
             <Link 
-              to={`/courses/${course.id }`}
+              to={`/courses/${course.id}`}
               className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-6 rounded-lg 
                        hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium 
                        flex items-center space-x-2 group"
