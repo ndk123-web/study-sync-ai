@@ -136,6 +136,7 @@ npm run dev
 ## 👨‍💼 Author
 
 **Navnath | @ndk123-web**
+**Sahil | @sahil-khilari**
 🚀 Computer Engineering Student
 🔭 Passionate about AI, Cloud, and Full Stack Development
 🌐 [Portfolio](https://ndkdev.me) | [LinkedIn](https://linkedin.com/in/...)
