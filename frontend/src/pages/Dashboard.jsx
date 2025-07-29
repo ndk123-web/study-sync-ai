@@ -361,7 +361,7 @@ const Dashboard = () => {
             {[
               { id: 'overview', label: 'Dashboard', icon: <Home className="w-5 h-5" />, emoji: '🏠' },
               { id: 'search', label: 'Search Topics', icon: <Search className="w-5 h-5" />, emoji: '🔍' },
-              { id: 'videos', label: 'Videos', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
+              { id: 'videos', label: 'Courses', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
               { id: 'quiz', label: 'Quizzes', icon: <Brain className="w-5 h-5" />, emoji: '🧠' },
               { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
               { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },

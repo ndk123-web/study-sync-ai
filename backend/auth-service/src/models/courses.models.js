@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
-import ApiError from "../utils/ApiError";
+import ApiError from "../utils/ApiError.js";
 
 const courseSchema = mongoose.Schema(
     {
         topicName: {
             type: String,
             required: true
+        },
+        courseId: {
+            type: String 
         },
         description: {
             type: String,
@@ -22,6 +25,10 @@ const courseSchema = mongoose.Schema(
         availableLanguages: {
             type: [String],
             required: true
+        },
+        likes: {
+            type: Number,
+            default: 0
         }
     },
     {

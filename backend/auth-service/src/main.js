@@ -26,9 +26,12 @@ app.use(express.static('public'));
 
 // all imports routes will be here
 import userRouter from './routes/user.routes.js';
+import coursesRouter from './routes/course.routes.js';
+
 
 // all routes
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/courses', coursesRouter);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
