@@ -293,7 +293,7 @@ const Header = () => {
                       {showNotifications && (
                         <div className={`notification-dropdown absolute right-0 mt-2 w-80 ${
                           isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                        } rounded-xl shadow-xl border z-50 animate-slide-down`}>
+                        } rounded-xl shadow-xl border z-50 animate-in slide-in-from-top-2 duration-300`}>
                           <div className="p-4">
                             <div className="flex items-center justify-between mb-3">
                               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -308,7 +308,7 @@ const Header = () => {
                                 </button>
                               )}
                             </div>
-                            <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                            <div className="max-h-64 overflow-y-auto">
                               {notifications.length === 0 ? (
                                 <div className="text-center py-8">
                                   <Bell className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
@@ -370,7 +370,7 @@ const Header = () => {
                       {showUserMenu && (
                         <div className={`user-menu-dropdown absolute right-0 mt-2 w-64 ${
                           isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                        } rounded-xl shadow-xl border z-50 animate-slide-down`}>
+                        } rounded-xl shadow-xl border z-50 animate-in slide-in-from-top-2 duration-300`}>
                           <div className="p-4">
                             {/* User Info */}
                             <div className={`flex items-center space-x-3 pb-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -498,7 +498,7 @@ const Header = () => {
                     {showNotifications && (
                       <div className={`notification-dropdown absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] ${
                         isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                      } rounded-xl shadow-xl border z-50 animate-slide-down`}>
+                      } rounded-xl shadow-xl border z-50 animate-in slide-in-from-top-2 duration-300`}>
                         <div className="p-3">
                           <div className="flex items-center justify-between mb-3">
                             <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -511,7 +511,7 @@ const Header = () => {
                               <X className="w-4 h-4" />
                             </button>
                           </div>
-                          <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                          <div className="max-h-48 overflow-y-auto">
                             {notifications.length === 0 ? (
                               <p className={`text-sm text-center py-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 No new notifications
@@ -590,7 +590,7 @@ const Header = () => {
             isDark
               ? "bg-gray-900 border-l border-gray-800"
               : "bg-white border-l border-gray-200"
-          } overflow-y-auto custom-scrollbar`}
+          } overflow-y-auto`}
         >
           <div className="p-6 min-h-full flex flex-col">
             {/* Mobile Header */}
@@ -839,55 +839,6 @@ const Header = () => {
           </div>
         </div>
       </div>
-
-      {/* Add CSS for slide-down animation and custom scrollbars */}
-      <style jsx>{`
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-
-        /* Custom Scrollbar Styles */
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: ${isDark ? '#10b981' : '#059669'} ${isDark ? '#374151' : '#f3f4f6'};
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: ${isDark ? '#374151' : '#f3f4f6'};
-          border-radius: 3px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(135deg, #10b981, #059669);
-          border-radius: 3px;
-          transition: all 0.3s ease;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(135deg, #059669, #047857);
-          box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-corner {
-          background: ${isDark ? '#374151' : '#f3f4f6'};
-        }
-      `}</style>
     </>
   );
 };

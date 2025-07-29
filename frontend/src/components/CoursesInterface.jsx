@@ -149,7 +149,7 @@ const CoursesInterface = () => {
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
   const [chatMessage, setChatMessage] = useState("");
-  const [videoSize, setVideoSize] = useState(66.67); // Default 2/3 width
+  const [videoSize, setVideoSize] = useState(55); // Default 50%
   const [chatMessages, setChatMessages] = useState([
     {
       id: 1,
