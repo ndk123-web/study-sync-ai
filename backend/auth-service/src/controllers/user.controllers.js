@@ -9,7 +9,7 @@ const signUpController = wrapper(async (req, res) => {
   const firebaseSignUpUser = req.user;
   const { username } = req.body;
 
-  console.log(firebaseSignUpUser)
+  console.log(firebaseSignUpUser);
 
   if (!firebaseSignUpUser || !firebaseSignUpUser.uid) {
     throw new ApiError(401, "Invalid Firebase authentication");
@@ -43,7 +43,15 @@ const signUpController = wrapper(async (req, res) => {
     }
 
     console.log("✅ New User Created:", newUser._id);
-    res.status(201).json(new ApiResponse(201, newUser));
+    res
+      .status(201)
+      .cookie("token", firebaseSignUpUser.token, {
+        httpOnly: true,
+        sameSite: "Strict", // prevent by CSRF Attack
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      })
+      .json(new ApiResponse(201, newUser));
   } catch (err) {
     console.error("❌ Error in MongoDB:", err.message);
 
@@ -80,10 +88,17 @@ const signInController = wrapper(async (req, res) => {
     const existingUser = await User.findOne({ uid: firebaseSignUpUser.uid });
 
     if (existingUser) {
-      return res.status(200).json(new ApiResponse(200, existingUser));
-    }
-    else{
-      throw new ApiError(400,"User Doesnt exist");
+      return res
+        .status(200)
+        .cookie("token", firebaseSignUpUser.token, {
+          httpOnly: true,
+          sameSite: "Strict", // prevent by CSRF Attack
+          secure: true,
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        })
+        .json(new ApiResponse(200, existingUser));
+    } else {
+      throw new ApiError(400, "User Doesnt exist");
     }
   } catch (err) {
     console.error("❌ Error in MongoDB:", err.message);
@@ -92,16 +107,18 @@ const signInController = wrapper(async (req, res) => {
       throw new ApiError(400, "User data validation failed");
     }
 
-    try {
-      await admin.auth().deleteUser(firebaseSignUpUser.uid);
-      console.log("⛔ Firebase user deleted due to MongoDB error");
-    } catch (firebaseDeleteErr) {
-      console.error("⚠️ Failed to delete Firebase user:", firebaseDeleteErr.message);
-    }
-
     throw new ApiError(500, "Account creation failed");
   }
 });
 
+const logOutController = wrapper(async (req, res) => {
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      sameSite: "Strict",
+      secure: true,
+    })
+    .json(new ApiResponse(200, "User logged out successfully"));
+});
 
-export { signUpController, signInController };
+export { signUpController, signInController, logOutController };

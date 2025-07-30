@@ -180,7 +180,7 @@ const Courses = () => {
         }
         console.log(apiResponse.data);
         setCourses((prev) => (
-          [...prev, ...apiResponse.data]
+          [...apiResponse.data]
         ));
       } catch (err) {
         alert("Error fetching courses: " + err.message);
