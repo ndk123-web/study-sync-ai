@@ -10,7 +10,7 @@ const app = express();
 // all middlewares will be here
 app.use(
     cors({
-        origin: '*',
+        origin: ['http://localhost:5173'],
         credentials: true,
         optionsSuccessStatus: 200,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

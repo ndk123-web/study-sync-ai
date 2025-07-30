@@ -5,6 +5,7 @@ import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
 import CryptoJs from "crypto-js";
 import { Link, useLocation } from "react-router-dom";
+import { logoutUserApi } from "../api/logoutUser";
 
 const Header = () => {
   const theme = useThemeStore((state) =>
@@ -33,11 +34,19 @@ const Header = () => {
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     removeAuth();
     logoutUser();
     setIsMenuOpen(false);
     setShowUserMenu(false);
+    try{
+      const isRemoveCookie = await logoutUserApi()
+      if (isRemoveCookie.status === 200 || isRemoveCookie.status === 201) {
+       alert("SignOut Successfully")
+      }
+    }catch(err){
+      alert(err.message)
+    }
   };
 
   const smoothScrollTo = (elementId) => {

@@ -1,15 +1,14 @@
 import axios from "axios";
 import { use } from "react";
 
-const signInApi = async ({ token }) => {
+const logoutUserApi = async () => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/user/login-user",
+      "http://localhost:5000/api/v1/user/logout-user",
       {},
       {
         withCredentials: true,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -31,4 +30,4 @@ const signInApi = async ({ token }) => {
   }
 };
 
-export { signInApi };
+export { logoutUserApi };

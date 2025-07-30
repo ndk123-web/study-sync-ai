@@ -3,7 +3,7 @@ import admin from '../config/firebase-config.js';
 import ApiError from '../utils/ApiError.js';
 
 const verifyJWT = wrapper(async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
 
     if (!token) {
         throw new ApiError(401, 'Unauthorized');
@@ -21,6 +21,7 @@ const verifyJWT = wrapper(async (req, res, next) => {
         req.user = {
             ...decoded,
             email: userRecord.email,
+            token: token 
         };
 
         next();
