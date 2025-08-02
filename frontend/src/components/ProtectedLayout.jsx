@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
+import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
+import { useNavigate } from "react-router-dom";
 
 const ProtectedLayout = ({ children }) => {
   const isAuth = useIsAuth((state) => state.isAuth);
   const [showLoader, setShowLoader] = useState(true);
+  const removeAuth = useIsAuth((state) => state.removeAuth);
+  const logoutUser = useUserStore((state) => state.logoutUser);
+  const removeCurrentPlaylist = useCurrentPlaylist(
+    (state) => state.removeCurrentPlaylist
+  );
+  const removeCurrentVideoId = useCurrentPlaylist(
+    (state) => state.removeCurrentVideoId
+  );
+  const removeCourseId = useCurrentPlaylist((state) => state.removeCourseId);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -23,7 +35,15 @@ const ProtectedLayout = ({ children }) => {
     );
   }
 
-  return isAuth ? children : <Navigate to="/signin" replace />;
+  return isAuth ? children : (
+    <>
+      {logoutUser()}
+      {removeCurrentPlaylist()}
+      {removeCurrentVideoId()}
+      {removeCourseId()}
+      <Navigate to="/signin" replace />
+    </>
+  );
 };
 
 export default ProtectedLayout;
