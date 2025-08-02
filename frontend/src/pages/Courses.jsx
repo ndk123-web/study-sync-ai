@@ -19,6 +19,8 @@ import {
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
+import EnrollmentModal from "../components/EnrollmentModal";
+import SuccessNotification from "../components/SuccessNotification";
 import { Link } from "react-router-dom";
 import { getAllCoursesApi } from "../api/GetAllCoursesApi.js";
 import { getAuth } from "firebase/auth";
@@ -42,6 +44,14 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Modal state
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  
+  // Success notification state
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const auth = getAuth(app);
   const isAuth = useIsAuth((state) => state.isAuth);
@@ -189,14 +199,14 @@ const Courses = () => {
         setCourses(sample_courses);
         const apiResponse = await getAllCoursesApi();
         console.log("apiResponse: ", apiResponse);
-        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {  // if JWT fails  
           alert("Failed to fetch courses: " + apiResponse.message);
           removeAuth();
         }
         console.log(apiResponse.data);
         setCourses(() => [...apiResponse.data]);
       } catch (err) {
-        // if JWT fails
+        // if JWT fails or error came  
         alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
         removeAuth();
       }
@@ -215,6 +225,40 @@ const Courses = () => {
       selectedCategory === "All" || course.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Handle enrollment modal
+  const handleEnrollClick = (course) => {
+    setSelectedCourse(course);
+    setIsEnrollmentModalOpen(true);
+  };
+
+  const handleEnrollmentConfirm = (course) => {
+    // Here you can add your enrollment logic
+    console.log('Enrolling in course:', course);
+    
+    // Show success notification
+    setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
+    setShowSuccessNotification(true);
+    
+    // Auto-hide notification after 3 seconds
+    setTimeout(() => {
+      setShowSuccessNotification(false);
+    }, 3000);
+    
+    // Navigate to the course after a short delay
+    setTimeout(() => {
+      navigate(`/learn/${course.id || course.courseId}`);
+    }, 1500);
+  };
+
+  const handleModalClose = () => {
+    setIsEnrollmentModalOpen(false);
+    setSelectedCourse(null);
+  };
+
+  const handleNotificationClose = () => {
+    setShowSuccessNotification(false);
+  };
 
   const CourseCard = ({ course }) => (
     <div
@@ -355,15 +399,15 @@ const Courses = () => {
           </div>
         </div>
 
-        <Link
-          to={`/learn/${course.id || course.courseId}`}
+        <button
+          onClick={() => handleEnrollClick(course)}
           className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 px-6 rounded-xl 
                    hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-bold text-center
                    flex items-center justify-center space-x-2 group shadow-lg hover:shadow-xl transform hover:scale-105"
         >
           <span>Enroll Now</span>
           <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -453,16 +497,15 @@ const Courses = () => {
               </div>
             </div>
 
-            <Link to={`/learn/${course.id}`}>
-              <div
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-6 rounded-lg 
+            <button
+              onClick={() => handleEnrollClick(course)}
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-6 rounded-lg 
                        hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium 
                        flex items-center space-x-2 group"
-              >
-                <span>Enroll Now</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
+            >
+              <span>Enroll Now</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </div>
@@ -701,6 +744,23 @@ const Courses = () => {
           </div>
         </div>
       </div>
+
+      {/* Enrollment Modal */}
+      <EnrollmentModal
+        isOpen={isEnrollmentModalOpen}
+        onClose={handleModalClose}
+        onConfirm={handleEnrollmentConfirm}
+        course={selectedCourse}
+        isDark={isDark}
+      />
+
+      {/* Success Notification */}
+      <SuccessNotification
+        isVisible={showSuccessNotification}
+        onClose={handleNotificationClose}
+        message={successMessage}
+        isDark={isDark}
+      />
     </div>
   );
 };

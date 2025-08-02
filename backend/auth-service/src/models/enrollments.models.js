@@ -13,7 +13,14 @@ const enrollmentSchema = mongoose.Schema({
     progress: {
         type: String,
         default: 0
-    }
+    },
+    completed: {
+        type: Boolean,
+        default: false
+    },
+},
+{
+    timestamps: true
 })
 
 const Enrollment = mongoose.model('EnrollmentCourse',enrollmentSchema);
