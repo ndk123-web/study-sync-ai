@@ -32,7 +32,12 @@ import {
 import Header from "./Header";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJS from "crypto-js";
-import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+  useParams,
+  Link,
+} from "react-router-dom";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useLoaders } from "../store/slices/useLoaders.js";
 import { GetPlayListApi } from "../api/GetPlayList.js";
@@ -226,7 +231,7 @@ const CoursesInterface = () => {
   ]);
 
   useEffect(() => {
-    const query = searchParams.get("cv");
+    const query = searchParams.get("currentvideoid");
     setCurrentVideoIdFromZustand(query || currentVideoId);
   }, [currentVideoId]);
 
@@ -239,7 +244,7 @@ const CoursesInterface = () => {
       setCurrentVideoId(previousVideo.youtubeVideoId);
 
       // Update URL
-      navigate(`?cv=${currentCourse.youtubeVideoId}`);
+      navigate(`?currentvideoid=${currentCourse.youtubeVideoId}`);
     }
   };
   const handleNextVideo = async () => {
@@ -251,7 +256,7 @@ const CoursesInterface = () => {
       setCurrentVideoId(nextVideo.youtubeVideoId);
 
       // Update URL
-      navigate(`?cv=${nextVideo.youtubeVideoId}`);
+      navigate(`?currentvideoid=${nextVideo.youtubeVideoId}`);
     }
   };
 
@@ -590,7 +595,10 @@ const CoursesInterface = () => {
                 {coursePlaylist.map((video, index) => (
                   <div
                     key={video.youtubeVideoId}
-                    onClick={() => changeYouTubeVideo(video.youtubeVideoId)}
+                    onClick={() => {
+                      changeYouTubeVideo(video.youtubeVideoId);
+                      navigate(`?currentvideoid=${video.youtubeVideoId}`);
+                    }}
                     className={`p-4 border-b cursor-pointer transition-all duration-200 ${
                       video.youtubeVideoId === currentVideoId
                         ? isDark
