@@ -23,6 +23,9 @@ import { Link } from "react-router-dom";
 import { getAllCoursesApi } from "../api/GetAllCoursesApi.js";
 import { getAuth } from "firebase/auth";
 import { app } from "../firebase/firebase.js";
+import { useIsAuth } from "../store/slices/useIsAuth.js";
+import { useUserStore } from '../store/slices/useUserStore.js';
+import { useCurrentPlaylist } from '../store/slices/useCurrentPlaylist.js';
 
 const Courses = () => {
   const theme = useThemeStore((state) =>
@@ -39,6 +42,12 @@ const Courses = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const auth = getAuth(app);
+  const isAuth = useIsAuth(state => state.isAuth);
+  const removeAuth = useIsAuth(state => state.removeAuth);
+  const logoutUser = useUserStore(state => state.logoutUser);
+  const removeCurrentPlaylist = useCurrentPlaylist(state => state.removeCurrentPlaylist);
+  const removeCurrentVideoId = useCurrentPlaylist(state => state.removeCurrentVideoId);
+  const removeCourseId = useCurrentPlaylist(state => state.removeCourseId);
 
   const [courses, setCourses] = useState([]);
 
@@ -179,11 +188,17 @@ const Courses = () => {
           return;
         }
         console.log(apiResponse.data);
-        setCourses((prev) => (
+        setCourses(() => (
           [...apiResponse.data]
         ));
       } catch (err) {
-        alert("Error fetching courses: " + err.message);
+        // if JWT fails  
+        alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page  
+        removeAuth();
+        logoutUser();
+        removeCurrentPlaylist();
+        removeCurrentVideoId();
+        removeCourseId();
       }
     };
 
