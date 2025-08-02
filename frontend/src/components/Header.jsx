@@ -39,13 +39,13 @@ const Header = () => {
     logoutUser();
     setIsMenuOpen(false);
     setShowUserMenu(false);
-    try{
-      const isRemoveCookie = await logoutUserApi()
+    try {
+      const isRemoveCookie = await logoutUserApi();
       if (isRemoveCookie.status === 200 || isRemoveCookie.status === 201) {
-       alert("SignOut Successfully")
+       localStorage.setItem('logoutUser', JSON.stringify({ username }));
       }
-    }catch(err){
-      alert(err.message)
+    } catch (err) {
+      alert(err.message);
     }
   };
 

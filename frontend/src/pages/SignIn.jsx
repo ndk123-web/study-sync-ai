@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Github, ArrowRight, Zap } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJs from "crypto-js";
@@ -17,7 +17,7 @@ import {
   GithubAuthProvider,
 } from "firebase/auth";
 import { signInApi } from "../api/signIn.js";
-import  SuccessNotification  from "../components/SuccessNotification.jsx";
+import SuccessNotification from "../components/SuccessNotification.jsx";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -48,6 +48,7 @@ const SignIn = () => {
   const setAuth = useIsAuth((state) => state.setAuth);
   const isAuth = useIsAuth((state) => state.isAuth);
   const navigate = useNavigate();
+  const location = useLocation(); // Add this for location tracking
 
   const [formData, setFormData] = useState({
     email: "",
@@ -55,6 +56,47 @@ const SignIn = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [signInNotification, setSignInNotification] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+
+  // Function to check logout notification
+  const checkLogoutNotification = () => {
+    const logoutData = localStorage.getItem("logoutUser");
+    
+    if (logoutData) {
+      const { username } = JSON.parse(logoutData);
+      const message = `Successfully logged out, ${username}! 👋`;
+
+      setWelcomeMessage(message);
+      setSignInNotification(true);
+
+      setTimeout(() => {
+        setSignInNotification(false);
+      }, 3000);
+
+      localStorage.removeItem("logoutUser");
+    }
+  };
+
+  // Check on mount
+  useEffect(() => {
+    checkLogoutNotification();
+  }, [username]);
+
+  // Check when location changes  
+  useEffect(() => {
+    checkLogoutNotification();
+  }, [location.pathname]);
+
+  // Check when component becomes visible (focus)
+  useEffect(() => {
+    const handleFocus = () => {
+      checkLogoutNotification();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -122,13 +164,16 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signin'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signin",
+        })
+      );
+
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Sign In", err);
@@ -181,13 +226,16 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard (Google)
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signin'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signin",
+        })
+      );
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
@@ -256,13 +304,16 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard (GitHub)
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signin'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signin",
+        })
+      );
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
@@ -592,6 +643,12 @@ const SignIn = () => {
             </div>
           </div>
         </div>
+        <SuccessNotification
+          isVisible={signInNotification}
+          onClose={() => setSignInNotification(false)}
+          message={welcomeMessage}
+          isDark={isDark}
+        />
       </div>
     </>
   );
