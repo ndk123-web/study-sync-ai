@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const getAllCoursesApi = async () => {
+const GetPlayListApi = async (courseId) => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/courses/",
+      `http://localhost:5000/api/v1/courses/${courseId}`,
       {
         withCredentials: true,
         headers: {
@@ -19,7 +19,7 @@ const getAllCoursesApi = async () => {
       data: backendResponse.data.data,
     };
   } catch (err) {
-    console.log("Err in Getting All Courses Api: ", err.message);
+    console.log("Err in SignUp Api: ", err.message);
     return {
       status: err.response?.status || 500,
       data: err.response?.data || {},
@@ -28,4 +28,4 @@ const getAllCoursesApi = async () => {
   }
 };
 
-export { getAllCoursesApi };
+export { GetPlayListApi };

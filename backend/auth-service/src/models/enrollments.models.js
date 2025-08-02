@@ -18,3 +18,13 @@ const enrollmentSchema = mongoose.Schema({
 
 const Enrollment = mongoose.model('EnrollmentCourse',enrollmentSchema);
 export default Enrollment;
+
+/*
+    Current course -> video length 
+    User ID -> from cookies
+    Progress Track using next button of that playlist -> which will be post req for next 
+
+    api will look like
+    1. api/v1/courses
+    2. api/v1/enroll/:id (user info will get from cookies)
+*/

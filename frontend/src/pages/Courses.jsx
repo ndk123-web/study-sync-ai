@@ -341,7 +341,7 @@ const Courses = () => {
         </div>
 
         <Link
-          to={`/courses/${course.id || course.courseId}`}
+          to={`/learn/${course.id || course.courseId}`}
           className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 px-6 rounded-xl 
                    hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-bold text-center
                    flex items-center justify-center space-x-2 group shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -438,7 +438,7 @@ const Courses = () => {
               </div>
             </div>
 
-            <Link to={`/courses/${course.id}`}>
+            <Link to={`/learn/${course.id}`}>
               <div
                 className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-6 rounded-lg 
                        hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium 
