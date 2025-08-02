@@ -159,6 +159,13 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signup'
+      }));
+      
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Form Validation", err);
@@ -217,6 +224,13 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard (Google)
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signup'
+      }));
+      
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
@@ -288,6 +302,13 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard (GitHub)
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signup'
+      }));
+      
       navigate("/dashboard");
       // unsetGithubLoader();
     } catch (err) {
