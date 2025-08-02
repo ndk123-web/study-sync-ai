@@ -24,8 +24,9 @@ import { getAllCoursesApi } from "../api/GetAllCoursesApi.js";
 import { getAuth } from "firebase/auth";
 import { app } from "../firebase/firebase.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
-import { useUserStore } from '../store/slices/useUserStore.js';
-import { useCurrentPlaylist } from '../store/slices/useCurrentPlaylist.js';
+import { useUserStore } from "../store/slices/useUserStore.js";
+import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
+import { useNavigate } from "react-router-dom";
 
 const Courses = () => {
   const theme = useThemeStore((state) =>
@@ -35,6 +36,7 @@ const Courses = () => {
     ).toString(CryptoJS.enc.Utf8)
   );
   const isDark = theme === "dark";
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -42,12 +44,16 @@ const Courses = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const auth = getAuth(app);
-  const isAuth = useIsAuth(state => state.isAuth);
-  const removeAuth = useIsAuth(state => state.removeAuth);
-  const logoutUser = useUserStore(state => state.logoutUser);
-  const removeCurrentPlaylist = useCurrentPlaylist(state => state.removeCurrentPlaylist);
-  const removeCurrentVideoId = useCurrentPlaylist(state => state.removeCurrentVideoId);
-  const removeCourseId = useCurrentPlaylist(state => state.removeCourseId);
+  const isAuth = useIsAuth((state) => state.isAuth);
+  const removeAuth = useIsAuth((state) => state.removeAuth);
+  const logoutUser = useUserStore((state) => state.logoutUser);
+  const removeCurrentPlaylist = useCurrentPlaylist(
+    (state) => state.removeCurrentPlaylist
+  );
+  const removeCurrentVideoId = useCurrentPlaylist(
+    (state) => state.removeCurrentVideoId
+  );
+  const removeCourseId = useCurrentPlaylist((state) => state.removeCourseId);
 
   const [courses, setCourses] = useState([]);
 
@@ -180,20 +186,24 @@ const Courses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        setCourses(sample_courses)
+        setCourses(sample_courses);
         const apiResponse = await getAllCoursesApi();
         console.log("apiResponse: ", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert("Failed to fetch courses: " + apiResponse.message);
+          removeAuth();
+          logoutUser();
+          removeCurrentPlaylist();
+          removeCurrentVideoId();
+          removeCourseId();
+          navigate("/signin");
           return;
         }
         console.log(apiResponse.data);
-        setCourses(() => (
-          [...apiResponse.data]
-        ));
+        setCourses(() => [...apiResponse.data]);
       } catch (err) {
-        // if JWT fails  
-        alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page  
+        // if JWT fails
+        alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
         removeAuth();
         logoutUser();
         removeCurrentPlaylist();
