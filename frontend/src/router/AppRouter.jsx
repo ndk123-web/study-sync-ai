@@ -54,7 +54,7 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path:"/courses/:id",
+    path:"/learn/:courseId",
     element: (
       <ProtectedLayout>
         <CoursesInterface />

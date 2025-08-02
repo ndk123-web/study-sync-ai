@@ -32,6 +32,10 @@ import {
 import Header from "./Header";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJS from "crypto-js";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
+import { useLoaders } from "../store/slices/useLoaders.js";
+import { GetPlayListApi } from "../api/GetPlayList.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -40,95 +44,137 @@ const CoursesInterface = () => {
       import.meta.env.VITE_ENCRYPTION_SECRET
     ).toString(CryptoJS.enc.Utf8)
   );
+  const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
+  const [coursePlaylist, setCoursePlaylist] = useState([]);
+  const navigate = useNavigate();
 
-  // Course data with playlist
-  const coursePlaylist = [
+  const setCurrentVideoIdFromZustand = useCurrentPlaylist(
+    (state) => state.setCurrentVideoId
+  );
+  const currentVideoIdFromZustand = useCurrentPlaylist(
+    (state) => state.currentVideoId
+  );
+  const setCurrentPlaylistFromZustand = useCurrentPlaylist(
+    (state) => state.setCurrentPlaylist
+  );
+  const currentPlaylistFromZustand = useCurrentPlaylist(
+    (state) => state.currentPlaylist
+  );
+  const chatLoader = useLoaders((state) => state.chatLoader);
+  const summarizeLoader = useLoaders((state) => state.summarizeLoader);
+  const assessmentLoader = useLoaders((state) => state.assessmentLoader);
+  const playlistLoader = useLoaders((state) => state.playlistLoader);
+  const { courseId } = useParams();
+
+  const coursePlaylistDemo = [
     {
       id: 1,
-      youtubeVideoId: "O6P86uwfdR0", 
+      youtubeVideoId: "O6P86uwfdR0",
       title: "Introduction to React Hooks",
       duration: "15:30",
       completed: true,
     },
     {
       id: 2,
-      youtubeVideoId: "TNhaISOUy6Q", 
+      youtubeVideoId: "TNhaISOUy6Q",
       title: "useState Hook Deep Dive",
       duration: "22:45",
       completed: true,
     },
     {
       id: 3,
-      youtubeVideoId: "0ZJgIjIuY7U", 
+      youtubeVideoId: "0ZJgIjIuY7U",
       title: "useEffect Hook & Side Effects",
       duration: "28:12",
       completed: false,
     },
     {
       id: 4,
-      youtubeVideoId: "t2ypzz6gJm0", 
+      youtubeVideoId: "t2ypzz6gJm0",
       title: "useContext for State Management",
       duration: "19:34",
       completed: false,
     },
     {
       id: 5,
-      youtubeVideoId: "kVeOpcw4GWY", 
+      youtubeVideoId: "kVeOpcw4GWY",
       title: "useReducer for Complex State",
       duration: "25:18",
       completed: false,
     },
     {
       id: 6,
-      youtubeVideoId: "AHNcOXku8aY", 
+      youtubeVideoId: "AHNcOXku8aY",
       title: "useMemo & useCallback Optimization",
       duration: "21:07",
       completed: false,
     },
     {
       id: 7,
-      youtubeVideoId: "raNActRyCeA", 
+      youtubeVideoId: "raNActRyCeA",
       title: "Custom Hooks Creation",
       duration: "24:56",
       completed: false,
     },
     {
       id: 8,
-      youtubeVideoId: "j942wKiXFu8", 
+      youtubeVideoId: "j942wKiXFu8",
       title: "useRef & DOM Manipulation",
       duration: "18:43",
       completed: false,
     },
     {
       id: 9,
-      youtubeVideoId: "HQq1lq3F4ys", 
+      youtubeVideoId: "HQq1lq3F4ys",
       title: "React Testing Library with Hooks",
       duration: "32:21",
       completed: false,
     },
     {
       id: 10,
-      youtubeVideoId: "Ke90Tje7VS0", 
+      youtubeVideoId: "Ke90Tje7VS0",
       title: "Performance Optimization Patterns",
       duration: "27:14",
       completed: false,
     },
     {
       id: 11,
-      youtubeVideoId: "FHvZuS1XpbM", 
+      youtubeVideoId: "FHvZuS1XpbM",
       title: "Error Boundaries & Error Handling",
       duration: "20:38",
       completed: false,
     },
     {
       id: 12,
-      youtubeVideoId: "dpw9EHDh2bM", 
+      youtubeVideoId: "dpw9EHDh2bM",
       title: "React Hooks Best Practices",
       duration: "26:45",
       completed: false,
     },
   ];
+
+  useEffect(() => {
+    const getPlaylist = async () => {
+      console.log("Course ID:", courseId);
+
+      const apiResponse = await GetPlayListApi(courseId);
+      console.log("API Response:", apiResponse.data[0].videoLinks);
+      if (apiResponse.status === 200 || apiResponse.status === 201) {
+        setCoursePlaylist(apiResponse.data[0].videoLinks);
+        setCurrentPlaylistFromZustand(apiResponse.data[0].videoLinks);
+        setCurrentVideoId(apiResponse.data[0].videoLinks[0].youtubeVideoId);
+      } else {
+        console.error("Error fetching playlist:", apiResponse.message);
+      }
+    };
+
+    // setCoursePlaylist(coursePlaylistDemo);
+
+    getPlaylist();
+  }, []);
+
+  // Course data with playlist
 
   const currentCourse = {
     title: "Complete React Hooks Guide",
@@ -145,7 +191,9 @@ const CoursesInterface = () => {
   };
 
   // States
-  const [currentVideoId, setCurrentVideoId] = useState(currentCourse.youtubeVideoId);
+  const [currentVideoId, setCurrentVideoId] = useState(
+    currentVideoIdFromZustand || currentCourse.youtubeVideoId
+  );
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
   const [chatMessage, setChatMessage] = useState("");
@@ -154,25 +202,58 @@ const CoursesInterface = () => {
     {
       id: 1,
       type: "ai",
-      message: "Hello! I'm your AI study assistant. I can help you understand React Hooks concepts. What would you like to learn about?",
+      message:
+        "Hello! I'm your AI study assistant. I can help you understand React Hooks concepts. What would you like to learn about?",
       timestamp: new Date(),
       avatar: "🤖",
     },
     {
       id: 2,
       type: "user",
-      message: "Can you explain the difference between useState and useReducer?",
+      message:
+        "Can you explain the difference between useState and useReducer?",
       timestamp: new Date(),
       avatar: "👤",
     },
     {
       id: 3,
       type: "ai",
-      message: "Great question! useState is perfect for simple state management, while useReducer is better for complex state logic with multiple sub-values or when the next state depends on the previous one. useReducer follows the Redux pattern with actions and reducers.",
+      message:
+        "Great question! useState is perfect for simple state management, while useReducer is better for complex state logic with multiple sub-values or when the next state depends on the previous one. useReducer follows the Redux pattern with actions and reducers.",
       timestamp: new Date(),
       avatar: "🤖",
     },
   ]);
+
+  useEffect(() => {
+    const query = searchParams.get("cv");
+    setCurrentVideoIdFromZustand(query || currentVideoId);
+  }, [currentVideoId]);
+
+  const handlePreviousVideo = async () => {
+    const currentIndex = coursePlaylist.findIndex(
+      (video) => video.youtubeVideoId === currentVideoId
+    );
+    if (currentIndex > 0) {
+      const previousVideo = coursePlaylist[currentIndex - 1];
+      setCurrentVideoId(previousVideo.youtubeVideoId);
+
+      // Update URL
+      navigate(`?cv=${currentCourse.youtubeVideoId}`);
+    }
+  };
+  const handleNextVideo = async () => {
+    const currentIndex = coursePlaylist.findIndex(
+      (video) => video.youtubeVideoId === currentVideoId
+    );
+    if (currentIndex < coursePlaylist.length - 1) {
+      const nextVideo = coursePlaylist[currentIndex + 1];
+      setCurrentVideoId(nextVideo.youtubeVideoId);
+
+      // Update URL
+      navigate(`?cv=${nextVideo.youtubeVideoId}`);
+    }
+  };
 
   // Video functions
   const getYouTubeEmbedUrl = (videoId) => {
@@ -202,11 +283,12 @@ const CoursesInterface = () => {
       const aiResponse = {
         id: chatMessages.length + 2,
         type: "ai",
-        message: "That's an excellent question about React Hooks! Let me explain that concept in detail...",
+        message:
+          "That's an excellent question about React Hooks! Let me explain that concept in detail...",
         timestamp: new Date(),
         avatar: "🤖",
       };
-      setChatMessages(prev => [...prev, aiResponse]);
+      setChatMessages((prev) => [...prev, aiResponse]);
     }, 1000);
 
     setChatMessage("");
@@ -288,22 +370,30 @@ const CoursesInterface = () => {
 
       {/* 📱 Mobile Responsive Content Area */}
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-180px)] max-w-full overflow-hidden">
-        
         {/* 🎬 Left Section: Video Player + Playlist (Desktop) */}
-        <div 
+        <div
           className="w-full lg:flex lg:flex-col flex-shrink-0"
-          style={{ width: window.innerWidth >= 1024 ? `${videoSize}%` : '100%' }}
+          style={{
+            width: window.innerWidth >= 1024 ? `${videoSize}%` : "100%",
+          }}
         >
-          
           {/* Video Player */}
-          <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl lg:rounded-none shadow-lg lg:shadow-none overflow-hidden m-4 lg:m-0`}>
+          <div
+            className={`${
+              isDark ? "bg-gray-800" : "bg-white"
+            } rounded-xl lg:rounded-none shadow-lg lg:shadow-none overflow-hidden m-4 lg:m-0`}
+          >
             <div className="relative group">
               {/* YouTube iframe */}
               <div className="aspect-video">
                 <iframe
                   key={currentVideoId}
                   src={getYouTubeEmbedUrl(currentVideoId)}
-                  title={coursePlaylist.find(v => v.youtubeVideoId === currentVideoId)?.title || currentCourse.currentLesson}
+                  title={
+                    coursePlaylist.find(
+                      (v) => v.youtubeVideoId === currentVideoId
+                    )?.title || currentCourse.currentLesson
+                  }
                   className="w-full h-full"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -315,26 +405,41 @@ const CoursesInterface = () => {
               <div className="absolute top-4 left-4 right-4 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-all duration-300">
                 <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3">
                   <h3 className="text-white font-semibold text-lg">
-                    {coursePlaylist.find(video => video.youtubeVideoId === currentVideoId)?.title || currentCourse.currentLesson}
+                    {coursePlaylist.find(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    )?.title || currentCourse.currentLesson}
                   </h3>
                   <p className="text-gray-300 text-sm">
                     {currentCourse.instructor}
                   </p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-red-500 text-xs font-medium">● YouTube</span>
+                    <span className="text-red-500 text-xs font-medium">
+                      ● YouTube
+                    </span>
                     <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                    <span className="text-xs text-gray-300">{currentCourse.rating}</span>
+                    <span className="text-xs text-gray-300">
+                      {currentCourse.rating}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="flex space-x-2">
-                  <button 
-                    onClick={() => window.open(`https://youtube.com/watch?v=${currentVideoId}`, '_blank')}
+                  <button
+                    onClick={() =>
+                      window.open(
+                        `https://youtube.com/watch?v=${currentVideoId}`,
+                        "_blank"
+                      )
+                    }
                     className="bg-black/60 backdrop-blur-sm text-white p-2 rounded-lg hover:bg-black/80 transition-colors"
                     title="Open in YouTube"
                   >
-                    <svg className="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    <svg
+                      className="w-5 h-5 text-red-500"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                     </svg>
                   </button>
                   <button className="bg-black/60 backdrop-blur-sm text-white p-2 rounded-lg hover:bg-black/80 transition-colors">
@@ -345,18 +450,23 @@ const CoursesInterface = () => {
             </div>
 
             {/* Video Controls */}
-            <div className={`p-4 ${isDark ? "bg-gray-800" : "bg-white"} border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+            <div
+              className={`p-4 ${isDark ? "bg-gray-800" : "bg-white"} border-t ${
+                isDark ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
               <div className="flex items-center justify-between mb-4">
                 <button
-                  onClick={() => {
-                    const currentIndex = coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId);
-                    if (currentIndex > 0) {
-                      changeYouTubeVideo(coursePlaylist[currentIndex - 1].youtubeVideoId);
-                    }
-                  }}
-                  disabled={coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId) === 0}
+                  onClick={handlePreviousVideo}
+                  disabled={
+                    coursePlaylist.findIndex(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    ) === 0
+                  }
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                    coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId) === 0
+                    coursePlaylist.findIndex(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    ) === 0
                       ? "opacity-50 cursor-not-allowed"
                       : isDark
                       ? "bg-gray-700 hover:bg-gray-600 text-white"
@@ -369,23 +479,36 @@ const CoursesInterface = () => {
 
                 <div className="text-center flex-1 mx-4">
                   <p className="text-lg font-semibold">
-                    {coursePlaylist.find(video => video.youtubeVideoId === currentVideoId)?.title || currentCourse.currentLesson}
+                    {coursePlaylist.find(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    )?.title || currentCourse.currentLesson}
                   </p>
-                  <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                    Lesson {coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId) + 1} of {coursePlaylist.length}
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    Lesson{" "}
+                    {coursePlaylist.findIndex(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    ) + 1}{" "}
+                    of {coursePlaylist.length}
                   </p>
                 </div>
 
-                <button 
-                  onClick={() => {
-                    const currentIndex = coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId);
-                    if (currentIndex < coursePlaylist.length - 1) {
-                      changeYouTubeVideo(coursePlaylist[currentIndex + 1].youtubeVideoId);
-                    }
-                  }}
-                  disabled={coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId) === coursePlaylist.length - 1}
+                <button
+                  onClick={handleNextVideo}
+                  disabled={
+                    coursePlaylist.findIndex(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    ) ===
+                    coursePlaylist.length - 1
+                  }
                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                    coursePlaylist.findIndex(video => video.youtubeVideoId === currentVideoId) === coursePlaylist.length - 1
+                    coursePlaylist.findIndex(
+                      (video) => video.youtubeVideoId === currentVideoId
+                    ) ===
+                    coursePlaylist.length - 1
                       ? "opacity-50 cursor-not-allowed"
                       : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg"
                   }`}
@@ -397,20 +520,39 @@ const CoursesInterface = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center justify-center space-x-2 lg:space-x-4">
-                <button className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}>
+                <button
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                    isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                  }`}
+                >
                   <ThumbsUp className="w-4 h-4" />
                   <span className="text-sm hidden sm:inline">Like</span>
                 </button>
-                <button 
-                  onClick={() => window.open(`https://youtube.com/watch?v=${currentVideoId}`, '_blank')}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+                <button
+                  onClick={() =>
+                    window.open(
+                      `https://youtube.com/watch?v=${currentVideoId}`,
+                      "_blank"
+                    )
+                  }
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                    isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                  }`}
                 >
-                  <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  <svg
+                    className="w-4 h-4 text-red-500"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                   <span className="text-sm hidden sm:inline">YouTube</span>
                 </button>
-                <button className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}>
+                <button
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                    isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                  }`}
+                >
                   <Share2 className="w-4 h-4" />
                   <span className="text-sm hidden sm:inline">Share</span>
                 </button>
@@ -420,12 +562,25 @@ const CoursesInterface = () => {
 
           {/* Desktop Playlist - Below Video */}
           <div className="hidden lg:block flex-1 p-4">
-            <div className={`h-full ${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg overflow-hidden`}>
-              
+            <div
+              className={`h-full ${
+                isDark ? "bg-gray-800" : "bg-white"
+              } rounded-xl shadow-lg overflow-hidden`}
+            >
               {/* Playlist Header */}
-              <div className={`p-4 border-b ${isDark ? "border-gray-700 bg-gray-750" : "border-gray-200 bg-gray-50"}`}>
+              <div
+                className={`p-4 border-b ${
+                  isDark
+                    ? "border-gray-700 bg-gray-750"
+                    : "border-gray-200 bg-gray-50"
+                }`}
+              >
                 <h3 className="text-lg font-semibold mb-1">Course Playlist</h3>
-                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                <p
+                  className={`text-sm ${
+                    isDark ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   {coursePlaylist.length} videos • React Hooks Masterclass
                 </p>
               </div>
@@ -448,13 +603,15 @@ const CoursesInterface = () => {
                   >
                     <div className="flex space-x-3">
                       <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                          video.youtubeVideoId === currentVideoId
-                            ? "bg-emerald-500 text-white"
-                            : isDark
-                            ? "bg-gray-600 text-gray-300"
-                            : "bg-gray-200 text-gray-600"
-                        }`}>
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                            video.youtubeVideoId === currentVideoId
+                              ? "bg-emerald-500 text-white"
+                              : isDark
+                              ? "bg-gray-600 text-gray-300"
+                              : "bg-gray-200 text-gray-600"
+                          }`}
+                        >
                           {video.youtubeVideoId === currentVideoId ? (
                             <Play className="w-4 h-4" />
                           ) : (
@@ -463,20 +620,30 @@ const CoursesInterface = () => {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className={`font-medium text-sm leading-tight ${
-                          video.youtubeVideoId === currentVideoId
-                            ? isDark ? "text-emerald-400" : "text-emerald-600"
-                            : ""
-                        }`}>
+                        <h4
+                          className={`font-medium text-sm leading-tight ${
+                            video.youtubeVideoId === currentVideoId
+                              ? isDark
+                                ? "text-emerald-400"
+                                : "text-emerald-600"
+                              : ""
+                          }`}
+                        >
                           {video.title}
                         </h4>
-                        <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        <p
+                          className={`text-xs mt-1 ${
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
                           {video.duration}
                         </p>
                         {video.completed && (
                           <div className="flex items-center space-x-1 mt-1">
                             <Check className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-500">Completed</span>
+                            <span className="text-xs text-green-500">
+                              Completed
+                            </span>
                           </div>
                         )}
                       </div>
@@ -501,18 +668,28 @@ const CoursesInterface = () => {
                 </div>
                 <div className="text-left">
                   <h3 className="font-semibold">Course Playlist</h3>
-                  <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     {coursePlaylist.length} videos
                   </p>
                 </div>
               </div>
-              <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${
-                showMobilePlaylist ? "rotate-180" : ""
-              }`} />
+              <ChevronDown
+                className={`w-5 h-5 transition-transform duration-200 ${
+                  showMobilePlaylist ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {showMobilePlaylist && (
-              <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg mb-4`}>
+              <div
+                className={`${
+                  isDark ? "bg-gray-800" : "bg-white"
+                } rounded-xl shadow-lg mb-4`}
+              >
                 <div className="max-h-80 overflow-y-auto">
                   {coursePlaylist.map((video, index) => (
                     <div
@@ -533,13 +710,15 @@ const CoursesInterface = () => {
                     >
                       <div className="flex space-x-3">
                         <div className="flex-shrink-0">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                            video.youtubeVideoId === currentVideoId
-                              ? "bg-emerald-500 text-white"
-                              : isDark
-                              ? "bg-gray-600 text-gray-300"
-                              : "bg-gray-200 text-gray-600"
-                          }`}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                              video.youtubeVideoId === currentVideoId
+                                ? "bg-emerald-500 text-white"
+                                : isDark
+                                ? "bg-gray-600 text-gray-300"
+                                : "bg-gray-200 text-gray-600"
+                            }`}
+                          >
                             {video.youtubeVideoId === currentVideoId ? (
                               <Play className="w-4 h-4" />
                             ) : (
@@ -548,20 +727,30 @@ const CoursesInterface = () => {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`font-medium text-sm leading-tight ${
-                            video.youtubeVideoId === currentVideoId
-                              ? isDark ? "text-emerald-400" : "text-emerald-600"
-                              : ""
-                          }`}>
+                          <h4
+                            className={`font-medium text-sm leading-tight ${
+                              video.youtubeVideoId === currentVideoId
+                                ? isDark
+                                  ? "text-emerald-400"
+                                  : "text-emerald-600"
+                                : ""
+                            }`}
+                          >
                             {video.title}
                           </h4>
-                          <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isDark ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
                             {video.duration}
                           </p>
                           {video.completed && (
                             <div className="flex items-center space-x-1 mt-1">
                               <Check className="w-3 h-3 text-green-500" />
-                              <span className="text-xs text-green-500">Completed</span>
+                              <span className="text-xs text-green-500">
+                                Completed
+                              </span>
                             </div>
                           )}
                         </div>
@@ -574,20 +763,27 @@ const CoursesInterface = () => {
 
             {/* Mobile Horizontal Tabs - Below Playlist */}
             <div className="lg:hidden p-4">
-              <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg p-4`}>
+              <div
+                className={`${
+                  isDark ? "bg-gray-800" : "bg-white"
+                } rounded-xl shadow-lg p-4`}
+              >
                 <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
                   <span>🎯</span>
                   <span>Learning Tools</span>
                 </h3>
-                
+
                 {/* Mobile Horizontal Scrollable Tabs */}
-                <div className="flex overflow-x-auto scrollbar-hide pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div
+                  className="flex overflow-x-auto scrollbar-hide pb-2"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
                   <style jsx>{`
                     .scrollbar-hide::-webkit-scrollbar {
                       display: none;
                     }
                   `}</style>
-                  
+
                   {[
                     {
                       id: "chat",
@@ -595,7 +791,7 @@ const CoursesInterface = () => {
                       icon: MessageCircle,
                       badge: "3",
                       color: "from-blue-500 to-blue-600",
-                      emoji: "🤖"
+                      emoji: "🤖",
                     },
                     {
                       id: "notes",
@@ -603,7 +799,7 @@ const CoursesInterface = () => {
                       icon: BookOpen,
                       badge: "2",
                       color: "from-green-500 to-green-600",
-                      emoji: "📝"
+                      emoji: "📝",
                     },
                     {
                       id: "quiz",
@@ -611,7 +807,7 @@ const CoursesInterface = () => {
                       icon: Award,
                       badge: "5",
                       color: "from-red-500 to-red-600",
-                      emoji: "🧠"
+                      emoji: "🧠",
                     },
                     {
                       id: "summary",
@@ -619,7 +815,7 @@ const CoursesInterface = () => {
                       icon: FileText,
                       badge: null,
                       color: "from-orange-500 to-orange-600",
-                      emoji: "📚"
+                      emoji: "📚",
                     },
                     {
                       id: "transcript",
@@ -627,7 +823,7 @@ const CoursesInterface = () => {
                       icon: Mic,
                       badge: null,
                       color: "from-purple-500 to-purple-600",
-                      emoji: "📜"
+                      emoji: "📜",
                     },
                   ].map((tab, index) => (
                     <button
@@ -636,38 +832,62 @@ const CoursesInterface = () => {
                       className={`relative flex flex-col items-center space-y-2 p-4 rounded-xl transition-all duration-300 min-w-[100px] flex-shrink-0 mr-3 transform hover:scale-105 ${
                         activeTab === tab.id
                           ? `bg-gradient-to-r ${tab.color} text-white shadow-lg`
-                          : `${isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} border ${isDark ? "border-gray-600" : "border-gray-200"}`
+                          : `${
+                              isDark
+                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            } border ${
+                              isDark ? "border-gray-600" : "border-gray-200"
+                            }`
                       }`}
                     >
                       {/* Icon with emoji */}
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        activeTab === tab.id ? "bg-white/20" : `bg-gradient-to-r ${tab.color}`
-                      }`}>
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          activeTab === tab.id
+                            ? "bg-white/20"
+                            : `bg-gradient-to-r ${tab.color}`
+                        }`}
+                      >
                         <span className="text-xl">{tab.emoji}</span>
                       </div>
-                      
+
                       {/* Label */}
-                      <span className="text-xs font-medium text-center leading-tight">{tab.label}</span>
-                      
+                      <span className="text-xs font-medium text-center leading-tight">
+                        {tab.label}
+                      </span>
+
                       {/* Badge */}
                       {tab.badge && (
-                        <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          activeTab === tab.id ? "bg-white text-red-500" : "bg-red-500 text-white"
-                        } animate-pulse shadow-lg border-2 ${activeTab === tab.id ? "border-white" : "border-red-600"}`}>
+                        <div
+                          className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            activeTab === tab.id
+                              ? "bg-white text-red-500"
+                              : "bg-red-500 text-white"
+                          } animate-pulse shadow-lg border-2 ${
+                            activeTab === tab.id
+                              ? "border-white"
+                              : "border-red-600"
+                          }`}
+                        >
                           {tab.badge}
                         </div>
                       )}
-                      
+
                       {/* Active indicator */}
                       {activeTab === tab.id && (
                         <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg"></div>
                       )}
                     </button>
                   ))}
-                  
+
                   {/* Scroll indicator */}
                   <div className="flex items-center justify-center min-w-[60px] flex-shrink-0">
-                    <div className={`w-1 h-12 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-200"}`}></div>
+                    <div
+                      className={`w-1 h-12 rounded-full ${
+                        isDark ? "bg-gray-700" : "bg-gray-200"
+                      }`}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -675,20 +895,30 @@ const CoursesInterface = () => {
 
             {/* Mobile Tab Content */}
             <div className="lg:hidden p-4">
-              <div className={`${isDark ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg p-4 min-h-[400px]`}>
+              <div
+                className={`${
+                  isDark ? "bg-gray-800" : "bg-white"
+                } rounded-xl shadow-lg p-4 min-h-[400px]`}
+              >
                 {activeTab === "chat" && (
                   <div className="h-full flex flex-col">
                     {/* AI Assistant Header */}
-                    <div className={`p-4 rounded-xl mb-4 bg-gradient-to-r ${
-                      isDark
-                        ? "from-blue-900/30 to-indigo-900/30 border border-blue-500/30"
-                        : "from-blue-50 to-indigo-50 border border-blue-200"
-                    }`}>
+                    <div
+                      className={`p-4 rounded-xl mb-4 bg-gradient-to-r ${
+                        isDark
+                          ? "from-blue-900/30 to-indigo-900/30 border border-blue-500/30"
+                          : "from-blue-50 to-indigo-50 border border-blue-200"
+                      }`}
+                    >
                       <div className="flex items-center space-x-3">
                         <div className="text-2xl">🤖</div>
                         <div>
                           <h3 className="font-semibold">AI Study Assistant</h3>
-                          <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                          <p
+                            className={`text-sm ${
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
                             Ask questions about this lesson
                           </p>
                         </div>
@@ -732,9 +962,13 @@ const CoursesInterface = () => {
                     </div>
 
                     {/* Mobile Chat Input */}
-                    <div className={`border rounded-xl p-3 ${
-                      isDark ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-gray-50"
-                    }`}>
+                    <div
+                      className={`border rounded-xl p-3 ${
+                        isDark
+                          ? "border-gray-600 bg-gray-700"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
+                    >
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -780,7 +1014,11 @@ const CoursesInterface = () => {
                       } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
                     />
                     <div className="flex justify-between items-center mt-3">
-                      <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                      <span
+                        className={`text-xs ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Auto-saved
                       </span>
                       <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
@@ -796,19 +1034,29 @@ const CoursesInterface = () => {
                       <span className="text-2xl">🧠</span>
                       <h3 className="text-lg font-semibold">Quiz Time</h3>
                     </div>
-                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} mb-4`}>
-                      <p className="text-sm mb-4">Which hook is used for managing state?</p>
+                    <div
+                      className={`p-4 rounded-lg ${
+                        isDark ? "bg-gray-700" : "bg-gray-100"
+                      } mb-4`}
+                    >
+                      <p className="text-sm mb-4">
+                        Which hook is used for managing state?
+                      </p>
                       <div className="space-y-2">
-                        {["useEffect", "useState", "useContext"].map((option, index) => (
-                          <button
-                            key={index}
-                            className={`w-full text-left p-3 text-sm rounded-lg transition-colors ${
-                              isDark ? "bg-gray-800 hover:bg-gray-600" : "bg-white hover:bg-gray-50"
-                            }`}
-                          >
-                            {String.fromCharCode(65 + index)}. {option}
-                          </button>
-                        ))}
+                        {["useEffect", "useState", "useContext"].map(
+                          (option, index) => (
+                            <button
+                              key={index}
+                              className={`w-full text-left p-3 text-sm rounded-lg transition-colors ${
+                                isDark
+                                  ? "bg-gray-800 hover:bg-gray-600"
+                                  : "bg-white hover:bg-gray-50"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + index)}. {option}
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                     <button className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-medium">
@@ -823,11 +1071,19 @@ const CoursesInterface = () => {
                       <span className="text-2xl">📚</span>
                       <h3 className="text-lg font-semibold">Lesson Summary</h3>
                     </div>
-                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+                    <div
+                      className={`p-4 rounded-lg ${
+                        isDark ? "bg-gray-700" : "bg-gray-100"
+                      }`}
+                    >
                       <h4 className="font-medium mb-2">Key Points:</h4>
                       <ul className="text-sm space-y-1">
-                        <li>• React Hooks enable state in functional components</li>
-                        <li>• useState is the basic hook for state management</li>
+                        <li>
+                          • React Hooks enable state in functional components
+                        </li>
+                        <li>
+                          • useState is the basic hook for state management
+                        </li>
                         <li>• Always call hooks at the top level</li>
                       </ul>
                     </div>
@@ -840,15 +1096,25 @@ const CoursesInterface = () => {
                       <span className="text-2xl">📜</span>
                       <h3 className="text-lg font-semibold">Transcript</h3>
                     </div>
-                    <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} max-h-64 overflow-y-auto`}>
+                    <div
+                      className={`p-4 rounded-lg ${
+                        isDark ? "bg-gray-700" : "bg-gray-100"
+                      } max-h-64 overflow-y-auto`}
+                    >
                       <div className="space-y-2 text-sm">
                         <div>
-                          <span className="text-emerald-500 font-mono text-xs">00:15</span>
+                          <span className="text-emerald-500 font-mono text-xs">
+                            00:15
+                          </span>
                           <p>Welcome to React Hooks guide...</p>
                         </div>
                         <div>
-                          <span className="text-emerald-500 font-mono text-xs">01:30</span>
-                          <p>Hooks allow functional components to have state...</p>
+                          <span className="text-emerald-500 font-mono text-xs">
+                            01:30
+                          </span>
+                          <p>
+                            Hooks allow functional components to have state...
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -871,7 +1137,9 @@ const CoursesInterface = () => {
             const startWidth = videoSize;
 
             const handleMouseMove = (e) => {
-              const container = document.querySelector(".flex.min-h-\\[calc\\(100vh-180px\\)\\]");
+              const container = document.querySelector(
+                ".flex.min-h-\\[calc\\(100vh-180px\\)\\]"
+              );
               const rect = container.getBoundingClientRect();
               const newSize = Math.min(
                 Math.max(((e.clientX - rect.left) / rect.width) * 100, 30),
@@ -893,24 +1161,26 @@ const CoursesInterface = () => {
         </div>
 
         {/* 📋 Right Section: Chat, Test, Summary, Transcript */}
-        <div 
+        <div
           className="hidden lg:flex lg:flex-col flex-shrink-0 min-w-0"
           style={{ width: `${100 - videoSize}%` }}
         >
-          
           {/* Enhanced Tab Navigation - Horizontal Scrollable like YouLearn */}
           <div
             className={`border-b ${
               isDark ? "border-gray-700" : "border-gray-200"
             } bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-700/50`}
           >
-            <div className="flex overflow-x-auto scrollbar-hide px-4 py-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div
+              className="flex overflow-x-auto scrollbar-hide px-4 py-2"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               <style jsx>{`
                 .scrollbar-hide::-webkit-scrollbar {
                   display: none;
                 }
               `}</style>
-              
+
               {[
                 {
                   id: "chat",
@@ -954,41 +1224,67 @@ const CoursesInterface = () => {
                   className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 whitespace-nowrap flex-shrink-0 mr-2 ${
                     activeTab === tab.id
                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md"
-                      : `${isDark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-white text-gray-600 hover:bg-gray-50"} border ${isDark ? "border-gray-700" : "border-gray-200"}`
+                      : `${
+                          isDark
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-white text-gray-600 hover:bg-gray-50"
+                        } border ${
+                          isDark ? "border-gray-700" : "border-gray-200"
+                        }`
                   }`}
                 >
                   {/* Icon with colored background */}
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                    activeTab === tab.id ? "bg-white/20" : tab.color
-                  }`}>
-                    <tab.icon className={`w-3 h-3 ${
-                      activeTab === tab.id ? "text-white" : "text-white"
-                    }`} />
+                  <div
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                      activeTab === tab.id ? "bg-white/20" : tab.color
+                    }`}
+                  >
+                    <tab.icon
+                      className={`w-3 h-3 ${
+                        activeTab === tab.id ? "text-white" : "text-white"
+                      }`}
+                    />
                   </div>
-                  
+
                   {/* Label */}
-                  <span className="text-xs font-medium hidden sm:inline">{tab.label}</span>
-                  
+                  <span className="text-xs font-medium hidden sm:inline">
+                    {tab.label}
+                  </span>
+
                   {/* Badge */}
                   {tab.badge && (
-                    <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
-                      activeTab === tab.id ? "bg-white text-emerald-500" : "bg-red-500 text-white"
-                    } animate-pulse shadow-lg`}>
+                    <div
+                      className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                        activeTab === tab.id
+                          ? "bg-white text-emerald-500"
+                          : "bg-red-500 text-white"
+                      } animate-pulse shadow-lg`}
+                    >
                       {tab.badge}
                     </div>
                   )}
-                  
+
                   {/* Active indicator */}
                   {activeTab === tab.id && (
                     <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full"></div>
                   )}
                 </button>
               ))}
-              
+
               {/* Scroll indicators */}
               <div className="flex items-center space-x-2 pl-4 flex-shrink-0">
-                <div className={`w-1 h-8 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-200"}`}></div>
-                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Scroll →</span>
+                <div
+                  className={`w-1 h-8 rounded-full ${
+                    isDark ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                ></div>
+                <span
+                  className={`text-xs ${
+                    isDark ? "text-gray-500" : "text-gray-400"
+                  }`}
+                >
+                  Scroll →
+                </span>
               </div>
             </div>
           </div>
@@ -1149,8 +1445,8 @@ const CoursesInterface = () => {
                   <button className="text-emerald-500 text-sm hover:text-emerald-600 transition-colors">
                     Export PDF
                   </button>
-                </div>  
-                
+                </div>
+
                 <textarea
                   placeholder="Take notes while watching the video...
 
@@ -1164,9 +1460,13 @@ Tips:
                       : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
                 />
-                
+
                 <div className="flex justify-between items-center">
-                  <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  <span
+                    className={`text-xs ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     💾 Auto-saved • Last saved: 2 minutes ago
                   </span>
                   <div className="flex space-x-2">
@@ -1184,16 +1484,33 @@ Tips:
                   <h4 className="font-semibold mb-3">Previous Lesson Notes</h4>
                   <div className="space-y-2">
                     {[
-                      { lesson: "useState Hook", note: "useState returns array with [state, setState]", time: "2 days ago" },
-                      { lesson: "useEffect Hook", note: "useEffect runs after every render by default", time: "3 days ago" }
+                      {
+                        lesson: "useState Hook",
+                        note: "useState returns array with [state, setState]",
+                        time: "2 days ago",
+                      },
+                      {
+                        lesson: "useEffect Hook",
+                        note: "useEffect runs after every render by default",
+                        time: "3 days ago",
+                      },
                     ].map((note, index) => (
-                      <div key={index} className={`p-3 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg ${
+                          isDark ? "bg-gray-700" : "bg-gray-100"
+                        }`}
+                      >
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium text-sm">{note.lesson}</p>
                             <p className="text-sm mt-1">{note.note}</p>
                           </div>
-                          <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span
+                            className={`text-xs ${
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
                             {note.time}
                           </span>
                         </div>
@@ -1207,70 +1524,98 @@ Tips:
             {activeTab === "quiz" && (
               <div className="space-y-6 max-w-full">
                 {/* Quiz Header */}
-                <div className={`p-4 rounded-2xl bg-gradient-to-r max-w-full ${
-                  isDark
-                    ? "from-red-900/30 to-pink-900/30 border border-red-500/30"
-                    : "from-red-50 to-pink-50 border border-red-200"
-                }`}>
+                <div
+                  className={`p-4 rounded-2xl bg-gradient-to-r max-w-full ${
+                    isDark
+                      ? "from-red-900/30 to-pink-900/30 border border-red-500/30"
+                      : "from-red-50 to-pink-50 border border-red-200"
+                  }`}
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                       <Award className="w-6 h-6 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-xl font-bold truncate">Quiz Time! 🧠</h3>
-                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} truncate`}>
+                      <h3 className="text-xl font-bold truncate">
+                        Quiz Time! 🧠
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        } truncate`}
+                      >
                         Test your knowledge on React Hooks
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Quiz Question */}
-                <div className={`p-6 rounded-2xl ${isDark ? "bg-gray-800/50" : "bg-white/50"} border ${isDark ? "border-gray-700" : "border-gray-200"} max-w-full backdrop-blur-sm`}>
+                <div
+                  className={`p-6 rounded-2xl ${
+                    isDark ? "bg-gray-800/50" : "bg-white/50"
+                  } border ${
+                    isDark ? "border-gray-700" : "border-gray-200"
+                  } max-w-full backdrop-blur-sm`}
+                >
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-semibold text-lg">Question 1 of 5</h4>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      isDark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-100 text-emerald-700"
-                    }`}>
+                    <div
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        isDark
+                          ? "bg-emerald-900/30 text-emerald-400"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
                       Easy Level
                     </div>
                   </div>
-                  
+
                   <p className="mb-6 text-lg leading-relaxed break-words">
-                    Which hook is used for managing state in functional components?
+                    Which hook is used for managing state in functional
+                    components?
                   </p>
-                  
+
                   <div className="space-y-3">
-                    {[
-                      "useEffect",
-                      "useState", 
-                      "useContext",
-                      "useReducer"
-                    ].map((option, index) => (
-                      <button
-                        key={index}
-                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02] break-words ${
-                          isDark 
-                            ? "border-gray-600 hover:border-emerald-500 hover:bg-gray-700/50 bg-gray-800/30" 
-                            : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 bg-white/80"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
-                            isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                          }`}>
-                            {String.fromCharCode(65 + index)}
+                    {["useEffect", "useState", "useContext", "useReducer"].map(
+                      (option, index) => (
+                        <button
+                          key={index}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02] break-words ${
+                            isDark
+                              ? "border-gray-600 hover:border-emerald-500 hover:bg-gray-700/50 bg-gray-800/30"
+                              : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 bg-white/80"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
+                                isDark
+                                  ? "bg-gray-700 text-gray-300"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + index)}
+                            </div>
+                            <span className="break-words font-medium">
+                              {option}
+                            </span>
                           </div>
-                          <span className="break-words font-medium">{option}</span>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      )
+                    )}
                   </div>
-                  
+
                   <div className="flex justify-between items-center mt-6 flex-wrap gap-3">
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full bg-emerald-500`}></div>
-                      <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                      <div
+                        className={`w-2 h-2 rounded-full bg-emerald-500`}
+                      ></div>
+                      <span
+                        className={`text-sm font-medium ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Progress: 1/5
                       </span>
                     </div>
@@ -1282,18 +1627,34 @@ Tips:
 
                 {/* Enhanced Quiz Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className={`p-6 rounded-2xl text-center border ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-white/50 border-gray-200"} backdrop-blur-sm`}>
+                  <div
+                    className={`p-6 rounded-2xl text-center border ${
+                      isDark
+                        ? "bg-gray-800/50 border-gray-700"
+                        : "bg-white/50 border-gray-200"
+                    } backdrop-blur-sm`}
+                  >
                     <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
-                    <div className="text-3xl font-bold text-emerald-500 mb-1">85%</div>
+                    <div className="text-3xl font-bold text-emerald-500 mb-1">
+                      85%
+                    </div>
                     <div className="text-sm font-medium">Accuracy Rate</div>
                   </div>
-                  <div className={`p-6 rounded-2xl text-center border ${isDark ? "bg-gray-800/50 border-gray-700" : "bg-white/50 border-gray-200"} backdrop-blur-sm`}>
+                  <div
+                    className={`p-6 rounded-2xl text-center border ${
+                      isDark
+                        ? "bg-gray-800/50 border-gray-700"
+                        : "bg-white/50 border-gray-200"
+                    } backdrop-blur-sm`}
+                  >
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Award className="w-6 h-6 text-white" />
                     </div>
-                    <div className="text-3xl font-bold text-blue-500 mb-1">12</div>
+                    <div className="text-3xl font-bold text-blue-500 mb-1">
+                      12
+                    </div>
                     <div className="text-sm font-medium">Completed</div>
                   </div>
                 </div>
@@ -1303,27 +1664,61 @@ Tips:
             {activeTab === "transcript" && (
               <div className="space-y-4 max-w-full">
                 <h3 className="text-xl font-bold">Video Transcript 📜</h3>
-                <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"} max-h-96 overflow-y-auto`}>
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDark ? "bg-gray-700" : "bg-gray-100"
+                  } max-h-96 overflow-y-auto`}
+                >
                   <div className="space-y-3 text-sm leading-relaxed">
                     <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">00:15</span>
-                      <p className="break-words">Welcome to our comprehensive guide on React Hooks. In this lesson, we'll explore how hooks revolutionized React development.</p>
+                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
+                        00:15
+                      </span>
+                      <p className="break-words">
+                        Welcome to our comprehensive guide on React Hooks. In
+                        this lesson, we'll explore how hooks revolutionized
+                        React development.
+                      </p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">01:30</span>
-                      <p className="break-words">React Hooks allow functional components to have state and lifecycle methods that were previously only available in class components.</p>
+                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
+                        01:30
+                      </span>
+                      <p className="break-words">
+                        React Hooks allow functional components to have state
+                        and lifecycle methods that were previously only
+                        available in class components.
+                      </p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">02:45</span>
-                      <p className="break-words">The useState hook is the most fundamental hook. It allows you to add state to functional components with a simple API.</p>
+                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
+                        02:45
+                      </span>
+                      <p className="break-words">
+                        The useState hook is the most fundamental hook. It
+                        allows you to add state to functional components with a
+                        simple API.
+                      </p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">04:10</span>
-                      <p className="break-words">When you call useState, it returns an array with two elements: the current state value and a function to update it.</p>
+                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
+                        04:10
+                      </span>
+                      <p className="break-words">
+                        When you call useState, it returns an array with two
+                        elements: the current state value and a function to
+                        update it.
+                      </p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">05:25</span>
-                      <p className="break-words">It's important to follow the rules of hooks: only call hooks at the top level and only call them from React functions.</p>
+                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
+                        05:25
+                      </span>
+                      <p className="break-words">
+                        It's important to follow the rules of hooks: only call
+                        hooks at the top level and only call them from React
+                        functions.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1333,20 +1728,33 @@ Tips:
             {activeTab === "summary" && (
               <div className="space-y-4">
                 <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
-                <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
-                  <h4 className="font-semibold mb-3">🎯 Key Learning Points:</h4>
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDark ? "bg-gray-700" : "bg-gray-100"
+                  }`}
+                >
+                  <h4 className="font-semibold mb-3">
+                    🎯 Key Learning Points:
+                  </h4>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-start space-x-2">
                       <span className="text-emerald-500 mt-1">•</span>
-                      <span>React Hooks allow you to use state in functional components</span>
+                      <span>
+                        React Hooks allow you to use state in functional
+                        components
+                      </span>
                     </li>
                     <li className="flex items-start space-x-2">
                       <span className="text-emerald-500 mt-1">•</span>
-                      <span>useState is the most basic hook for managing state</span>
+                      <span>
+                        useState is the most basic hook for managing state
+                      </span>
                     </li>
                     <li className="flex items-start space-x-2">
                       <span className="text-emerald-500 mt-1">•</span>
-                      <span>Always call hooks at the top level of your function</span>
+                      <span>
+                        Always call hooks at the top level of your function
+                      </span>
                     </li>
                     <li className="flex items-start space-x-2">
                       <span className="text-emerald-500 mt-1">•</span>
@@ -1354,12 +1762,18 @@ Tips:
                     </li>
                   </ul>
                 </div>
-                
-                <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-gray-100"}`}>
+
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDark ? "bg-gray-700" : "bg-gray-100"
+                  }`}
+                >
                   <h4 className="font-semibold mb-3">💡 Quick Recap:</h4>
                   <p className="text-sm">
-                    This lesson covered the fundamentals of React Hooks, focusing on useState for state management 
-                    in functional components. You learned the rules of hooks and best practices for implementation.
+                    This lesson covered the fundamentals of React Hooks,
+                    focusing on useState for state management in functional
+                    components. You learned the rules of hooks and best
+                    practices for implementation.
                   </p>
                 </div>
               </div>
