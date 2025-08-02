@@ -17,6 +17,7 @@ import {
   GithubAuthProvider,
 } from "firebase/auth";
 import { signInApi } from "../api/signIn.js";
+import  SuccessNotification  from "../components/SuccessNotification.jsx";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -121,6 +122,13 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signin'
+      }));
+      
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Sign In", err);
@@ -173,6 +181,13 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard (Google)
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signin'
+      }));
+      
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
@@ -224,7 +239,7 @@ const SignIn = () => {
       const token = await firebaseResponse.user.getIdToken();
 
       const apiResponse = await signInApi({
-        token
+        token,
       });
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -241,6 +256,13 @@ const SignIn = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
+      
+      // Set welcome message for dashboard (GitHub)
+      localStorage.setItem('welcomeUser', JSON.stringify({
+        username: apiResponse.data.username,
+        type: 'signin'
+      }));
+      
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);

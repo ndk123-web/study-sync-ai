@@ -10,6 +10,7 @@ import { useIsAuth } from '../store/slices/useIsAuth';
 import { useUserStore } from '../store/slices/useUserStore';
 import Header from '../components/Header';
 import CryptoJs from 'crypto-js';
+import SuccessNotification from '../components/SuccessNotification';
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -20,7 +21,34 @@ const Dashboard = () => {
     ).toString(CryptoJs.enc.Utf8)
   );
 
-  const [signInNotification , setSignInNotification] = useState(false);
+  const [signInNotification, setSignInNotification] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+
+  // Welcome notification functionality
+  useEffect(() => {
+    const welcomeData = localStorage.getItem('welcomeUser');
+    if (welcomeData) {
+      const { username, type } = JSON.parse(welcomeData);
+      
+      let message = '';
+      if (type === 'signin') {
+        message = `Welcome back, ${username}! 🎉`;
+      } else if (type === 'signup') {
+        message = `Welcome to StudySync AI, ${username}! 🎉✨`;
+      }
+      
+      setWelcomeMessage(message);
+      setSignInNotification(true);
+      
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        setSignInNotification(false);
+      }, 4000);
+      
+      // Clean up localStorage
+      localStorage.removeItem('welcomeUser');
+    }
+  }, []);
 
   const setMode  = useThemeStore((state) => state.setMode);
   const isAuth  = useIsAuth((state) => state.isAuth);
@@ -753,6 +781,14 @@ const Dashboard = () => {
           background: ${isDark ? '#374151' : '#f3f4f6'};
         }
       `}</style>
+      
+      {/* Welcome Notification */}
+      <SuccessNotification
+        isVisible={signInNotification}
+        onClose={() => setSignInNotification(false)}
+        message={welcomeMessage}
+        isDark={isDark}
+      />
     </div>
   );
 };
