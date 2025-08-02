@@ -43,7 +43,7 @@ const Dashboard = () => {
       // Auto-hide after 4 seconds
       setTimeout(() => {
         setSignInNotification(false);
-      }, 4000);
+      }, 2000);
       
       // Clean up localStorage
       localStorage.removeItem('welcomeUser');
