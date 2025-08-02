@@ -41,6 +41,7 @@ import {
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useLoaders } from "../store/slices/useLoaders.js";
 import { GetPlayListApi } from "../api/GetPlayList.js";
+import { useIsAuth } from "../store/slices/useIsAuth.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -70,6 +71,9 @@ const CoursesInterface = () => {
   const summarizeLoader = useLoaders((state) => state.summarizeLoader);
   const assessmentLoader = useLoaders((state) => state.assessmentLoader);
   const playlistLoader = useLoaders((state) => state.playlistLoader);
+  const isAuth = useIsAuth((state) => state.isAuth);
+  const removeAuth = useIsAuth((state) => state.removeAuth);
+
   const { courseId } = useParams();
 
   const coursePlaylistDemo = [
@@ -163,18 +167,37 @@ const CoursesInterface = () => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
 
-      const apiResponse = await GetPlayListApi(courseId);
-      console.log("API Response:", apiResponse.data[0].videoLinks);
-      if (apiResponse.status === 200 || apiResponse.status === 201) {
-        setCoursePlaylist(apiResponse.data[0].videoLinks);
-        setCurrentPlaylistFromZustand(apiResponse.data[0].videoLinks);
-        setCurrentVideoId(apiResponse.data[0].videoLinks[0].youtubeVideoId);
-      } else {
-        console.error("Error fetching playlist:", apiResponse.message);
+      try {
+        const apiResponse = await GetPlayListApi(courseId);
+        const playlist = apiResponse?.data?.[0]?.videoLinks;
+
+        if (apiResponse.status === 200 || apiResponse.status === 201) {
+          if (!playlist || playlist.length === 0) {
+            alert("No videos found in this course.");
+            return;
+          }
+
+          setCoursePlaylist(playlist);
+          setCurrentPlaylistFromZustand(playlist);
+
+          // Only set videoId if it exists and is valid
+          const firstVideoId =
+            playlist[0]?.youtubeVideoId || playlist[0]?.url?.split("v=")[1];
+
+          if (firstVideoId) {
+            setCurrentVideoId(firstVideoId);
+          } else {
+            alert("No valid video ID found.");
+          }
+        } else {
+          alert("Error fetching playlist: " + apiResponse.message);
+          removeAuth();
+        }
+      } catch (err) {
+        alert("Error fetching playlist: " + err.message);
+        removeAuth();
       }
     };
-
-    // setCoursePlaylist(coursePlaylistDemo);
 
     getPlaylist();
   }, []);
