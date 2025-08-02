@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Moon, Sun, Menu, X, Zap, User, LogOut, Home, Search, BookOpen, MessageCircle, Bell, ChevronDown, Settings, CheckCircle2, Sparkles } from "lucide-react";
+import { Moon, Sun, Menu, X, Zap, User, LogOut, Home, Search, BookOpen, MessageCircle, Bell, ChevronDown, Settings, CheckCircle2, Sparkles, FileText, Video } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";

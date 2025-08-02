@@ -5,6 +5,8 @@ import SignUp from "../pages/SignUp.jsx";
 import Home from "../pages/Home.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Courses from "../pages/Courses.jsx";
+import PdfInteraction from "../pages/PdfInteraction.jsx";
+import VideoInteraction from "../pages/VideoInteraction.jsx";
 import Features from "../components/Features.jsx";
 import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
@@ -58,6 +60,22 @@ const AppRouter = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <CoursesInterface />
+      </ProtectedLayout>
+    )
+  },
+  {
+    path: "/pdf-learning",
+    element: (
+      <ProtectedLayout>
+        <PdfInteraction />
+      </ProtectedLayout>
+    )
+  },
+  {
+    path: "/video-learning",
+    element: (
+      <ProtectedLayout>
+        <VideoInteraction />
       </ProtectedLayout>
     )
   },

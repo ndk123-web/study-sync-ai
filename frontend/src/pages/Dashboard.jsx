@@ -290,30 +290,47 @@ const Dashboard = () => {
                   { id: 'overview', label: 'Dashboard', icon: <Home className="w-5 h-5" />, emoji: '🏠' },
                   { id: 'search', label: 'Search Topics', icon: <Search className="w-5 h-5" />, emoji: '🔍' },
                   { id: 'videos', label: 'Videos', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
+                  { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
+                  { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
                   { id: 'quiz', label: 'Quizzes', icon: <Brain className="w-5 h-5" />, emoji: '🧠' },
                   { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
                   { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
                   { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, emoji: '⚙️' },
                 ].map((item, index) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 animate-fade-in ${
-                      activeTab === item.id
-                        ? `bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg`
-                        : `${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`
-                    }`}
-                    style={{ animationDelay: `${0.3 + index * 0.05}s` }}
-                  >
-                    <span className="text-lg animate-bounce-in" style={{ animationDelay: `${0.4 + index * 0.05}s` }}>{item.emoji}</span>
-                    <span className="font-medium">{item.label}</span>
-                    {activeTab === item.id && (
-                      <ChevronRight className="w-4 h-4 ml-auto animate-slide-in-right" />
-                    )}
-                  </button>
+                  item.isLink ? (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 animate-fade-in ${
+                        isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                      style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+                    >
+                      <span className="text-lg animate-bounce-in" style={{ animationDelay: `${0.4 + index * 0.05}s` }}>{item.emoji}</span>
+                      <span className="font-medium">{item.label}</span>
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </a>
+                  ) : (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 animate-fade-in ${
+                        activeTab === item.id
+                          ? `bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg`
+                          : `${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`
+                      }`}
+                      style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+                    >
+                      <span className="text-lg animate-bounce-in" style={{ animationDelay: `${0.4 + index * 0.05}s` }}>{item.emoji}</span>
+                      <span className="font-medium">{item.label}</span>
+                      {activeTab === item.id && (
+                        <ChevronRight className="w-4 h-4 ml-auto animate-slide-in-right" />
+                      )}
+                    </button>
+                  )
                 ))}
               </nav>
             </div>
@@ -362,6 +379,8 @@ const Dashboard = () => {
               { id: 'overview', label: 'Dashboard', icon: <Home className="w-5 h-5" />, emoji: '🏠' },
               { id: 'search', label: 'Search Topics', icon: <Search className="w-5 h-5" />, emoji: '🔍' },
               { id: 'videos', label: 'Courses', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
+              { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
+              { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
               { id: 'quiz', label: 'Quizzes', icon: <Brain className="w-5 h-5" />, emoji: '🧠' },
               { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
               { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
@@ -369,22 +388,37 @@ const Dashboard = () => {
               { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, emoji: '👤' },
               { id: 'help', label: 'Help & Support', icon: <MessageCircle className="w-5 h-5" />, emoji: '❓' },
             ].map((item, index) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
-                  activeTab === item.id
-                    ? `bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg`
-                    : `${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`
-                }`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <span className="text-lg">{item.emoji}</span>
-                <span className="font-medium">{item.label}</span>
-                {activeTab === item.id && (
+              item.isLink ? (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="font-medium">{item.label}</span>
                   <ChevronRight className="w-4 h-4 ml-auto" />
-                )}
-              </button>
+                </a>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    activeTab === item.id
+                      ? `bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg`
+                      : `${isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="font-medium">{item.label}</span>
+                  {activeTab === item.id && (
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  )}
+                </button>
+              )
             ))}
           </nav>
         </div>
