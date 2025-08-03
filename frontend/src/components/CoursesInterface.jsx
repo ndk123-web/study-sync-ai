@@ -42,6 +42,7 @@ import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useLoaders } from "../store/slices/useLoaders.js";
 import { GetPlayListApi } from "../api/GetPlayList.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
+import { ChangeCourseProgressApi } from "../api/ChangeCourseProgressApi.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -53,6 +54,7 @@ const CoursesInterface = () => {
   const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
+  const [progress , setProgress] = useState(0);
   const navigate = useNavigate();
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
@@ -276,6 +278,16 @@ const CoursesInterface = () => {
     );
     if (currentIndex < coursePlaylist.length - 1) {
       const nextVideo = coursePlaylist[currentIndex + 1];
+
+      const apiResponse = await ChangeCourseProgressApi(courseId, currentIndex);
+      if (apiResponse.status !== 200 || apiResponse.status !== 201) {
+        // Logic For Error Notification
+      }
+
+      console.log("API Response:", apiResponse); 
+      // If Success then follow next steps
+      setProgress(apiResponse.data); 
+
       setCurrentVideoId(nextVideo.youtubeVideoId);
 
       // Update URL
@@ -383,12 +395,12 @@ const CoursesInterface = () => {
           <div className="flex items-center space-x-4">
             <div className="text-right hidden md:block">
               <p className="text-sm font-medium">
-                Progress: {Math.round((2 / 12) * 100)}%
+                Progress: {progress}%
               </p>
               <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-700"
-                  style={{ width: `${(2 / 12) * 100}%` }}
+                  style={{ width: `${progress}%` }}
                 ></div>
               </div>
             </div>
