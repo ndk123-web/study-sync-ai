@@ -29,6 +29,7 @@ import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { useUserStore } from "../store/slices/useUserStore.js";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useNavigate } from "react-router-dom";
+import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
 
 const Courses = () => {
   const theme = useThemeStore((state) =>
@@ -232,9 +233,17 @@ const Courses = () => {
     setIsEnrollmentModalOpen(true);
   };
 
-  const handleEnrollmentConfirm = (course) => {
+  const handleEnrollmentConfirm = async (course) => {
     // Here you can add your enrollment logic
     console.log('Enrolling in course:', course);
+
+    // Call the enrollment API
+    const apiResponse = await EnrollmentCourseApi(course.courseId);
+    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error is there: " + apiResponse?.message);
+        navigate('/courses')
+        return  
+    }
     
     // Show success notification
     setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
@@ -243,12 +252,10 @@ const Courses = () => {
     // Auto-hide notification after 3 seconds
     setTimeout(() => {
       setShowSuccessNotification(false);
-    }, 3000);
+    }, 2000);
     
     // Navigate to the course after a short delay
-    setTimeout(() => {
-      navigate(`/learn/${course.id || course.courseId}`);
-    }, 1500);
+    navigate(`/learn/${course.id || course.courseId}`);
   };
 
   const handleModalClose = () => {

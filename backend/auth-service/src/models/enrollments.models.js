@@ -1,18 +1,18 @@
 import mongoose from 'mongoose';
-import ApiError from '../utils/ApiError';
+import ApiError from '../utils/ApiError.js';
 
 const enrollmentSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",  
     },
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course"
+        ref: "Course",
     },
     progress: {
         type: String,
-        default: 0
+        default: '0'
     },
     completed: {
         type: Boolean,
