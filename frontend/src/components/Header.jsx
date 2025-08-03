@@ -6,6 +6,8 @@ import { useUserStore } from "../store/slices/useUserStore";
 import CryptoJs from "crypto-js";
 import { Link, useLocation } from "react-router-dom";
 import { logoutUserApi } from "../api/logoutUser";
+import { useCurrentPlaylist } from '../store/slices/useCurrentPlaylist.js';
+
 
 const Header = () => {
   const theme = useThemeStore((state) =>
@@ -29,7 +31,11 @@ const Header = () => {
   const photoURL = useUserStore((state) => state.photoURL);
   const isPremium = useUserStore((state) => state.isPremium);
   const logoutUser = useUserStore((state) => state.logoutUser);
-  
+
+  const removeCurrentPlaylist = useCurrentPlaylist((state) => state.removeCurrentPlaylist);
+  const removeCurrentVideoId = useCurrentPlaylist((state) => state.removeCurrentVideoId);
+  const removeCourseId = useCurrentPlaylist((state) => state.removeCourseId);
+
   // Get current location to check if we're on dashboard
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
@@ -39,6 +45,9 @@ const Header = () => {
     logoutUser();
     setIsMenuOpen(false);
     setShowUserMenu(false);
+    removeCurrentPlaylist();
+    removeCurrentVideoId();
+    removeCourseId();
     try {
       const isRemoveCookie = await logoutUserApi();
       if (isRemoveCookie.status === 200 || isRemoveCookie.status === 201) {

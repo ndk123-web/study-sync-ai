@@ -235,27 +235,61 @@ const Courses = () => {
 
   const handleEnrollmentConfirm = async (course) => {
     // Here you can add your enrollment logic
-    console.log('Enrolling in course:', course);
+    console.log('🎓 Enrolling in course:', course);
+    console.log('🔍 Course properties:', Object.keys(course));
+    console.log('🆔 course.id:', course.id);
+    console.log('🆔 course.courseId:', course.courseId);
 
-    // Call the enrollment API
-    const apiResponse = await EnrollmentCourseApi(course.courseId);
-    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        alert("Error is there: " + apiResponse?.message);
-        navigate('/courses')
-        return  
+    try {
+      // Call the enrollment API - use courseId consistently
+      const courseIdToUse = course.courseId || course.id;
+      console.log('📝 Using course ID for API:', courseIdToUse);
+      
+      const apiResponse = await EnrollmentCourseApi(courseIdToUse);
+      console.log('📡 API Response:', apiResponse);
+      console.log('📊 API Status:', apiResponse.status);
+      
+      // Fix the condition logic - should be OR, not AND
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.error('❌ API Error:', apiResponse);
+          alert("Error is there: " + apiResponse?.message);
+          return;
+      }
+      
+      console.log('✅ Enrollment successful!');
+      
+      // Close the modal first
+      setIsEnrollmentModalOpen(false);
+      setSelectedCourse(null);
+      
+      // Show success notification
+      setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
+      setShowSuccessNotification(true);
+      
+      // Auto-hide notification after 2 seconds
+      setTimeout(() => {
+        setShowSuccessNotification(false);
+      }, 2000);
+      
+      // Navigate to the course after a short delay
+      setTimeout(() => {
+        const finalCourseId = courseIdToUse;
+        console.log('🚀 Navigating to course with ID:', finalCourseId);
+        console.log('🌐 Navigation URL will be:', `/learn/${finalCourseId}`);
+        console.log('🔄 Current URL before navigation:', window.location.href);
+        
+        navigate(`/learn/${finalCourseId}`);
+        
+        // Check if navigation happened
+        setTimeout(() => {
+          console.log('🔍 URL after navigation:', window.location.href);
+        }, 500);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('💥 Enrollment error:', error);
+      alert("Error enrolling in course: " + error.message);
     }
-    
-    // Show success notification
-    setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
-    setShowSuccessNotification(true);
-    
-    // Auto-hide notification after 3 seconds
-    setTimeout(() => {
-      setShowSuccessNotification(false);
-    }, 2000);
-    
-    // Navigate to the course after a short delay
-    navigate(`/learn/${course.id || course.courseId}`);
   };
 
   const handleModalClose = () => {

@@ -70,6 +70,10 @@ const CoursesInterface = () => {
   const currentPlaylistFromZustand = useCurrentPlaylist(
     (state) => state.currentPlaylist
   );
+  const setCourseIdFromZustand = useCurrentPlaylist(
+    (state) => state.setCourseId
+  );
+
   const chatLoader = useLoaders((state) => state.chatLoader);
   const summarizeLoader = useLoaders((state) => state.summarizeLoader);
   const assessmentLoader = useLoaders((state) => state.assessmentLoader);

@@ -34,27 +34,39 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
   if (!getCurrentUser) {
     throw new ApiError("404", "User Not Found in DB");
   }
-
+  console.log("User for enrollment found");
+  
   const getCurrentCourse = await Course.findOne({ courseId: courseId });
   if (!getCurrentCourse) {
-    throw new ApiError("404", "Course Not Found in DB");
-  }
-  // console.log("Current Course: ", getCurrentCourse);
+      throw new ApiError("404", "Course Not Found in DB");
+    }
+    console.log("Course for enrollment found");
+    // console.log("Current Course: ", getCurrentCourse);
+    
+    const isAlreadyEnrolled = await Enrollment.findOne({
+        userId: getCurrentUser._id,
+        courseId: getCurrentCourse._id,
+    });
+    if (isAlreadyEnrolled) {
+        console.log("Enrolled Already so Enrolling");
+        throw new ApiError("400", "User is already enrolled in this course");
+    }
+    console.log("Not Enrolled so Enrolling");
 
-  const isAlreadyEnrolled = await Enrollment.findOne({
-    userId: getCurrentUser._id,
-    courseId: getCurrentCourse._id,
-  });
-  if (isAlreadyEnrolled) {
-    throw new ApiError("400", "User is already enrolled in this course");
-  }
-
-  const enrollment = await Enrollment.create({
+  const enrollment = new Enrollment({
     userId: getCurrentUser._id,
     courseId: getCurrentCourse._id,
     progress: "0",
     completed: false,
   });
+            
+  const userEnrollment = await enrollment.save();
+  if (!userEnrollment){
+    console.log("Enrollment Creation Failed");
+    throw new ApiError("500", "Enrollment Creation Failed");
+  }
+
+  console.log("Enrollment Created");
 
   return res
     .status(201)
