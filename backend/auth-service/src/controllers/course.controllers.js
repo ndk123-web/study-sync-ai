@@ -1,63 +1,144 @@
-import Course  from '../models/courses.models.js';
-import Enrollment from '../models/enrollments.models.js';
-import User from '../models/user.models.js';
-import wrapper from '../utils/Wrapper.js';
-import ApiError from '../utils/ApiError.js';
-import ApiResponse from '../utils/ApiResponse.js';
-import coursesRouter from '../routes/course.routes.js';
+import Course from "../models/courses.models.js";
+import Enrollment from "../models/enrollments.models.js";
+import User from "../models/user.models.js";
+import wrapper from "../utils/Wrapper.js";
+import ApiError from "../utils/ApiError.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import coursesRouter from "../routes/course.routes.js";
 
-const GetAllCoursesController = wrapper(async (req , res) => {
-    const courses = await Course.find();
-    return res.status(200).json(new ApiResponse(200, courses));
+const GetAllCoursesController = wrapper(async (req, res) => {
+  const courses = await Course.find();
+  return res.status(200).json(new ApiResponse(200, courses));
+});
 
-} )
+const GetCurrentPlayListController = wrapper(async (req, res) => {
+  const { courseId } = req.params;
+  console.log("Course ID:", courseId);
 
-const GetCurrentPlayListController = wrapper(async (req , res) => {
-    const { courseId } = req.params; 
-    console.log("Course ID:", courseId);
+  const playlist = await Course.find({ courseId: courseId });
+  console.log("Playlist:", playlist);
 
-    const playlist = await Course.find({ courseId: courseId });
-    console.log("Playlist:", playlist);
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found");
+  }
 
-    if (!playlist) {
-        throw new ApiError(404, "Playlist not found");
+  return res.status(200).json(new ApiResponse(200, playlist));
+});
+
+const EnrollCurrentCourseController = wrapper(async (req, res) => {
+  const { courseId } = req.body;
+  const currentUser = req.user;
+  console.log("CourseId: ", courseId);
+
+  const getCurrentUser = await User.findOne({ uid: currentUser.uid });
+  if (!getCurrentUser) {
+    throw new ApiError("404", "User Not Found in DB");
+  }
+
+  const getCurrentCourse = await Course.findOne({ courseId: courseId });
+  if (!getCurrentCourse) {
+    throw new ApiError("404", "Course Not Found in DB");
+  }
+  // console.log("Current Course: ", getCurrentCourse);
+
+  const isAlreadyEnrolled = await Enrollment.findOne({
+    userId: getCurrentUser._id,
+    courseId: getCurrentCourse._id,
+  });
+  if (isAlreadyEnrolled) {
+    throw new ApiError("400", "User is already enrolled in this course");
+  }
+
+  const enrollment = await Enrollment.create({
+    userId: getCurrentUser._id,
+    courseId: getCurrentCourse._id,
+    progress: "0",
+    completed: false,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        {},
+        `Successfully enrolled in course ${getCurrentCourse.title}`
+      )
+    );
+});
+
+const ChangeCourseProgressController = wrapper(async (req, res) => {
+  const { courseId, currentIndex } = req.body;
+  const currentUser = req.user;
+
+  const getCurrentUser = await User.findOne({ uid: currentUser.uid });
+  if (!getCurrentUser) {
+    throw new ApiError("404", "User Not Found in DB");
+  }
+
+  const getCurrentCourse = await Course.findOne({ courseId: courseId });
+  if (!getCurrentCourse) {
+    throw new ApiError("404", "Course Not Found in DB");
+  }
+
+  const isEnrollment = await Enrollment.findOne({
+    userId: getCurrentUser._id,
+    courseId: getCurrentCourse._id,
+  });
+  if (!isEnrollment) {
+    throw new ApiError("404", "User is not enrolled in this course");
+  }
+
+  const totalVideos = getCurrentCourse.videoLinks.length;
+  let lastVideo = false;
+  let progressCalculation = 0;
+
+  if (currentIndex - 1 === totalVideos) {
+    progressCalculation = 100;
+    lastVideo = true;
+  }
+
+  if (!lastVideo) {
+    progressCalculation = Math.min(
+      Math.round(((currentIndex + 2) / totalVideos) * 100),
+      100
+    );
+  }
+  console.log(
+    "Progress Calculation: ",
+    progressCalculation,
+    currentIndex,
+    totalVideos
+  );
+
+  if (lastVideo || progressCalculation === 100) {
+    const updateUserEnrollmentCourseProgress =
+      await Enrollment.findOneAndUpdate(
+        { userId: getCurrentUser._id, courseId: getCurrentCourse._id },
+        { progress: progressCalculation, completed: true },
+        { new: true }
+      );
+    if (!updateUserEnrollmentCourseProgress) {
+      throw new ApiError("404", "Enrollment not found");
     }
+  }
+  const updateUserEnrollmentCourseProgress = await Enrollment.findOneAndUpdate(
+    { userId: getCurrentUser._id, courseId: getCurrentCourse._id },
+    { progress: progressCalculation },
+    { new: true }
+  );
+  if (!updateUserEnrollmentCourseProgress) {
+    throw new ApiError("404", "Enrollment not found");
+  }
 
-    return res.status(200).json(new ApiResponse(200, playlist));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { progress: progressCalculation }));
+});
 
-})
-
-const EnrollCurrentCourseController = wrapper(async (req , res) => {
-    const { courseId } = req.body;
-    const currentUser = req.user; 
-    console.log("CourseId: ", courseId);
-
-    
-    const getCurrentUser = await User.findOne({ uid: currentUser.uid });
-    if (!getCurrentUser){
-        throw new ApiError('404','User Not Found in DB');
-    }
-    
-    const getCurrentCourse = await Course.findOne({ courseId: courseId });
-    if (!getCurrentCourse){
-        throw new ApiError('404','Course Not Found in DB');
-    }
-    // console.log("Current Course: ", getCurrentCourse);
-
-    const isAlreadyEnrolled = await Enrollment.findOne({ userId: getCurrentUser._id, courseId: getCurrentCourse._id });
-    if (isAlreadyEnrolled) {
-        throw new ApiError('400','User is already enrolled in this course');
-    }
-
-    const enrollment = await Enrollment.create({
-        userId: getCurrentUser._id,
-        courseId: getCurrentCourse._id,
-        progress: "0",
-        completed: false  
-    })
-
-    return res.status(201).json(new ApiResponse(201, {}, `Successfully enrolled in course ${getCurrentCourse.title}`));
-
-})
-
-export { GetAllCoursesController, GetCurrentPlayListController, EnrollCurrentCourseController }
+export {
+  GetAllCoursesController,
+  GetCurrentPlayListController,
+  EnrollCurrentCourseController,
+  ChangeCourseProgressController,
+};
