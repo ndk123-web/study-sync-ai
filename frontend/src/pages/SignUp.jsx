@@ -30,10 +30,15 @@ import {
   GithubAuthProvider,
 } from "firebase/auth";
 import { signUpApi } from "../api/signUp.js";
+import ErrorNotification from "../components/ErrorNotification.jsx";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Error notification state
+  const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const isLoading = useLoaders((state) => state.loader);
   const setLoader = useLoaders((state) => state.setLoader);
@@ -76,6 +81,15 @@ const SignUp = () => {
   }, [isAuth]);
 
   const [errors, setErrors] = useState({});
+
+  // Helper function to show error notifications
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorNotification(true);
+    setTimeout(() => {
+      setShowErrorNotification(false);
+    }, 5000);
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -147,7 +161,7 @@ const SignUp = () => {
 
       if (apiResponse.status !== 201 && apiResponse.status !== 200) {
         await firebaseResponse.user.delete();
-        alert("Error in creating account. Please try again.");
+        showError("Error in creating account. Please try again.");
         return;
       }
 
@@ -169,7 +183,7 @@ const SignUp = () => {
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Form Validation", err);
-      alert("Signup failed. Please try again.");
+      showError("Signup failed. Please try again.");
     } finally {
       unsetLoader();
       setFormData({
@@ -237,14 +251,14 @@ const SignUp = () => {
 
       // Handle specific Firebase Auth errors
       if (err.code === "auth/popup-closed-by-user") {
-        alert("Sign-up cancelled. Please try again.");
+        showError("Sign-up cancelled. Please try again.");
       } else if (err.code === "auth/popup-blocked") {
-        alert("Popup was blocked. Please allow popups for this site.");
+        showError("Popup was blocked. Please allow popups for this site.");
       } else if (err.code === "auth/cancelled-popup-request") {
         // This happens when multiple popups are opened, ignore silently
         console.log("Popup request cancelled");
       } else {
-        alert("Google sign-up failed. Please try again.");
+        showError("Google sign-up failed. Please try again.");
       }
 
       // Clean up Firebase user if it was created
@@ -290,7 +304,7 @@ const SignUp = () => {
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         await firebaseResponse.user.delete();
-        alert("Error creating account. Please try again.");
+        showError("Error creating account. Please try again.");
         return;
       }
 
@@ -316,14 +330,14 @@ const SignUp = () => {
 
       // Handle specific Firebase Auth errors
       if (err.code === "auth/popup-closed-by-user") {
-        alert("Sign-up cancelled. Please try again.");
+        showError("Sign-up cancelled. Please try again.");
       } else if (err.code === "auth/popup-blocked") {
-        alert("Popup was blocked. Please allow popups for this site.");
+        showError("Popup was blocked. Please allow popups for this site.");
       } else if (err.code === "auth/cancelled-popup-request") {
         // This happens when multiple popups are opened, ignore silently
         console.log("Popup request cancelled");
       } else {
-        alert("Google sign-up failed. Please try again.");
+        showError("GitHub sign-up failed. Please try again.");
       }
 
       // Clean up Firebase user if it was created
@@ -742,6 +756,12 @@ const SignUp = () => {
             </div>
           </div>
         </div>
+        <ErrorNotification
+          isVisible={showErrorNotification}
+          onClose={() => setShowErrorNotification(false)}
+          message={errorMessage}
+          isDark={isDark}
+        />
       </div>
     </>
   );

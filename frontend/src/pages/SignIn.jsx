@@ -18,6 +18,7 @@ import {
 } from "firebase/auth";
 import { signInApi } from "../api/signIn.js";
 import SuccessNotification from "../components/SuccessNotification.jsx";
+import ErrorNotification from "../components/ErrorNotification.jsx";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -58,6 +59,20 @@ const SignIn = () => {
   const [errors, setErrors] = useState({});
   const [signInNotification, setSignInNotification] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  
+  // Error notification state
+  const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Helper function to show error notification
+  const showError = (message, duration = 4000) => {
+    setErrorMessage(message);
+    setShowErrorNotification(true);
+    
+    setTimeout(() => {
+      setShowErrorNotification(false);
+    }, duration);
+  };
 
   // Function to check logout notification
   const checkLogoutNotification = () => {
@@ -80,23 +95,26 @@ const SignIn = () => {
 
   // Check on mount
   useEffect(() => {
-    checkLogoutNotification();
-  }, [username]);
-
-  // Check when location changes  
-  useEffect(() => {
-    checkLogoutNotification();
-  }, [location.pathname]);
-
-  // Check when component becomes visible (focus)
-  useEffect(() => {
-    const handleFocus = () => {
+    // Small delay to ensure component is fully mounted
+    setTimeout(() => {
       checkLogoutNotification();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    }, 100);
   }, []);
+
+  // Also check when location search params change (for URL-based triggers)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('logout') === 'true') {
+      // Remove the logout parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Check for logout notification
+      setTimeout(() => {
+        checkLogoutNotification();
+      }, 100);
+    }
+  }, [location.search]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -152,7 +170,7 @@ const SignIn = () => {
 
       if (apiResponse.status !== 201 && apiResponse.status !== 200) {
         await firebaseResponse.user.delete();
-        alert("Error signing in. Please try again.");
+        showError("Error signing in. Please check your credentials and try again.");
         return;
       }
 
@@ -177,7 +195,21 @@ const SignIn = () => {
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Sign In", err);
-      alert("Sign in failed. Please try again.");
+      
+      // Handle specific Firebase errors
+      if (err.code === 'auth/user-not-found') {
+        showError("No account found with this email address.");
+      } else if (err.code === 'auth/wrong-password') {
+        showError("Incorrect password. Please try again.");
+      } else if (err.code === 'auth/invalid-email') {
+        showError("Invalid email address format.");
+      } else if (err.code === 'auth/user-disabled') {
+        showError("This account has been disabled.");
+      } else if (err.code === 'auth/too-many-requests') {
+        showError("Too many failed attempts. Please try again later.");
+      } else {
+        showError("Sign in failed. Please check your credentials and try again.");
+      }
     } finally {
       unsetLoader();
       setFormData({
@@ -214,7 +246,7 @@ const SignIn = () => {
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         await firebaseResponse.user.delete();
-        alert("Error creating account. Please try again.");
+        showError("Error creating account. Please try again.");
         return;
       }
 
@@ -242,14 +274,14 @@ const SignIn = () => {
 
       // Handle specific Firebase Auth errors
       if (err.code === "auth/popup-closed-by-user") {
-        alert("Sign-up cancelled. Please try again.");
+        showError("Sign-in cancelled. Please try again.");
       } else if (err.code === "auth/popup-blocked") {
-        alert("Popup was blocked. Please allow popups for this site.");
+        showError("Popup was blocked. Please allow popups for this site.");
       } else if (err.code === "auth/cancelled-popup-request") {
         // This happens when multiple popups are opened, ignore silently
         console.log("Popup request cancelled");
       } else {
-        alert("Google sign-in failed. Please try again.");
+        showError("Google sign-in failed. Please try again.");
       }
 
       // Clean up Firebase user if it was created
@@ -292,7 +324,7 @@ const SignIn = () => {
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         await firebaseResponse.user.delete();
-        alert("Error creating account. Please try again.");
+        showError("Error creating account. Please try again.");
         return;
       }
 
@@ -320,14 +352,14 @@ const SignIn = () => {
 
       // Handle specific Firebase Auth errors
       if (err.code === "auth/popup-closed-by-user") {
-        alert("Sign-up cancelled. Please try again.");
+        showError("Sign-in cancelled. Please try again.");
       } else if (err.code === "auth/popup-blocked") {
-        alert("Popup was blocked. Please allow popups for this site.");
+        showError("Popup was blocked. Please allow popups for this site.");
       } else if (err.code === "auth/cancelled-popup-request") {
         // This happens when multiple popups are opened, ignore silently
         console.log("Popup request cancelled");
       } else {
-        alert("Github sign-In failed. Please try again.");
+        showError("GitHub sign-in failed. Please try again.");
       }
 
       // Clean up Firebase user if it was created
@@ -647,6 +679,12 @@ const SignIn = () => {
           isVisible={signInNotification}
           onClose={() => setSignInNotification(false)}
           message={welcomeMessage}
+          isDark={isDark}
+        />
+        <ErrorNotification
+          isVisible={showErrorNotification}
+          onClose={() => setShowErrorNotification(false)}
+          message={errorMessage}
           isDark={isDark}
         />
       </div>
