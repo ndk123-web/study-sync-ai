@@ -78,7 +78,7 @@ const signUpController = wrapper(async (req, res) => {
 const signInController = wrapper(async (req, res) => {
   const firebaseSignUpUser = req.user;
 
-  console.log(firebaseSignUpUser);
+  console.log("Firebase User:", firebaseSignUpUser);
 
   if (!firebaseSignUpUser || !firebaseSignUpUser.uid) {
     throw new ApiError(401, "Invalid Firebase authentication");
