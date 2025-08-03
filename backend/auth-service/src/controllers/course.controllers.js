@@ -136,9 +136,41 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
     .json(new ApiResponse(200, { progress: progressCalculation }));
 });
 
+const GetCurrentCourseProgressController = wrapper(async (req, res) => {
+    const currentUser = req.user;
+    const { courseId } = req.body;
+
+    const getCurrentCourse = await Course.findOne({ courseId: courseId });
+    if (!getCurrentCourse) {
+        throw new ApiError("404", "Course Not Found in DB");
+    }
+
+    const getCurrentUser = await User.findOne({ uid: currentUser.uid });
+    if (!getCurrentUser) {
+        console.log("User Not Found");
+        throw new ApiError("404", "User Not Found in DB");
+    }
+    
+    const isEnrollment = await Enrollment.findOne({
+        userId: getCurrentUser._id,
+        courseId: getCurrentCourse._id,
+    });
+    
+    if (!isEnrollment) {
+        console.log("User Not Found");
+        throw new ApiError("404", "User is not enrolled in this course");
+    }
+    
+    console.log("Success From Here");
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { progress: isEnrollment.progress }));
+});
+
 export {
   GetAllCoursesController,
   GetCurrentPlayListController,
   EnrollCurrentCourseController,
   ChangeCourseProgressController,
+  GetCurrentCourseProgressController
 };

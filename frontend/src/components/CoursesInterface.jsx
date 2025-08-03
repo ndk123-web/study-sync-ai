@@ -43,6 +43,7 @@ import { useLoaders } from "../store/slices/useLoaders.js";
 import { GetPlayListApi } from "../api/GetPlayList.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { ChangeCourseProgressApi } from "../api/ChangeCourseProgressApi.js";
+import { GetCurrentCourseProgressApi } from "../api/GetCurrentCourseProgressApi.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -54,7 +55,7 @@ const CoursesInterface = () => {
   const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
-  const [progress , setProgress] = useState(0);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
@@ -201,6 +202,25 @@ const CoursesInterface = () => {
       }
     };
 
+    const getCurrentCourseProgress = async () => {
+      try {
+        const apiResponse = await GetCurrentCourseProgressApi(courseId);
+        console.log("Api Response to get progress: ", apiResponse);
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          alert(
+            "Error fetching course progress: " +
+              (apiResponse?.message || "Err in 201")
+          );
+        }
+
+        setProgress(parseInt(apiResponse?.data) ?? 0);
+      } catch (err) {
+        alert("Error fetching course progress: " + err.message);
+        // removeAuth();
+      }
+    };
+
+    getCurrentCourseProgress();
     getPlaylist();
   }, []);
 
@@ -284,9 +304,9 @@ const CoursesInterface = () => {
         // Logic For Error Notification
       }
 
-      console.log("API Response:", apiResponse); 
+      console.log("API Response:", apiResponse);
       // If Success then follow next steps
-      setProgress(apiResponse.data); 
+      setProgress(apiResponse.data);
 
       setCurrentVideoId(nextVideo.youtubeVideoId);
 
@@ -394,9 +414,7 @@ const CoursesInterface = () => {
 
           <div className="flex items-center space-x-4">
             <div className="text-right hidden md:block">
-              <p className="text-sm font-medium">
-                Progress: {progress}%
-              </p>
+              <p className="text-sm font-medium">Progress: {progress}%</p>
               <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-700"
