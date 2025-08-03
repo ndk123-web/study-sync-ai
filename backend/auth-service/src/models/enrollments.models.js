@@ -4,11 +4,13 @@ import ApiError from '../utils/ApiError.js';
 const enrollmentSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",  
+        ref: "User", 
+        required: true 
     },
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
+        required: true
     },
     progress: {
         type: String,
@@ -21,7 +23,10 @@ const enrollmentSchema = mongoose.Schema({
 },
 {
     timestamps: true
-})
+});
+
+// Create compound unique index to prevent duplicate enrollments for same user-course combination
+enrollmentSchema.index({ userId: 1, courseId: 1 }, { unique: true });
 
 const Enrollment = mongoose.model('EnrollmentCourse',enrollmentSchema);
 export default Enrollment;
