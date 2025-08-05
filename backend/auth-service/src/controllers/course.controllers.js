@@ -110,11 +110,11 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
   console.log("Current Index: ",currentIndex + 2)
 
   if (actualIndex + 1 > currentIndex + 2){
-    return res.status(200).json(new ApiResponse(200, { message : "User already completed this video" }))
+    return res.status(200).json(new ApiResponse(200, { message : "User already completed this video" , progress: isEnrollment.progress }));
   }
 
   if (actualIndex + 1 < currentIndex + 2) {
-    return res.status(200).json(new ApiResponse(200, { message: "U cant go ahead before completing video" }));
+    return res.status(200).json(new ApiResponse(200, { message: "U cant go ahead before completing video" , progress: isEnrollment.progress }));
   }
 
   if (currentIndex - 1 === totalVideos) {

@@ -203,10 +203,10 @@ const Courses = () => {
         // setCourses(sample_courses);
 
       // Check if there's a current playlist then use it from localstorage
-      if (currentPlaylist.length > 0){
-        setCourses(currentPlaylist);
-        return; 
-      }
+      // if (currentPlaylist.length > 0){
+      //   setCourses(currentPlaylist);
+      //   return; 
+      // }
 
         const apiResponse = await getAllCoursesApi();
         console.log("apiResponse: ", apiResponse);

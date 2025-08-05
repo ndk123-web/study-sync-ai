@@ -203,7 +203,7 @@ const CoursesInterface = () => {
           await getCurrentCourseProgress(playlist);
         } else {
           alert("Error fetching playlist: " + apiResponse.message);
-          removeAuth();
+          // removeAuth();
         }
       } catch (err) {
         alert("Error fetching playlist: " + err.message);
