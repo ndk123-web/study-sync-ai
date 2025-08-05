@@ -44,6 +44,7 @@ import { GetPlayListApi } from "../api/GetPlayList.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { ChangeCourseProgressApi } from "../api/ChangeCourseProgressApi.js";
 import { GetCurrentCourseProgressApi } from "../api/GetCurrentCourseProgressApi.js";
+import { TrackPlaylistIndexApi } from '../api/TrackPlaylistIndex.js';
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -56,7 +57,7 @@ const CoursesInterface = () => {
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
   const [progress, setProgress] = useState(0);
-  const [completedVideos, setCompletedVideos] = useState(-1); 
+  const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
   const navigate = useNavigate();
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
@@ -231,6 +232,7 @@ const CoursesInterface = () => {
         const currentIndex = apiResponse?.data?.currentIndex ?? 0;
         
         setProgress(progressValue);
+        setCompletedVideosIndex(currentIndex);
         
         // Set the current video based on the progress index
         if (playlistData.length > 0 && currentIndex < playlistData.length) {
@@ -249,6 +251,21 @@ const CoursesInterface = () => {
 
     getPlaylist();
   }, []);
+
+  useEffect(() => {
+    const trackPlaylistIndex = async () => {
+      try{
+        const apiResponse = await TrackPlaylistIndexApi(courseId);
+        console.log("Api Response in TrackPlaylistIndexController:", apiResponse);  
+        setCompletedVideosIndex(apiResponse?.data?.trackCompletedVideosIndex || -1);
+        console.log("Current Video Watching By User: ",completedVideosIndex) 
+      }
+      catch(err){
+        alert("Err: ",err.message);
+      }
+    }
+    trackPlaylistIndex();
+  }, [completedVideosIndex])
 
   // Course data with playlist
 
@@ -338,6 +355,9 @@ const CoursesInterface = () => {
       setProgress(progressValue);
 
       setCurrentVideoId(nextVideo.youtubeVideoId);
+
+      setCompletedVideosIndex(apiResponse?.currentIndex);
+      console.log("Current Video Watching By User: ",completedVideosIndex) 
 
       // Update URL
       navigate(`?currentvideoid=${nextVideo.youtubeVideoId}`);
@@ -728,7 +748,7 @@ const CoursesInterface = () => {
                         >
                           {video.duration}
                         </p>
-                        {video.completed && (
+                        {index + 1 < completedVideosIndex && (
                           <div className="flex items-center space-x-1 mt-1">
                             <Check className="w-3 h-3 text-green-500" />
                             <span className="text-xs text-green-500">
@@ -835,7 +855,7 @@ const CoursesInterface = () => {
                           >
                             {video.duration}
                           </p>
-                          {video.completed && (
+                          {index + 1 <= completedVideosIndex && (
                             <div className="flex items-center space-x-1 mt-1">
                               <Check className="w-3 h-3 text-green-500" />
                               <span className="text-xs text-green-500">

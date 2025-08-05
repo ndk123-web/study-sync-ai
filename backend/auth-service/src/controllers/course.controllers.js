@@ -104,6 +104,18 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
   const totalVideos = getCurrentCourse.videoLinks.length;
   let lastVideo = false;
   let progressCalculation = 0;
+  let actualIndex = isEnrollment.trackCompletedVideosIndex || 0;
+
+  console.log("Actual Index: ",actualIndex + 1);
+  console.log("Current Index: ",currentIndex + 2)
+
+  if (actualIndex + 1 > currentIndex + 2){
+    return res.status(200).json(new ApiResponse(200, { message : "User already completed this video" }))
+  }
+
+  if (actualIndex + 1 < currentIndex + 2) {
+    return res.status(200).json(new ApiResponse(200, { message: "U cant go ahead before completing video" }));
+  }
 
   if (currentIndex - 1 === totalVideos) {
     progressCalculation = 100;
@@ -127,17 +139,17 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
     const updateUserEnrollmentCourseProgress =
       await Enrollment.findOneAndUpdate(
         { userId: getCurrentUser._id, courseId: getCurrentCourse._id },
-        { progress: progressCalculation, completed: true },
+        { progress: progressCalculation, completed: true , trackCompletedVideosIndex: currentIndex+2},
         { new: true }
       );
     if (!updateUserEnrollmentCourseProgress) {
       throw new ApiError("404", "Enrollment not found");
     }
   }
-  
+
   const updateUserEnrollmentCourseProgress = await Enrollment.findOneAndUpdate(
     { userId: getCurrentUser._id, courseId: getCurrentCourse._id },
-    { progress: progressCalculation },
+    { progress: progressCalculation, trackCompletedVideosIndex: currentIndex + 2 },
     { new: true }
   );
   if (!updateUserEnrollmentCourseProgress) {
@@ -146,7 +158,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { progress: progressCalculation , currentIndex: currentIndex + 2}));
+    .json(new ApiResponse(200, { progress: progressCalculation , currentIndex: currentIndex + 2 }));
 });
 
 const GetCurrentCourseProgressController = wrapper(async (req, res) => {
@@ -194,10 +206,44 @@ const GetCurrentCourseProgressController = wrapper(async (req, res) => {
         }));
 });
 
+const TrackPlaylistIndexController = wrapper(async (req, res) => {
+  const { courseId } = req.body; // Fix: properly destructure courseId
+  const currentUser = req.user; 
+
+  console.log("TrackPlaylistIndex - CourseId:", courseId);
+  console.log("TrackPlaylistIndex - User:", currentUser.uid);
+
+  // get the courseId 
+  const getCurrentCourse = await Course.findOne({ courseId: courseId });
+  if (!getCurrentCourse){
+    throw new ApiError('404', "Course Not Found");
+  }
+
+  // get the sign in user
+  const getCurrentUser = await User.findOne({ uid: currentUser.uid });
+  if (!getCurrentUser){
+    throw new ApiError("404", "User Not Found");
+  } 
+
+  // if both user and course found
+  const isEnrollment = await Enrollment.findOne({ userId: getCurrentUser._id, courseId: getCurrentCourse._id });
+  if (!isEnrollment){
+    throw new ApiError("404", `User Not Enrolled in courseId ${courseId} Course`);
+  }
+
+  console.log("TrackPlaylistIndex - Success, returning progress:", isEnrollment.progress);
+
+  return res.status(200).json(new ApiResponse(200, { 
+    trackCompletedVideosIndex: isEnrollment.trackCompletedVideosIndex
+  }));
+
+})
+
 export {
   GetAllCoursesController,
   GetCurrentPlayListController,
   EnrollCurrentCourseController,
   ChangeCourseProgressController,
-  GetCurrentCourseProgressController
+  GetCurrentCourseProgressController,
+  TrackPlaylistIndexController
 };

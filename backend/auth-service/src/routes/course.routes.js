@@ -6,6 +6,7 @@ import {
   EnrollCurrentCourseController,
   ChangeCourseProgressController,
   GetCurrentCourseProgressController,
+  TrackPlaylistIndexController
 } from "../controllers/course.controllers.js";
 // import { GetCurrentPlayListController } from '../controllers/course.controllers.js';
 
@@ -24,5 +25,7 @@ coursesRouter.post(
   verifyJWT,
   GetCurrentCourseProgressController
 );
+
+coursesRouter.post('/track-playlist-index', verifyJWT, TrackPlaylistIndexController);
 
 export default coursesRouter;

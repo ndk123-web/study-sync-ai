@@ -20,9 +20,9 @@ const enrollmentSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    trackCompledVideosIndex: {
+    trackCompletedVideosIndex: {
         type: Number,
-        default: -1  
+        default: 1
     }
 },
 {
