@@ -487,22 +487,21 @@ const Dashboard = () => {
               <nav className="space-y-2 mb-6">
                 {[
                   { id: 'overview', label: 'Dashboard', icon: <Home className="w-5 h-5" />, emoji: '🏠' },
-                  { id: 'search', label: 'Search Topics', icon: <Search className="w-5 h-5" />, emoji: '🔍' },
-                  { id: 'videos', label: 'Videos', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
+                  { id: 'all-courses', label: 'All Courses', icon: <BookOpen className="w-5 h-5" />, emoji: '📚', href: '/courses' },
+                  { id: 'enrolled-courses', label: 'Enrolled Courses', icon: <Youtube className="w-5 h-5" />, emoji: '📹', href: '/enrolled-courses' },
                   { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
                   { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
-                  { id: 'quiz', label: 'Quizzes', icon: <Brain className="w-5 h-5" />, emoji: '🧠' },
                   { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
                   { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
-                  { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, emoji: '⚙️' },
                 ].map((item, index) => (
-                  item.isLink ? (
+                  item.isLink || item.href ? (
                     <a
                       key={item.id}
                       href={item.href}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 animate-fade-in ${
                         isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
                       }`}
+                      onClick={() => setIsSidebarOpen(false)}
                       style={{ animationDelay: `${0.3 + index * 0.05}s` }}
                     >
                       <span className="text-lg animate-bounce-in" style={{ animationDelay: `${0.4 + index * 0.05}s` }}>{item.emoji}</span>
@@ -576,18 +575,15 @@ const Dashboard = () => {
           <nav className="space-y-2">
             {[
               { id: 'overview', label: 'Dashboard', icon: <Home className="w-5 h-5" />, emoji: '🏠' },
-              { id: 'search', label: 'Search Topics', icon: <Search className="w-5 h-5" />, emoji: '🔍' },
-              { id: 'videos', label: 'Courses', icon: <Youtube className="w-5 h-5" />, emoji: '📹' },
+              { id: 'all-courses', label: 'All Courses', icon: <BookOpen className="w-5 h-5" />, emoji: '📚', href: '/courses' },
+              { id: 'enrolled-courses', label: 'Enrolled Courses', icon: <Youtube className="w-5 h-5" />, emoji: '📹', href: '/enrolled-courses' },
               { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
               { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
-              { id: 'quiz', label: 'Quizzes', icon: <Brain className="w-5 h-5" />, emoji: '🧠' },
               { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
               { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
-              { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, emoji: '⚙️' },
-              { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, emoji: '👤' },
               { id: 'help', label: 'Help & Support', icon: <MessageCircle className="w-5 h-5" />, emoji: '❓' },
             ].map((item, index) => (
-              item.isLink ? (
+              item.isLink || item.href ? (
                 <a
                   key={item.id}
                   href={item.href}
