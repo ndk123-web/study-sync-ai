@@ -119,7 +119,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
   console.log(
     "Progress Calculation: ",
     progressCalculation,
-    currentIndex,
+    currentIndex+2,
     totalVideos
   );
 
@@ -134,6 +134,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
       throw new ApiError("404", "Enrollment not found");
     }
   }
+  
   const updateUserEnrollmentCourseProgress = await Enrollment.findOneAndUpdate(
     { userId: getCurrentUser._id, courseId: getCurrentCourse._id },
     { progress: progressCalculation },
@@ -145,7 +146,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { progress: progressCalculation }));
+    .json(new ApiResponse(200, { progress: progressCalculation , currentIndex: currentIndex + 2}));
 });
 
 const GetCurrentCourseProgressController = wrapper(async (req, res) => {
@@ -173,10 +174,24 @@ const GetCurrentCourseProgressController = wrapper(async (req, res) => {
         throw new ApiError("404", "User is not enrolled in this course");
     }
     
-    console.log("Success From Here");
+    // Calculate currentIndex based on progress
+    const totalVideos = getCurrentCourse.videoLinks.length;
+    const progressPercent = parseInt(isEnrollment.progress) || 0;
+    
+    // Calculate current video index based on progress
+    let currentIndex = 0;
+    if (progressPercent > 0) {
+        currentIndex = Math.max(0, Math.floor((progressPercent / 100) * totalVideos) - 1);
+    }
+    
+    console.log("Success From Here - Progress:", isEnrollment.progress, "CurrentIndex:", currentIndex);
     return res
         .status(200)
-        .json(new ApiResponse(200, { progress: isEnrollment.progress }));
+        .json(new ApiResponse(200, { 
+            progress: isEnrollment.progress, 
+            currentIndex: currentIndex,
+            totalVideos: totalVideos 
+        }));
 });
 
 export {

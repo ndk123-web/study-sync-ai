@@ -13,14 +13,15 @@ const ChangeCourseProgressApi = async (courseId, currentIndex) => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      } 
     );
 
-    console.log("backendApiResponse: ", backendResponse);
+    console.log("Change Course backendApiResponse: ", backendResponse.data);
 
     return {
       status: backendResponse.status,
-      data: backendResponse.data.data.progress,
+      progress: backendResponse.data.data.progress || 0,
+      currentIndex: backendResponse.data.data.currentIndex || 0,
     };
   } catch (err) {
     console.log("Err in Getting All Courses Api: ", err.message);

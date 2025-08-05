@@ -19,7 +19,7 @@ const GetCurrentCourseProgressApi = async (courseId) => {
 
     return {
       status: backendResponse.status,
-      data: backendResponse.data.data.progress,
+      data: backendResponse.data.data, // Return the full data object
     };
   } catch (err) {
     console.log("Err in Getting All Courses Api: ", err.message);
