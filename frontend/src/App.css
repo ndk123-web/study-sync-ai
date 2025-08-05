@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+
+body{
+  font-family: 'Montserrat', "Didact Gothic";
+  font-weight: 500;
+}
+
 /* Custom animations for SignUp page */
 @keyframes float {
   0%, 100% {
