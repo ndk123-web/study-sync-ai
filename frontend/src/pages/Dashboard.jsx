@@ -151,11 +151,11 @@ const Dashboard = () => {
       action: () => setActiveTab('search')
     },
     {
-      title: "Take Quiz",
-      description: "Test your knowledge",
+      title: "Enrolled Courses",
+      description: "View your enrolled courses",
       color: "from-blue-500 to-purple-500",
       icon: <Brain className="w-5 h-5 md:w-6 md:h-6" />,
-      action: () => setActiveTab('quiz')
+      action: () => window.location.href = '/enrolled-courses'
     },
     {
       title: "Watch Videos",
@@ -235,6 +235,177 @@ const Dashboard = () => {
       isNew: true
     }
   ];
+
+  // Dummy data for different tabs
+  const searchTopics = [
+    { id: 1, title: "React Hooks Deep Dive", category: "Frontend", difficulty: "Intermediate", duration: "3h 45m", students: "2.4k", rating: 4.8, thumbnail: "⚛️" },
+    { id: 2, title: "Node.js Backend Development", category: "Backend", difficulty: "Advanced", duration: "5h 20m", students: "1.8k", rating: 4.9, thumbnail: "🟢" },
+    { id: 3, title: "Python Machine Learning", category: "AI/ML", difficulty: "Beginner", duration: "4h 15m", students: "3.2k", rating: 4.7, thumbnail: "🐍" },
+    { id: 4, title: "TypeScript Fundamentals", category: "Programming", difficulty: "Intermediate", duration: "2h 30m", students: "1.5k", rating: 4.6, thumbnail: "📘" },
+  ];
+
+  const enrolledCourses = [
+    { id: 1, title: "Complete React Course", progress: 75, instructor: "John Doe", duration: "12h", nextLesson: "React Context API", thumbnail: "⚛️", enrolledDate: "2 weeks ago" },
+    { id: 2, title: "JavaScript ES6 Masterclass", progress: 45, instructor: "Jane Smith", duration: "8h", nextLesson: "Arrow Functions", thumbnail: "🟨", enrolledDate: "1 month ago" },
+    { id: 3, title: "CSS Grid & Flexbox", progress: 90, instructor: "Mike Johnson", duration: "6h", nextLesson: "Grid Areas", thumbnail: "🎨", enrolledDate: "3 weeks ago" },
+  ];
+
+  const videoLibrary = [
+    { id: 1, title: "React Hooks Tutorial", views: "45k", duration: "25:30", category: "React", thumbnail: "⚛️", uploadDate: "2 days ago" },
+    { id: 2, title: "CSS Animation Basics", views: "32k", duration: "18:45", category: "CSS", thumbnail: "🎨", uploadDate: "1 week ago" },
+    { id: 3, title: "JavaScript Promises", views: "28k", duration: "22:15", category: "JavaScript", thumbnail: "🟨", uploadDate: "3 days ago" },
+    { id: 4, title: "Node.js Express Setup", views: "19k", duration: "35:20", category: "Backend", thumbnail: "🟢", uploadDate: "5 days ago" },
+  ];
+
+  const userNotes = [
+    { id: 1, title: "React State Management", content: "useState hook is used for managing state in functional components...", date: "2 days ago", tags: ["React", "Hooks"] },
+    { id: 2, title: "JavaScript Closures", content: "A closure is a function that has access to variables in its outer scope...", date: "1 week ago", tags: ["JavaScript", "Concepts"] },
+    { id: 3, title: "CSS Grid Layout", content: "Grid container and grid items are the fundamental concepts...", date: "3 days ago", tags: ["CSS", "Layout"] },
+  ];
+
+  // Function to render content based on active tab
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'search':
+        return (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                🔍 Search Topics
+              </h2>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className={`w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <input
+                    type="text"
+                    placeholder="Search for topics..."
+                    className={`pl-10 pr-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                  />
+                </div>
+                <button className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}>
+                  <Filter className="w-4 h-4" />
+                  <span>Filter</span>
+                </button>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {searchTopics.map((topic, index) => (
+                <div key={topic.id} className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-50 border-gray-200 hover:bg-white'}`} style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-3xl">{topic.thumbnail}</div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${topic.difficulty === 'Beginner' ? 'bg-green-100 text-green-800' : topic.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                      {topic.difficulty}
+                    </span>
+                  </div>
+                  <h3 className={`font-semibold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{topic.title}</h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{topic.category}</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>⏱️ {topic.duration}</span>
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>👥 {topic.students}</span>
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>⭐ {topic.rating}</span>
+                  </div>
+                  <button className="w-full mt-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105">
+                    Enroll Now
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'videos':
+        return (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                📹 Video Library
+              </h2>
+              <div className="flex items-center space-x-4">
+                <select className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}>
+                  <option>All Categories</option>
+                  <option>React</option>
+                  <option>JavaScript</option>
+                  <option>CSS</option>
+                  <option>Backend</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videoLibrary.map((video, index) => (
+                <div key={video.id} className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-50 border-gray-200 hover:bg-white'}`} style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-3xl">{video.thumbnail}</div>
+                    <span className="text-red-500 text-sm font-medium">● LIVE</span>
+                  </div>
+                  <h3 className={`font-semibold text-lg mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{video.title}</h3>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{video.category}</p>
+                  <div className="flex items-center justify-between text-sm mb-4">
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>👁️ {video.views}</span>
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>⏱️ {video.duration}</span>
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{video.uploadDate}</span>
+                  </div>
+                  <button className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 flex items-center justify-center space-x-2">
+                    <Play className="w-4 h-4" />
+                    <span>Watch Now</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'notes':
+        return (
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                📝 My Notes
+              </h2>
+              <button className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center space-x-2">
+                <Plus className="w-4 h-4" />
+                <span>New Note</span>
+              </button>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userNotes.map((note, index) => (
+                <div key={note.id} className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' : 'bg-gray-50 border-gray-200 hover:bg-white'}`} style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{note.title}</h3>
+                    <button className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <BookmarkPlus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className={`text-sm mb-4 line-clamp-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {note.content}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {note.tags.map((tag) => (
+                      <span key={tag} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{note.date}</span>
+                    <div className="flex space-x-2">
+                      <button className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   // Mobile Sidebar
   const MobileSidebar = () => (
@@ -642,6 +813,13 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Dynamic Content Based on Active Tab */}
+          {activeTab !== 'overview' && (
+            <div className="mt-8 animate-fade-in">
+              {renderActiveTabContent()}
+            </div>
+          )}
         </div>
       </main>
 

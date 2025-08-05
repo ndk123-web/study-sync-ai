@@ -66,6 +66,8 @@ const Courses = () => {
   );
   const removeCourseId = useCurrentPlaylist((state) => state.removeCourseId);
 
+  const currentPlaylist = useCurrentPlaylist((state) => state.currentPlaylist);
+
   const [courses, setCourses] = useState([]);
 
   // Sample courses data - replace with your DB data
@@ -196,8 +198,16 @@ const Courses = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
+
       try {
-        setCourses(sample_courses);
+        // setCourses(sample_courses);
+
+      // Check if there's a current playlist then use it from localstorage
+      if (currentPlaylist.length > 0){
+        setCourses(currentPlaylist);
+        return; 
+      }
+
         const apiResponse = await getAllCoursesApi();
         console.log("apiResponse: ", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {  // if JWT fails  
