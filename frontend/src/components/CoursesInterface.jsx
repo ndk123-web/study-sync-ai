@@ -56,6 +56,7 @@ const CoursesInterface = () => {
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
   const [progress, setProgress] = useState(0);
+  const [completedVideos, setCompletedVideos] = useState(-1); 
   const navigate = useNavigate();
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
@@ -196,6 +197,9 @@ const CoursesInterface = () => {
           } else {
             alert("No valid video ID found.");
           }
+          
+          // After playlist is loaded, get progress and set correct video
+          await getCurrentCourseProgress(playlist);
         } else {
           alert("Error fetching playlist: " + apiResponse.message);
           removeAuth();
@@ -206,7 +210,7 @@ const CoursesInterface = () => {
       }
     };
 
-    const getCurrentCourseProgress = async () => {
+    const getCurrentCourseProgress = async (playlistData = coursePlaylist) => {
       try {
         const apiResponse = await GetCurrentCourseProgressApi(courseId);
         console.log("Api Response to get progress: ", apiResponse);
@@ -215,16 +219,34 @@ const CoursesInterface = () => {
             "Error fetching course progress: " +
               (apiResponse?.message || "Err in 201")
           );
+          return;
         }
 
-        setProgress(parseInt(apiResponse?.data) ?? 0);
+        // Fix: Access data from the correct structure
+        console.log("Current Progress:", apiResponse?.data?.progress);
+        console.log("Current Index:", apiResponse?.data?.currentIndex);
+        console.log("Total Videos:", apiResponse?.data?.totalVideos);
+
+        const progressValue = parseInt(apiResponse?.data?.progress) ?? 0;
+        const currentIndex = apiResponse?.data?.currentIndex ?? 0;
+        
+        setProgress(progressValue);
+        
+        // Set the current video based on the progress index
+        if (playlistData.length > 0 && currentIndex < playlistData.length) {
+          const currentVideo = playlistData[currentIndex];
+          if (currentVideo?.youtubeVideoId) {
+            console.log("Setting video from progress - Index:", currentIndex, "Video ID:", currentVideo.youtubeVideoId);
+            setCurrentVideoId(currentVideo.youtubeVideoId);
+            setCurrentVideoIdFromZustand(currentVideo.youtubeVideoId);
+          }
+        }
       } catch (err) {
         alert("Error fetching course progress: " + err.message);
         // removeAuth();
       }
     };
 
-    getCurrentCourseProgress();
     getPlaylist();
   }, []);
 
@@ -309,8 +331,11 @@ const CoursesInterface = () => {
       }
 
       console.log("API Response:", apiResponse);
+
+      const progressValue = parseInt(apiResponse?.progress) ?? 0;
+      console.log("Prgoress value: ",progressValue);
       // If Success then follow next steps
-      setProgress(apiResponse.data);
+      setProgress(progressValue);
 
       setCurrentVideoId(nextVideo.youtubeVideoId);
 

@@ -20,6 +20,10 @@ const enrollmentSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    trackCompledVideosIndex: {
+        type: Number,
+        default: -1  
+    }
 },
 {
     timestamps: true
