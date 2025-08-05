@@ -11,6 +11,7 @@ import Features from "../components/Features.jsx";
 import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
 import CoursesInterface from '../components/CoursesInterface'
+import EnrolledCourses from '../components/EnrolledCourses'
 
 const AppRouter = createBrowserRouter([
   {
@@ -42,6 +43,14 @@ const AppRouter = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <Courses />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: "/enrolled-courses",
+    element: (
+      <ProtectedLayout>
+        <EnrolledCourses />
       </ProtectedLayout>
     ),
   },
