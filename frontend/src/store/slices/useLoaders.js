@@ -11,6 +11,7 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
     playlistLoader: false,
     progressLoader: false,
     enrollLoader: false,
+    notesLoader: false,
 
     setLoader: () => set(() => ({ loader: true })),
     unsetLoader: () => set(() => ({ loader: false })),
@@ -41,6 +42,9 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
 
     setEnrollLoader: () => set(() => ({ enrollLoader: true })),
     unsetEnrollLoader: () => set(() => ({ enrollLoader: false })),
+
+    setNotesLoader: () => set(() => ({ notesLoader: true })),
+    unsetNotesLoader: () => set(() => ({ notesLoader: false })),
 }))
 
 export { useLoaders }
