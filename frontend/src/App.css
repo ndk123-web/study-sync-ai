@@ -2,8 +2,8 @@
 
 
 body{
-  font-family: 'Montserrat', "Didact Gothic";
-  font-weight: 500;
+font-family: 'Poppins', 'Lora', sans-serif;
+font-weight: 500;
 }
 
 /* Custom animations for SignUp page */
@@ -107,4 +107,132 @@ body{
 
 .animate-fade-in-up {
   animation: fadeInUp 0.8s ease-out;
+}
+
+/* Analytics Charts Animations */
+@keyframes grow-up {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--target-height);
+    opacity: 1;
+  }
+}
+
+@keyframes progress-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--target-width);
+  }
+}
+
+@keyframes draw-circle {
+  from {
+    stroke-dashoffset: 251.2;
+  }
+  to {
+    stroke-dashoffset: 62.8;
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-grow-up {
+  animation: grow-up 1s ease-out forwards;
+}
+
+.animate-progress-fill {
+  animation: progress-fill 1.5s ease-out forwards;
+}
+
+.animate-draw-circle {
+  animation: draw-circle 2s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* Hover effects for charts */
+.chart-bar:hover {
+  transform: scaleY(1.1);
+  filter: brightness(1.2);
+}
+
+.progress-bar {
+  transition: all 0.3s ease;
+}
+
+.progress-bar:hover {
+  filter: brightness(1.1);
+  transform: scaleX(1.02);
+}
+
+/* Heatmap cell hover effect */
+.heatmap-cell {
+  transition: all 0.2s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.3);
+  border-radius: 50%;
+  filter: brightness(1.3);
+}
+
+/* Achievement card glow effect */
+.achievement-earned {
+  position: relative;
+}
+
+.achievement-earned::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #10B981, #059669, #10B981);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.7;
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+  from {
+    opacity: 0.7;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(4px);
+  }
 }

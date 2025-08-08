@@ -8,6 +8,8 @@ import coursesRouter from "../routes/course.routes.js";
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
+  const user = req.user;
+  console.log("User:", user);
   return res.status(200).json(new ApiResponse(200, courses));
 });
 

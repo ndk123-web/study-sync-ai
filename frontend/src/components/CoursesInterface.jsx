@@ -44,7 +44,8 @@ import { GetPlayListApi } from "../api/GetPlayList.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { ChangeCourseProgressApi } from "../api/ChangeCourseProgressApi.js";
 import { GetCurrentCourseProgressApi } from "../api/GetCurrentCourseProgressApi.js";
-import { TrackPlaylistIndexApi } from '../api/TrackPlaylistIndex.js';
+import { TrackPlaylistIndexApi } from "../api/TrackPlaylistIndex.js";
+import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -66,6 +67,9 @@ const CoursesInterface = () => {
   const currentVideoIdFromZustand = useCurrentPlaylist(
     (state) => state.currentVideoId
   );
+  const [currentVideoId, setCurrentVideoId] = useState(
+    currentVideoIdFromZustand
+  );
   const setCurrentPlaylistFromZustand = useCurrentPlaylist(
     (state) => state.setCurrentPlaylist
   );
@@ -82,6 +86,50 @@ const CoursesInterface = () => {
   const playlistLoader = useLoaders((state) => state.playlistLoader);
   const isAuth = useIsAuth((state) => state.isAuth);
   const removeAuth = useIsAuth((state) => state.removeAuth);
+  const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
+  const [activeTab, setActiveTab] = useState("chat");
+  const [chatMessage, setChatMessage] = useState("");
+  const [videoSize, setVideoSize] = useState(55); // Default 50%
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      type: "ai",
+      message:
+        "Hello! I'm your AI study assistant. I can help you understand React Hooks concepts. What would you like to learn about?",
+      timestamp: new Date(),
+      avatar: "🤖",
+    },
+    {
+      id: 2,
+      type: "user",
+      message:
+        "Can you explain the difference between useState and useReducer?",
+      timestamp: new Date(),
+      avatar: "👤",
+    },
+    {
+      id: 3,
+      type: "ai",
+      message:
+        "Great question! useState is perfect for simple state management, while useReducer is better for complex state logic with multiple sub-values or when the next state depends on the previous one. useReducer follows the Redux pattern with actions and reducers.",
+      timestamp: new Date(),
+      avatar: "🤖",
+    },
+  ]);
+  const [transcriptText, setTranscriptText] = useState("");
+  const currentCourse = {
+    title: "Complete React Hooks Guide",
+    instructor: "React Developer Pro",
+    duration: "8 hours",
+    level: "Intermediate",
+    students: "45,234",
+    rating: "4.9",
+    category: "Frontend Development",
+    currentLesson: "Introduction to React Hooks",
+    lessonNumber: "1",
+    totalLessons: "12",
+    youtubeVideoId: "O6P86uwfdR0", // Default video
+  };
 
   const { courseId } = useParams();
 
@@ -172,6 +220,7 @@ const CoursesInterface = () => {
     },
   ];
 
+  // Set current video ID from URL
   useEffect(() => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
@@ -198,7 +247,7 @@ const CoursesInterface = () => {
           } else {
             alert("No valid video ID found.");
           }
-          
+
           // After playlist is loaded, get progress and set correct video
           await getCurrentCourseProgress(playlist);
         } else {
@@ -230,15 +279,20 @@ const CoursesInterface = () => {
 
         const progressValue = parseInt(apiResponse?.data?.progress) ?? 0;
         const currentIndex = apiResponse?.data?.currentIndex ?? 0;
-        
+
         setProgress(progressValue);
         setCompletedVideosIndex(currentIndex);
-        
+
         // Set the current video based on the progress index
         if (playlistData.length > 0 && currentIndex < playlistData.length) {
           const currentVideo = playlistData[currentIndex];
           if (currentVideo?.youtubeVideoId) {
-            console.log("Setting video from progress - Index:", currentIndex, "Video ID:", currentVideo.youtubeVideoId);
+            console.log(
+              "Setting video from progress - Index:",
+              currentIndex,
+              "Video ID:",
+              currentVideo.youtubeVideoId
+            );
             setCurrentVideoId(currentVideo.youtubeVideoId);
             setCurrentVideoIdFromZustand(currentVideo.youtubeVideoId);
           }
@@ -252,76 +306,44 @@ const CoursesInterface = () => {
     getPlaylist();
   }, []);
 
+  // Track completed videos index
   useEffect(() => {
     const trackPlaylistIndex = async () => {
-      try{
+      try {
         const apiResponse = await TrackPlaylistIndexApi(courseId);
-        console.log("Api Response in TrackPlaylistIndexController:", apiResponse);  
-        setCompletedVideosIndex(apiResponse?.data?.trackCompletedVideosIndex || -1);
-        console.log("Current Video Watching By User: ",completedVideosIndex) 
+        console.log(
+          "Api Response in TrackPlaylistIndexController:",
+          apiResponse
+        );
+        setCompletedVideosIndex(
+          apiResponse?.data?.trackCompletedVideosIndex || -1
+        );
+        console.log("Current Video Watching By User: ", completedVideosIndex);
+      } catch (err) {
+        alert("Err: ", err.message);
       }
-      catch(err){
-        alert("Err: ",err.message);
-      }
-    }
+    };
     trackPlaylistIndex();
-  }, [completedVideosIndex])
+  }, [completedVideosIndex]);
 
-  // Course data with playlist
-
-  const currentCourse = {
-    title: "Complete React Hooks Guide",
-    instructor: "React Developer Pro",
-    duration: "8 hours",
-    level: "Intermediate",
-    students: "45,234",
-    rating: "4.9",
-    category: "Frontend Development",
-    currentLesson: "Introduction to React Hooks",
-    lessonNumber: "1",
-    totalLessons: "12",
-    youtubeVideoId: "O6P86uwfdR0", // Default video
-  };
-
-  // States
-  const [currentVideoId, setCurrentVideoId] = useState(
-    currentVideoIdFromZustand || currentCourse.youtubeVideoId
-  );
-  const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
-  const [activeTab, setActiveTab] = useState("chat");
-  const [chatMessage, setChatMessage] = useState("");
-  const [videoSize, setVideoSize] = useState(55); // Default 50%
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      type: "ai",
-      message:
-        "Hello! I'm your AI study assistant. I can help you understand React Hooks concepts. What would you like to learn about?",
-      timestamp: new Date(),
-      avatar: "🤖",
-    },
-    {
-      id: 2,
-      type: "user",
-      message:
-        "Can you explain the difference between useState and useReducer?",
-      timestamp: new Date(),
-      avatar: "👤",
-    },
-    {
-      id: 3,
-      type: "ai",
-      message:
-        "Great question! useState is perfect for simple state management, while useReducer is better for complex state logic with multiple sub-values or when the next state depends on the previous one. useReducer follows the Redux pattern with actions and reducers.",
-      timestamp: new Date(),
-      avatar: "🤖",
-    },
-  ]);
-
+  // Set current video ID from URL
   useEffect(() => {
     const query = searchParams.get("currentvideoid");
     setCurrentVideoIdFromZustand(query || currentVideoId);
   }, [currentVideoId]);
+
+  // get the transcript of current going video
+  useEffect(() => {
+    const fetchTranscript = async () => {
+      const apiResponse = await GetCurrentVideoTranscriptApi({
+        currentVideoId,
+      });
+      console.log("ApiResponse for Transcript: ", apiResponse);
+    };
+
+    fetchTranscript();
+  }, [currentVideoId]);
+  // States
 
   const handlePreviousVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
@@ -350,14 +372,14 @@ const CoursesInterface = () => {
       console.log("API Response:", apiResponse);
 
       const progressValue = parseInt(apiResponse?.progress) ?? 0;
-      console.log("Prgoress value: ",progressValue);
+      console.log("Prgoress value: ", progressValue);
       // If Success then follow next steps
       setProgress(progressValue);
 
       setCurrentVideoId(nextVideo.youtubeVideoId);
 
       setCompletedVideosIndex(apiResponse?.currentIndex);
-      console.log("Current Video Watching By User: ",completedVideosIndex) 
+      console.log("Current Video Watching By User: ", completedVideosIndex);
 
       // Update URL
       navigate(`?currentvideoid=${nextVideo.youtubeVideoId}`);
@@ -702,7 +724,7 @@ const CoursesInterface = () => {
                       navigate(`?currentvideoid=${video.youtubeVideoId}`);
                     }}
                     className={`p-4 border-b cursor-pointer transition-all duration-200 ${
-                      video.youtubeVideoId === currentVideoId
+                      video.youtubeVideoId === currentVideoId // after refresh still it will preserver user ongoing video
                         ? isDark
                           ? "bg-emerald-900/30 border-emerald-500/30"
                           : "bg-emerald-50 border-emerald-200"
@@ -1780,56 +1802,7 @@ Tips:
                   } max-h-96 overflow-y-auto`}
                 >
                   <div className="space-y-3 text-sm leading-relaxed">
-                    <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
-                        00:15
-                      </span>
-                      <p className="break-words">
-                        Welcome to our comprehensive guide on React Hooks. In
-                        this lesson, we'll explore how hooks revolutionized
-                        React development.
-                      </p>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
-                        01:30
-                      </span>
-                      <p className="break-words">
-                        React Hooks allow functional components to have state
-                        and lifecycle methods that were previously only
-                        available in class components.
-                      </p>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
-                        02:45
-                      </span>
-                      <p className="break-words">
-                        The useState hook is the most fundamental hook. It
-                        allows you to add state to functional components with a
-                        simple API.
-                      </p>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
-                        04:10
-                      </span>
-                      <p className="break-words">
-                        When you call useState, it returns an array with two
-                        elements: the current state value and a function to
-                        update it.
-                      </p>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="text-emerald-500 font-mono text-xs flex-shrink-0">
-                        05:25
-                      </span>
-                      <p className="break-words">
-                        It's important to follow the rules of hooks: only call
-                        hooks at the top level and only call them from React
-                        functions.
-                      </p>
-                    </div>
+                    Here Transcript will be here
                   </div>
                 </div>
               </div>
