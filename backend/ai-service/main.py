@@ -1,15 +1,42 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.db import ping_server
+from contextlib import asynccontextmanager
+import asyncio
+
+from app.routes.transcript_router import transcriptRouter
+
 # from api.utils.addMiddlewares import setupMiddlewares
 from app.config.firebase import initialize_firebase , check_firebase_connection
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
-load_dotenv()
+load_dotenv() 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    connected = await ping_server()
+    if connected:
+        print("✅ Connected to MongoDB successfully!")
+        await initialize_firebase()
+    else:
+        print("❌ MongoDB connection failed!")
+
+    yield  # Application runs after this point
+
+    # Shutdown logic
+    print("🔻 App shutting down...")
+    connected = await ping_server()
+    if connected:
+        print("✅ Connected to MongoDB successfully!")
+        await initialize_firebase()
+    else:
+        print("❌ MongoDB connection failed!")
+
+# Load environment variables
+
+app = FastAPI(lifespan=lifespan)
 
 # setup middlewares
 app.add_middleware(
@@ -21,15 +48,6 @@ app.add_middleware(
 )
 
 # Setup DB CONNECTION
-@app.on_event("startup")
-async def startup_event():
-    connected = await ping_server()
-    if connected:
-        print("✅ Connected to MongoDB successfully!")
-        await initialize_firebase()
-    else:
-        print("❌ MongoDB connection failed!")
-
 
 # For Test
 @app.get("/")
@@ -38,4 +56,4 @@ async def read_root():
     return {"Hello": "World"}
 
 # Routes
-# app.include_router(resume_router, prefix="/api/v1/resumes")
+app.include_router(transcriptRouter, prefix='/api/v1/transcripts')
