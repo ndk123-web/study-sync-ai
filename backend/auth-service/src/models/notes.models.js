@@ -1,17 +1,16 @@
 import mongoose from "mongoose";
-import ApiError from "../utils/ApiError";
+import ApiError from "../utils/ApiError.js";
 
 const noteSchema = mongoose.Schema(
     {
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            index: true
+            ref: "User"
+            // index: false because same user for multiple notes of different courses 
         },
         courseId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Course",
-            index: true,
             required: false
         },
         type: {
@@ -27,7 +26,7 @@ const noteSchema = mongoose.Schema(
             type: String,
             required: false
         },
-        note: {
+        notes: {
             type: String,
             required: true
         }

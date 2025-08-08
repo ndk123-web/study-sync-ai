@@ -40,12 +40,15 @@ import {
 } from "react-router-dom";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useLoaders } from "../store/slices/useLoaders.js";
+import { useNotes } from "../store/slices/useNotes.js";
 import { GetPlayListApi } from "../api/GetPlayList.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { ChangeCourseProgressApi } from "../api/ChangeCourseProgressApi.js";
 import { GetCurrentCourseProgressApi } from "../api/GetCurrentCourseProgressApi.js";
 import { TrackPlaylistIndexApi } from "../api/TrackPlaylistIndex.js";
 import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
+import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
+import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -58,8 +61,17 @@ const CoursesInterface = () => {
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
   const [progress, setProgress] = useState(0);
+  const [notStoreNotes, setNotStoreNotes] = useState("");
+  const [storedNotes, setStoredNotes] = useState("");
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
   const navigate = useNavigate();
+
+  const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
+  const storedNotesFromZustand = useNotes((state) => state.storedNotes);
+  const setNotStoreNotesFromZustand = useNotes(
+    (state) => state.setNotStoreNotes
+  );
+  const setStoredNotesFromZustand = useNotes((state) => state.setStoreNotes);
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
     (state) => state.setCurrentVideoId
@@ -79,6 +91,10 @@ const CoursesInterface = () => {
   const setCourseIdFromZustand = useCurrentPlaylist(
     (state) => state.setCourseId
   );
+
+  const notesLoader = useLoaders((state) => state.notesLoader);
+  const setNotesLoader = useLoaders((state) => state.setNotesLoader);
+  const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
 
   const chatLoader = useLoaders((state) => state.chatLoader);
   const summarizeLoader = useLoaders((state) => state.summarizeLoader);
@@ -340,9 +356,9 @@ const CoursesInterface = () => {
       });
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
+        // alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
         return;
-      }  
+      }
 
       setTranscriptText(apiResponse?.data?.transcript);
       console.log("Transcript: ", transcriptText);
@@ -352,7 +368,98 @@ const CoursesInterface = () => {
 
     fetchTranscript();
   }, [currentVideoId]);
-  // States
+
+  // To Get Notes on the basis of courseId
+  useEffect(() => {
+    const fetchNotes = async () => {
+      console.log("🔍 Fetching notes for courseId:", courseId);
+
+      if (!courseId) {
+        console.log("❌ No courseId provided, skipping notes fetch");
+        return;
+      }
+
+      try {
+        // Fetch notes for the current course
+        const apiResponse = await GetCurrentNotesApi({ courseId });
+        console.log("📝 Notes API Response:", apiResponse);
+
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("❌ Error fetching notes:", apiResponse?.message);
+          alert("Error fetching notes: " + apiResponse?.message);
+          return;
+        }
+
+        const notesData = apiResponse?.data?.notes || "";
+
+        setStoredNotesFromZustand(notesData);
+        setNotStoreNotesFromZustand(notesData);
+
+        setStoredNotes(storedNotesFromZustand);
+        setNotStoreNotes(notStoreNotesFromZustand);
+
+        // console.log("✅ Notes fetched successfully:", apiResponse?.data);
+        // console.log("Notes from API:", apiResponse?.data?.notes);
+        console.log("Setting stored notes to:", storedNotes);
+        console.log("Setting notStoreNotes to:", notStoreNotes);
+      } catch (error) {
+        console.error("💥 Error in fetchNotes:", error);
+        alert("Failed to fetch notes: " + error.message);
+      }
+    };
+
+    fetchNotes();
+  }, [courseId]);
+
+  // Debug useEffect to log state changes
+  useEffect(() => {
+    console.log("🔄 State updated - storedNotes:", storedNotes);
+    console.log("🔄 State updated - notStoreNotes:", notStoreNotes);
+
+  }, [storedNotes, notStoreNotes]);
+
+  const handleSaveNotes = async () => {
+    try {
+
+      console.log("notStoreNotes:", notStoreNotes);
+      console.log("storedNotesFromZustand:", storedNotesFromZustand);
+      console.log("storedNotes:", storedNotes);
+      console.log("notStoreNotesFromZustand:", notStoreNotesFromZustand);
+
+      // if stored notes are equal to not stored notes then no need to call API
+      if (notStoreNotes.trim() === notStoreNotesFromZustand.trim()) {
+        alert("No changes detected in notes.");
+        return;
+      }
+
+      setNotesLoader();
+      // if notStoreNotes is not equal to storedNotes then call API to create a new Note
+      const apiResponse = await SaveCourseNotesApi({
+        courseId,
+        notes: notStoreNotes,
+      });
+      console.log("Api Response for Creating Note: ", apiResponse);
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        // Logic For Error Notification
+        console.log(
+          "Error in fetching notes: ",
+          apiResponse?.message || "Error in fetching notes"
+        );
+        return;
+      }
+
+      unsetNotesLoader();
+      setStoredNotes(apiResponse?.data?.notes || "");
+      setNotStoreNotes(apiResponse?.data?.notes || "");
+
+      alert("Notes Saved Successfully")
+    } catch (err) {
+      alert("Error fetching notes: " + err.message);
+      // unsetNotesLoader();
+    } finally {
+      unsetNotesLoader();
+    }
+  };
 
   const handlePreviousVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
@@ -366,6 +473,7 @@ const CoursesInterface = () => {
       navigate(`?currentvideoid=${currentCourse.youtubeVideoId}`);
     }
   };
+
   const handleNextVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
       (video) => video.youtubeVideoId === currentVideoId
@@ -1153,6 +1261,8 @@ const CoursesInterface = () => {
                           ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                       } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                      value={notStoreNotes}
+                      onChange={(e) => setNotStoreNotes(e.target.value)}
                     />
                     <div className="flex justify-between items-center mt-3">
                       <span
@@ -1162,8 +1272,8 @@ const CoursesInterface = () => {
                       >
                         Auto-saved
                       </span>
-                      <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        Save
+                      <button onClick={handleSaveNotes} className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                        { notesLoader ? "Saving..." : "Save" }
                       </button>
                     </div>
                   </div>
@@ -1244,14 +1354,18 @@ const CoursesInterface = () => {
                     >
                       <div className="space-y-2 text-sm">
                         <div>
-                          {transcriptText && transcriptText.map((snippet, index) => (
-                            <div key={index}>
-                              <span className="text-emerald-500 font-mono text-xs">
-                                {snippet.startTime + " - " + snippet.endTime + "\n"}
-                              </span>
-                              <p>{snippet.text}</p>
-                            </div>
-                          ))}
+                          {transcriptText &&
+                            transcriptText.map((snippet, index) => (
+                              <div key={index}>
+                                <span className="text-emerald-500 font-mono text-xs">
+                                  {snippet.startTime +
+                                    " - " +
+                                    snippet.endTime +
+                                    "\n"}
+                                </span>
+                                <p>{snippet.text}</p>
+                              </div>
+                            ))}
                         </div>
                       </div>
                     </div>
@@ -1591,70 +1705,35 @@ Tips:
 • Use timestamps like [05:30] for important moments
 • Write key concepts and definitions
 • Note questions to ask later"
-                  className={`w-full h-64 p-4 rounded-lg border resize-none ${
+                  value={notStoreNotes} // Changed from storedNotes to notStoreNotes
+                  className={`w-full h-48 p-4 rounded-lg border resize-none ${
                     isDark
                       ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                       : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
+                  // This is important for validating notes
+                  onChange={(e) => {
+                    setNotStoreNotes(e.target.value);
+                  }}
                 />
 
-                <div className="flex justify-between items-center">
-                  <span
-                    className={`text-xs ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    💾 Auto-saved • Last saved: 2 minutes ago
-                  </span>
-                  <div className="flex space-x-2">
-                    <button className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
-                      Clear
-                    </button>
-                    <button className="px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600 transition-colors">
-                      Save Notes
-                    </button>
-                  </div>
-                </div>
+                {/* Debug info - you can remove this later */}
+                {/* <div className="mt-2 text-xs text-gray-500">
+                  <p>Debug: notStoreNotes length: {notStoreNotes.length}</p>
+                  <p>Debug: storedNotes length: {storedNotes.length}</p>
+                </div> */}
 
-                {/* Previous Notes */}
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3">Previous Lesson Notes</h4>
-                  <div className="space-y-2">
-                    {[
-                      {
-                        lesson: "useState Hook",
-                        note: "useState returns array with [state, setState]",
-                        time: "2 days ago",
-                      },
-                      {
-                        lesson: "useEffect Hook",
-                        note: "useEffect runs after every render by default",
-                        time: "3 days ago",
-                      },
-                    ].map((note, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg ${
-                          isDark ? "bg-gray-700" : "bg-gray-100"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-sm">{note.lesson}</p>
-                            <p className="text-sm mt-1">{note.note}</p>
-                          </div>
-                          <span
-                            className={`text-xs ${
-                              isDark ? "text-gray-400" : "text-gray-600"
-                            }`}
-                          >
-                            {note.time}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* button to save notes */}
+                <button
+                  onClick={handleSaveNotes}
+                  className={`mt-4 px-4 py-2 rounded-lg text-white ${
+                    isDark
+                      ? "bg-emerald-500 hover:bg-emerald-600"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  } transition-all duration-200`}
+                >
+                  {notesLoader ? "Saving..." : "Save Notes"}
+                </button>
               </div>
             )}
 
@@ -1807,12 +1886,14 @@ Tips:
                   } max-h-96 overflow-y-auto`}
                 >
                   <div className="space-y-3 text-sm leading-relaxed">
-                    { transcriptText?.map( (item, index) => (
+                    {transcriptText?.map((item, index) => (
                       <div key={index}>
-                        <span className="font-semibold">{item.startTime} - {item.endTime}: </span>
+                        <span className="font-semibold">
+                          {item.startTime} - {item.endTime}:{" "}
+                        </span>
                         <span>{item.text}</span>
                       </div>
-                    )) }
+                    ))}
                   </div>
                 </div>
               </div>
