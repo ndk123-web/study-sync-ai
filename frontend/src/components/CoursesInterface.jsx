@@ -116,7 +116,7 @@ const CoursesInterface = () => {
       avatar: "🤖",
     },
   ]);
-  const [transcriptText, setTranscriptText] = useState("");
+  const [transcriptText, setTranscriptText] = useState([]);
   const currentCourse = {
     title: "Complete React Hooks Guide",
     instructor: "React Developer Pro",
@@ -338,6 +338,15 @@ const CoursesInterface = () => {
       const apiResponse = await GetCurrentVideoTranscriptApi({
         currentVideoId,
       });
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
+        return;
+      }  
+
+      setTranscriptText(apiResponse?.data?.transcript);
+      console.log("Transcript: ", transcriptText);
+
       console.log("ApiResponse for Transcript: ", apiResponse);
     };
 
@@ -1235,18 +1244,14 @@ const CoursesInterface = () => {
                     >
                       <div className="space-y-2 text-sm">
                         <div>
-                          <span className="text-emerald-500 font-mono text-xs">
-                            00:15
-                          </span>
-                          <p>Welcome to React Hooks guide...</p>
-                        </div>
-                        <div>
-                          <span className="text-emerald-500 font-mono text-xs">
-                            01:30
-                          </span>
-                          <p>
-                            Hooks allow functional components to have state...
-                          </p>
+                          {transcriptText && transcriptText.map((snippet, index) => (
+                            <div key={index}>
+                              <span className="text-emerald-500 font-mono text-xs">
+                                {snippet.startTime + " - " + snippet.endTime + "\n"}
+                              </span>
+                              <p>{snippet.text}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -1802,7 +1807,12 @@ Tips:
                   } max-h-96 overflow-y-auto`}
                 >
                   <div className="space-y-3 text-sm leading-relaxed">
-                    Here Transcript will be here
+                    { transcriptText?.map( (item, index) => (
+                      <div key={index}>
+                        <span className="font-semibold">{item.startTime} - {item.endTime}: </span>
+                        <span>{item.text}</span>
+                      </div>
+                    )) }
                   </div>
                 </div>
               </div>

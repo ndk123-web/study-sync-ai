@@ -11,6 +11,6 @@ class transcriptBody(BaseModel):
 @transcriptRouter.post("/get-transcript")
 async def get_transcript(payload: transcriptBody , userData = Depends(verifyJWT)):
     print("Payload: ",payload)
-    print("User Data: ",userData)  
+    print("User Data: Verified!!")  
     response =  await getTranscriptController(payload.videoId)
     return response 
