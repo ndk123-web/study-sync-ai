@@ -23,6 +23,10 @@ const enrollmentSchema = mongoose.Schema({
     trackCompletedVideosIndex: {
         type: Number,
         default: 1
+    },
+    uid: {
+        type: String,
+        required: true
     }
 },
 {

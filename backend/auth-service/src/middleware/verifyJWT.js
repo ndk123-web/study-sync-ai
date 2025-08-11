@@ -12,7 +12,7 @@ const verifyJWT = wrapper(async (req, res, next) => {
     try {
         const decoded = await admin.auth().verifyIdToken(token);
         const userRecord = await admin.auth().getUser(decoded.uid); 
-        console.log('userRecord: ',userRecord)
+        // console.log('userRecord: ',userRecord)
         
         if (!decoded) {
             throw new ApiError(401, 'Access Token expired or invalid');
