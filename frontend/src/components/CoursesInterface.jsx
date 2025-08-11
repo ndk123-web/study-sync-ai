@@ -67,11 +67,11 @@ const CoursesInterface = () => {
   const navigate = useNavigate();
 
   const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
-  const storedNotesFromZustand = useNotes((state) => state.storeNotes);
+  const storedNotesFromZustand = useNotes((state) => state.storedNotes); // ✅ Fixed property name
   const setNotStoreNotesFromZustand = useNotes(
     (state) => state.setNotStoreNotes
   );
-  const setStoredNotesFromZustand = useNotes((state) => state.setStoreNotes);
+  const setStoredNotesFromZustand = useNotes((state) => state.setStoredNotes); // ✅ Fixed function name
   const clearNotesFromZustand = useNotes((state) => state.clearNotes);
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
@@ -97,11 +97,6 @@ const CoursesInterface = () => {
   const notesLoader = useLoaders((state) => state.notesLoader);
   const setNotesLoader = useLoaders((state) => state.setNotesLoader);
   const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
-  const chatLoader = useLoaders((state) => state.chatLoader);
-  const summarizeLoader = useLoaders((state) => state.summarizeLoader);
-  const assessmentLoader = useLoaders((state) => state.assessmentLoader);
-  const playlistLoader = useLoaders((state) => state.playlistLoader);
-  const isAuth = useIsAuth((state) => state.isAuth);
   const removeAuth = useIsAuth((state) => state.removeAuth);
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
@@ -243,9 +238,9 @@ const CoursesInterface = () => {
     setCourseIdFromZustand(courseId);
     clearNotesFromZustand(); // it will clear the notes in zustand for the new course
     console.log("✅ Cleared Zustand notes for new course");
-  }, [courseId])
+  }, [courseId]);
 
-    // To Get Notes on the basis of courseId
+  // To Get Notes on the basis of courseId
   useEffect(() => {
     const fetchNotes = async () => {
       console.log("🔍 Fetching notes for courseId:", courseId);
@@ -256,7 +251,6 @@ const CoursesInterface = () => {
       }
 
       try {
-
         // If no Zustand data, then fetch from backend
         console.log("🌐 Fetching notes from backend...");
         const apiResponse = await GetCurrentNotesApi({ courseId });
@@ -266,9 +260,9 @@ const CoursesInterface = () => {
           console.log("❌ Error fetching notes:", apiResponse?.message);
           // Don't show alert for empty notes, just set empty state
           const emptyNotes = "";
-          // setStoredNotes(emptyNotes);
-          // setNotStoreNotes(emptyNotes);
-          // setStoredNotesFromZustand(emptyNotes);
+          setStoredNotes(emptyNotes);
+          setNotStoreNotes(emptyNotes);
+          setStoredNotesFromZustand(emptyNotes);
           setNotStoreNotesFromZustand(emptyNotes);
           return;
         }
@@ -278,7 +272,10 @@ const CoursesInterface = () => {
 
         // Update both local state and Zustand
         // setStoredNotes(notesData);
-        // setNotStoreNotes(notesData);
+
+        // this is the main that it re renders the component because of the useState
+        setNotStoreNotes(notesData);
+
         // setStoredNotesFromZustand(notesData);
         setNotStoreNotesFromZustand(notesData);
       } catch (error) {
@@ -428,17 +425,15 @@ const CoursesInterface = () => {
     fetchTranscript();
   }, [currentVideoId]);
 
-
-
   // Auto-save to Zustand as well as dtabase after typing 1 seconds when user types (with debounce)
   useEffect(() => {
     if (!courseId || !notStoreNotes) return;
 
     const autoSaveTimer = setTimeout(async () => {
       console.log("💾 Auto-saving notes to Zustand...");
-      setNotStoreNotesFromZustand(notStoreNotes); // when user types then this will be called 
+      setNotStoreNotesFromZustand(notStoreNotes); // when user types then this will be called
 
-      try{
+      try {
         setNotesLoader();
 
         const apiResponse = await SaveCourseNotesApi({
@@ -451,14 +446,11 @@ const CoursesInterface = () => {
           alert("Error in Saving Notes after 2 seconds");
           return;
         }
-
-      }
-      catch(err){
-        console.error("💥 Error in auto-save:", err)
+      } catch (err) {
+        console.error("💥 Error in auto-save:", err);
         alert("Error in Saving Notes after 2 seconds");
-      }
-      finally{
-        unsetNotesLoader(); // whether error or success this will be called 
+      } finally {
+        unsetNotesLoader(); // whether error or success this will be called
       }
 
       console.log("✅ Notes auto-saved to Zustand");
@@ -498,15 +490,15 @@ const CoursesInterface = () => {
   //     }
 
   //     unsetNotesLoader();
-      
+
   //     // Update both local state and Zustand with the saved notes
   //     const savedNotes = apiResponse?.data?.notes || "";
   //     // setStoredNotes(savedNotes);
-      
+
   //     // Update Zustand store as well
   //     // setStoredNotesFromZustand(savedNotes);
   //     setNotStoreNotesFromZustand(savedNotes);
-      
+
   //     console.log("✅ Notes saved successfully and synced with Zustand");
   //     alert("Notes Saved Successfully");
 
@@ -1330,7 +1322,7 @@ const CoursesInterface = () => {
                         Auto-saved
                       </span>
                       <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        { notesLoader ? "Saving..." : "Save" }
+                        {notesLoader ? "Saving..." : "Save"}
                       </button>
                     </div>
                   </div>
