@@ -1043,7 +1043,7 @@ const CoursesInterface = () => {
                           >
                             {video.duration}
                           </p>
-                          {index + 1 <= completedVideosIndex && (
+                          {index + 1 < completedVideosIndex && (
                             <div className="flex items-center space-x-1 mt-1">
                               <Check className="w-3 h-3 text-green-500" />
                               <span className="text-xs text-green-500">
