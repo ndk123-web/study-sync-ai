@@ -67,7 +67,7 @@ const CoursesInterface = () => {
   const navigate = useNavigate();
 
   const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
-  const storedNotesFromZustand = useNotes((state) => state.storedNotes);
+  const storedNotesFromZustand = useNotes((state) => state.storeNotes);
   const setNotStoreNotesFromZustand = useNotes(
     (state) => state.setNotStoreNotes
   );
@@ -380,36 +380,52 @@ const CoursesInterface = () => {
       }
 
       try {
-        // Fetch notes for the current course
+        // First check if we have notes in Zustand (local storage)
+        if (storedNotesFromZustand) {
+          console.log("📱 Using notes from Zustand:", storedNotesFromZustand);
+          setStoredNotes(storedNotesFromZustand);
+          setNotStoreNotes(notStoreNotesFromZustand || storedNotesFromZustand);
+          return;
+        }
+
+        // If no Zustand data, then fetch from backend
+        console.log("🌐 Fetching notes from backend...");
         const apiResponse = await GetCurrentNotesApi({ courseId });
         console.log("📝 Notes API Response:", apiResponse);
 
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("❌ Error fetching notes:", apiResponse?.message);
-          alert("Error fetching notes: " + apiResponse?.message);
+          // Don't show alert for empty notes, just set empty state
+          const emptyNotes = "";
+          setStoredNotes(emptyNotes);
+          setNotStoreNotes(emptyNotes);
+          setStoredNotesFromZustand(emptyNotes);
+          setNotStoreNotesFromZustand(emptyNotes);
           return;
         }
 
         const notesData = apiResponse?.data?.notes || "";
+        console.log("✅ Notes fetched from backend:", notesData);
 
+        // Update both local state and Zustand
+        setStoredNotes(notesData);
+        setNotStoreNotes(notesData);
         setStoredNotesFromZustand(notesData);
         setNotStoreNotesFromZustand(notesData);
 
-        setStoredNotes(storedNotesFromZustand);
-        setNotStoreNotes(notStoreNotesFromZustand);
-
-        // console.log("✅ Notes fetched successfully:", apiResponse?.data);
-        // console.log("Notes from API:", apiResponse?.data?.notes);
-        console.log("Setting stored notes to:", storedNotes);
-        console.log("Setting notStoreNotes to:", notStoreNotes);
       } catch (error) {
         console.error("💥 Error in fetchNotes:", error);
-        alert("Failed to fetch notes: " + error.message);
+        // Set empty notes on error
+        const emptyNotes = "";
+        setStoredNotes(emptyNotes);
+        setNotStoreNotes(emptyNotes);
+        setStoredNotesFromZustand(emptyNotes);
+        setNotStoreNotesFromZustand(emptyNotes);
       }
     };
 
     fetchNotes();
-  }, [courseId]);
+  }, [courseId, storedNotesFromZustand]);
 
   // Debug useEffect to log state changes
   useEffect(() => {
@@ -417,6 +433,43 @@ const CoursesInterface = () => {
     console.log("🔄 State updated - notStoreNotes:", notStoreNotes);
 
   }, [storedNotes, notStoreNotes]);
+
+  // Auto-save to Zustand when user types (with debounce)
+  useEffect(() => {
+    if (!courseId || !notStoreNotes) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      console.log("💾 Auto-saving notes to Zustand...");
+      setNotStoreNotesFromZustand(notStoreNotes); // when user types then this will be called 
+
+      try{
+        setNotesLoader();
+
+        const apiResponse = await SaveCourseNotesApi({
+          courseId,
+          notes: notStoreNotes,
+        });
+
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("❌ Error auto-saving notes:", apiResponse?.message);
+          alert("Error in Saving Notes after 2 seconds");
+          return;
+        }
+
+      }
+      catch(err){
+        console.error("💥 Error in auto-save:", err)
+        alert("Error in Saving Notes after 2 seconds");
+      }
+      finally{
+        unsetNotesLoader(); // whether error or success this will be called 
+      }
+
+      console.log("✅ Notes auto-saved to Zustand");
+    }, 1000); // Save after 1 second of no typing
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [notStoreNotes, courseId]);
 
   const handleSaveNotes = async () => {
     try {
@@ -449,9 +502,17 @@ const CoursesInterface = () => {
       }
 
       unsetNotesLoader();
-      setStoredNotes(apiResponse?.data?.notes || "");
-      setNotStoreNotes(apiResponse?.data?.notes || "");
-
+      
+      // Update both local state and Zustand with the saved notes
+      const savedNotes = apiResponse?.data?.notes || "";
+      setStoredNotes(savedNotes);
+      setNotStoreNotes(savedNotes);
+      
+      // Update Zustand store as well
+      setStoredNotesFromZustand(savedNotes);
+      setNotStoreNotesFromZustand(savedNotes);
+      
+      console.log("✅ Notes saved successfully and synced with Zustand");
       alert("Notes Saved Successfully")
     } catch (err) {
       alert("Error fetching notes: " + err.message);
