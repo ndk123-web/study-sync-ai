@@ -30,7 +30,7 @@ const SaveCurrentNotesController = wrapper( async (req , res) => {
     const newNote = new Note({
         userId: getSignInUserInstance._id,
         courseId: getCourseInstance._id,
-        notes: notes,
+        notes: notes || "",
         type: 'course'
     })
 
