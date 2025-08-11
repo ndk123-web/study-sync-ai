@@ -44,6 +44,7 @@ import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
 import Header from "../components/Header";
 import CryptoJs from "crypto-js";
+import { GetEnrolledCourseApi } from "../api/GetEnrolledCourseApi";
 
 const EnrolledCoursesSample = () => {
   // Zustand store hooks
@@ -84,6 +85,17 @@ const EnrolledCoursesSample = () => {
     window.dashboardSidebar = {
       toggle: () => setIsSidebarOpen((prev) => !prev),
     };
+
+    const fetchUserEnrollCourses = async () => {
+      const apiResponse = await GetEnrolledCourseApi();
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Something wrong in GetEnrolledCourseApi");
+        return;
+      }
+      console.log("Api Response for Fetching User Enrolled Api: ", apiResponse);
+    };
+
+    fetchUserEnrollCourses();
 
     return () => {
       delete window.dashboardSidebar;

@@ -12,6 +12,8 @@ import { useUserStore } from '../store/slices/useUserStore';
 import Header from '../components/Header';
 import CryptoJs from 'crypto-js';
 import SuccessNotification from '../components/SuccessNotification';
+// Recharts for professional charts (aliased to avoid icon name collisions)
+import * as Recharts from 'recharts';
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -21,6 +23,11 @@ const Dashboard = () => {
       import.meta.env.VITE_ENCRYPTION_SECRET
     ).toString(CryptoJs.enc.Utf8)
   );
+  const setMode = useThemeStore((state) => state.setMode);
+
+  // App stores
+  const { isAuth, removeAuth } = useIsAuth();
+  const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
 
   const [signInNotification, setSignInNotification] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState("");
@@ -30,37 +37,19 @@ const Dashboard = () => {
     const welcomeData = localStorage.getItem('welcomeUser');
     if (welcomeData) {
       const { username, type } = JSON.parse(welcomeData);
-      
       let message = '';
       if (type === 'signin') {
         message = `Welcome back, ${username}! 🎉`;
       } else if (type === 'signup') {
         message = `Welcome to StudySync AI, ${username}! 🎉✨`;
+      } else {
+        message = `Welcome, ${username}! 🎉`;
       }
-      
       setWelcomeMessage(message);
       setSignInNotification(true);
-      
-      // Auto-hide after 4 seconds
-      setTimeout(() => {
-        setSignInNotification(false);
-      }, 2000);
-      
-      // Clean up localStorage
       localStorage.removeItem('welcomeUser');
     }
   }, []);
-
-  const setMode  = useThemeStore((state) => state.setMode);
-  const isAuth  = useIsAuth((state) => state.isAuth);
-  const removeAuth = useIsAuth((state) => state.removeAuth);
-
-  const username = useUserStore((state) => state.username);
-  const email = useUserStore((state) => state.email);
-  const photoURL = useUserStore((state) => state.photoURL);
-  const isPremium = useUserStore((state) => state.isPremium);
-  const logoutUser = useUserStore((state) => state.logoutUser);
-
   // Use the actual user data instead of empty string
   const user = {
     name: username,
@@ -151,691 +140,243 @@ const Dashboard = () => {
     }
   ];
 
-  const analyticsData = {
-    weeklyStudyHours: [
-      { day: 'Mon', hours: 2.5, completed: 3 },
-      { day: 'Tue', hours: 4.2, completed: 5 },
-      { day: 'Wed', hours: 3.8, completed: 4 },
-      { day: 'Thu', hours: 5.1, completed: 6 },
-      { day: 'Fri', hours: 3.3, completed: 4 },
-      { day: 'Sat', hours: 6.5, completed: 8 },
-      { day: 'Sun', hours: 4.7, completed: 5 }
-    ],
-    subjectProgress: [
-      { subject: 'React', progress: 85, color: 'from-blue-500 to-purple-500' },
-      { subject: 'JavaScript', progress: 92, color: 'from-yellow-500 to-orange-500' },
-      { subject: 'Python', progress: 68, color: 'from-green-500 to-teal-500' },
-      { subject: 'CSS', progress: 75, color: 'from-pink-500 to-red-500' },
-      { subject: 'Node.js', progress: 58, color: 'from-emerald-500 to-cyan-500' }
-    ],
-    monthlyGoals: {
-      current: 78,
-      target: 100,
-      streak: 7,
-      bestStreak: 12
-    }
-  };
+  // Removed older analyticsData; not needed after simplifying charts
 
   const quickActions = [
     {
-      title: "Start New Topic",
-      description: "Begin learning something new",
-      color: "from-emerald-500 to-teal-500",
-      icon: <Plus className="w-5 h-5 md:w-6 md:h-6" />,
-      action: () => setActiveTab('search'),
-      stats: "24 available"
+      title: "📚 Browse Courses",
+      description: "Explore available courses",
+      color: "from-blue-500 to-indigo-600",
+      action: () => (window.location.href = '/courses'),
+      stats: "50+ available",
     },
     {
-      title: "Enrolled Courses",
-      description: "View your enrolled courses",
-      color: "from-blue-500 to-purple-500",
-      icon: <Brain className="w-5 h-5 md:w-6 md:h-6" />,
-      action: () => window.location.href = '/enrolled-courses',
-      stats: "5 active"
+      title: "🎯 My Courses",
+      description: "Continue learning",
+      color: "from-emerald-500 to-teal-600",
+      action: () => (window.location.href = '/enrolled-courses'),
+      stats: "3 in progress",
     },
     {
-      title: "Watch Videos",
-      description: "Visual learning content",
-      color: "from-red-500 to-pink-500",
-      icon: <Youtube className="w-5 h-5 md:w-6 md:h-6" />,
-      action: () => setActiveTab('videos'),
-      stats: "12 new videos"
+      title: "📄 PDF Learning",
+      description: "Study with documents",
+      color: "from-purple-500 to-pink-600",
+      action: () => (window.location.href = '/pdf-learning'),
+      stats: "Upload & learn",
     },
     {
-      title: "My Notes",
-      description: "Review your notes",
-      color: "from-orange-500 to-yellow-500",
-      icon: <FileText className="w-5 h-5 md:w-6 md:h-6" />,
+      title: "📝 My Notes",
+      description: "Access saved notes",
+      color: "from-orange-500 to-red-600",
       action: () => setActiveTab('notes'),
-      stats: "18 notes"
-    }
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'video',
-      title: 'Machine Learning Basics',
-      action: 'Watched video',
-      time: '2 hours ago',
-      progress: 100,
-      icon: <Youtube className="w-4 h-4 md:w-5 md:h-5" />
+      stats: "12 notes saved",
     },
-    {
-      id: 2,
-      type: 'quiz',
-      title: 'React Fundamentals',
-      action: 'Completed quiz',
-      time: '4 hours ago',
-      progress: 85,
-      icon: <Target className="w-4 h-4 md:w-5 md:h-5" />
-    },
-    {
-      id: 3,
-      type: 'notes',
-      title: 'JavaScript ES6 Features',
-      action: 'Added notes',
-      time: '1 day ago',
-      progress: 70,
-      icon: <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-    }
   ];
 
-  const trendingTopics = [
-    {
-      id: 1,
-      title: "Introduction to Machine Learning",
-      views: "2.3k",
-      duration: "1h 24m",
-      difficulty: "Beginner",
-      thumbnail: "🤖",
-      rating: 4.8,
-      isNew: true
-    },
-    {
-      id: 2,
-      title: "Advanced React Patterns",
-      views: "1.8k",
-      duration: "2h 15m",
-      difficulty: "Advanced",
-      thumbnail: "⚛️",
-      rating: 4.9,
-      isNew: false
-    },
-    {
-      id: 3,
-      title: "Python Data Analysis",
-      views: "3.1k",
-      duration: "1h 45m",
-      difficulty: "Intermediate",
-      thumbnail: "🐍",
-      rating: 4.7,
-      isNew: true
-    }
-  ];
-
-  // Dummy data for different tabs
-  const searchTopics = [
-    { id: 1, title: "React Hooks Deep Dive", category: "Frontend", difficulty: "Intermediate", duration: "3h 45m", students: "2.4k", rating: 4.8, thumbnail: "⚛️" },
-    { id: 2, title: "Node.js Backend Development", category: "Backend", difficulty: "Advanced", duration: "5h 20m", students: "1.8k", rating: 4.9, thumbnail: "🟢" },
-    { id: 3, title: "Python Machine Learning", category: "AI/ML", difficulty: "Beginner", duration: "4h 15m", students: "3.2k", rating: 4.7, thumbnail: "🐍" },
-    { id: 4, title: "TypeScript Fundamentals", category: "Programming", difficulty: "Intermediate", duration: "2h 30m", students: "1.5k", rating: 4.6, thumbnail: "📘" },
-  ];
-
-  const enrolledCourses = [
-    { id: 1, title: "Complete React Course", progress: 75, instructor: "John Doe", duration: "12h", nextLesson: "React Context API", thumbnail: "⚛️", enrolledDate: "2 weeks ago" },
-    { id: 2, title: "JavaScript ES6 Masterclass", progress: 45, instructor: "Jane Smith", duration: "8h", nextLesson: "Arrow Functions", thumbnail: "🟨", enrolledDate: "1 month ago" },
-    { id: 3, title: "CSS Grid & Flexbox", progress: 90, instructor: "Mike Johnson", duration: "6h", nextLesson: "Grid Areas", thumbnail: "🎨", enrolledDate: "3 weeks ago" },
-  ];
-
-  const videoLibrary = [
-    { id: 1, title: "React Hooks Tutorial", views: "45k", duration: "25:30", category: "React", thumbnail: "⚛️", uploadDate: "2 days ago" },
-    { id: 2, title: "CSS Animation Basics", views: "32k", duration: "18:45", category: "CSS", thumbnail: "🎨", uploadDate: "1 week ago" },
-    { id: 3, title: "JavaScript Promises", views: "28k", duration: "22:15", category: "JavaScript", thumbnail: "🟨", uploadDate: "3 days ago" },
-    { id: 4, title: "Node.js Express Setup", views: "19k", duration: "35:20", category: "Backend", thumbnail: "🟢", uploadDate: "5 days ago" },
-  ];
-
-  const userNotes = [
-    { id: 1, title: "React State Management", content: "useState hook is used for managing state in functional components...", date: "2 days ago", tags: ["React", "Hooks"] },
-    { id: 2, title: "JavaScript Closures", content: "A closure is a function that has access to variables in its outer scope...", date: "1 week ago", tags: ["JavaScript", "Concepts"] },
-    { id: 3, title: "CSS Grid Layout", content: "Grid container and grid items are the fundamental concepts...", date: "3 days ago", tags: ["CSS", "Layout"] },
-  ];
-
-  // Analytics Chart Components - Professional Charts
-  const StudyHoursChart = () => {
-    const [isMobile, setIsMobile] = useState(false);
-    
-    useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768);
-      };
-      
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
+  // Shared Recharts tooltip
+  const ReTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || payload.length === 0) return null;
     return (
-      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4 md:p-6 h-full`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
-          <div>
-            <h3 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Daily Study Hours
-            </h3>
-            <p className={`text-xs md:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Last 7 days performance
-            </p>
+      <div className={`px-3 py-2 rounded-lg border shadow ${isDark ? 'bg-gray-800 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'}`}>
+        {label && <div className="text-xs font-semibold mb-1">{label}</div>}
+        {payload.map((item, idx) => (
+          <div key={idx} className="text-xs flex items-center space-x-2">
+            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+            <span>{item.name}: </span>
+            <span className="font-semibold">{item.value}</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs md:text-sm">
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-              <span className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Study Hours</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Chart Area - Responsive */}
-        <div className="relative h-48 md:h-64 lg:h-72 mb-4 overflow-hidden">
-          {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2 z-10">
-            <span>8h</span>
-            <span>6h</span>
-            <span>4h</span>
-            <span>2h</span>
-            <span>0h</span>
-          </div>
-          
-          {/* Chart container - Fixed overflow */}
-          <div className="ml-6 md:ml-8 mr-2 md:mr-4 h-full flex items-end justify-between px-1 md:px-2">
-            {analyticsData.weeklyStudyHours.map((day, index) => (
-              <div key={day.day} className="flex flex-col items-center flex-1 max-w-[calc(100%/7)] group">
-                {/* Tooltip - More responsive */}
-                <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-1 md:mb-2 px-1 md:px-2 py-1 rounded text-xs font-medium ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-900 text-white'} whitespace-nowrap z-20 relative`}>
-                  {day.hours}h studied
-                </div>
-                
-                {/* Bar - Responsive width with proper constraints */}
-                <div className="relative w-full flex justify-center items-end">
-                  <div 
-                    className="bg-gradient-to-t from-emerald-600 via-emerald-500 to-emerald-400 rounded-t-lg transition-all duration-1000 hover:scale-110 cursor-pointer shadow-lg animate-grow-up"
-                    style={{ 
-                      width: 'min(32px, calc(100% - 4px))',
-                      maxWidth: '32px',
-                      height: `${Math.max((day.hours / 8) * (isMobile ? 160 : 200), 8)}px`,
-                      animationDelay: `${index * 0.15}s`
-                    }}
-                  />
-                </div>
-                
-                {/* Day label - Responsive text */}
-                <span className={`text-xs md:text-sm mt-1 md:mt-2 font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'} truncate w-full text-center`}>
-                  {isMobile ? day.day.slice(0, 3) : day.day}
-                </span>
-              </div>
-            ))}
-          </div>
-          
-          {/* Grid lines - Adjusted for proper spacing */}
-          <div className="absolute inset-0 ml-6 md:ml-8 mr-2 md:mr-4 pointer-events-none">
-            {[0, 1, 2, 3, 4].map((line) => (
-              <div 
-                key={line}
-                className={`absolute w-full border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
-                style={{ top: `${line * 25}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Chart Summary - Responsive grid */}
-        <div className="grid grid-cols-3 gap-2 md:gap-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-center">
-            <div className={`text-base md:text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {analyticsData.weeklyStudyHours.reduce((acc, day) => acc + day.hours, 0).toFixed(1)}h
-            </div>
-            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Total Week
-            </div>
-          </div>
-          <div className="text-center">
-            <div className={`text-base md:text-xl font-bold text-emerald-500`}>
-              {(analyticsData.weeklyStudyHours.reduce((acc, day) => acc + day.hours, 0) / 7).toFixed(1)}h
-            </div>
-            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Daily Avg
-            </div>
-          </div>
-          <div className="text-center">
-            <div className={`text-base md:text-xl font-bold text-blue-500`}>
-              +15%
-            </div>
-            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              vs Last Week
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     );
   };
 
-  const ProgressChart = () => (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6 h-full`}>
+  // Reusable responsive chart container using CSS clamp for height
+  const ResponsiveChartBox = ({ children, min = 220, vh = 35, max = 420 }) => (
+    <div style={{ width: '100%', height: `clamp(${min}px, ${vh}vh, ${max}px)` }}>
+      <Recharts.ResponsiveContainer width="100%" height="100%">
+        {children}
+      </Recharts.ResponsiveContainer>
+    </div>
+  );
+
+  // Chart data
+  const learningTrendData = [
+    { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 4 },
+    { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 3 },
+    { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 5 },
+    { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 6 },
+    { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 4 },
+    { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 7 },
+    { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 6 },
+    { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 8 },
+  ];
+
+  const categoryDistribution = [
+    { name: 'Frontend', value: 32, color: '#10B981' },
+    { name: 'Backend', value: 24, color: '#3B82F6' },
+    { name: 'DSA', value: 18, color: '#8B5CF6' },
+    { name: 'DevOps', value: 14, color: '#F59E0B' },
+    { name: 'AI/ML', value: 12, color: '#EF4444' },
+  ];
+
+  const quizScoresByCourse = [
+    { course: 'React', avgScore: 82, attempts: 3 },
+    { course: 'Node', avgScore: 74, attempts: 2 },
+    { course: 'DSA', avgScore: 68, attempts: 4 },
+    { course: 'DevOps', avgScore: 71, attempts: 1 },
+    { course: 'ML', avgScore: 77, attempts: 2 },
+  ];
+
+  // Datasets for tab content and side sections
+  const searchTopics = [
+    { id: 1, thumbnail: '⚛️', difficulty: 'Beginner', title: 'React Basics', category: 'Frontend', duration: '2h 10m', students: 1200, rating: 4.7 },
+    { id: 2, thumbnail: '🟨', difficulty: 'Intermediate', title: 'JavaScript ES2023', category: 'Frontend', duration: '3h 05m', students: 980, rating: 4.6 },
+    { id: 3, thumbnail: '🧩', difficulty: 'Advanced', title: 'Data Structures', category: 'CS', duration: '4h 30m', students: 620, rating: 4.8 },
+  ];
+
+  const videoLibrary = [
+    { id: 1, thumbnail: '🎬', title: 'Async JS Patterns', category: 'JavaScript', views: '12.4k', duration: '18:45', uploadDate: '2d ago' },
+    { id: 2, thumbnail: '💅', title: 'Tailwind CSS v4', category: 'CSS', views: '8.1k', duration: '22:13', uploadDate: '5d ago' },
+    { id: 3, thumbnail: '🗄️', title: 'Building REST APIs', category: 'Backend', views: '5.7k', duration: '16:02', uploadDate: '1w ago' },
+  ];
+
+  const userNotes = [
+    { id: 1, title: 'React Hooks', content: 'useState, useEffect, and custom hooks overview...', tags: ['react', 'hooks'], date: 'Aug 10, 2025' },
+    { id: 2, title: 'SQL Joins', content: 'INNER, LEFT, RIGHT joins explained with examples...', tags: ['sql', 'db'], date: 'Aug 9, 2025' },
+    { id: 3, title: 'Big-O Basics', content: 'Time vs space complexity quick reference...', tags: ['dsa'], date: 'Aug 8, 2025' },
+  ];
+
+  const recentActivities = [
+    { id: 1, icon: <PlayCircle className="w-5 h-5 text-emerald-500" />, title: 'Watched React State Patterns', action: 'Video', time: '2h ago', progress: 60 },
+    { id: 2, icon: <BookOpen className="w-5 h-5 text-indigo-500" />, title: 'Read DSA Notes - Trees', action: 'PDF', time: '5h ago', progress: 100 },
+    { id: 3, icon: <Trophy className="w-5 h-5 text-yellow-500" />, title: 'Quiz: Sorting Algorithms', action: 'Quiz', time: '1d ago', progress: 85 },
+  ];
+
+  const trendingTopics = [
+    { id: 1, thumbnail: '🧠', title: 'Neural Networks from Scratch', views: '21k', duration: '35m', rating: 4.9, isNew: true },
+    { id: 2, thumbnail: '⚙️', title: 'CI/CD with GitHub Actions', views: '15k', duration: '28m', rating: 4.7, isNew: false },
+    { id: 3, thumbnail: '🚀', title: 'Next.js 15 Server Actions', views: '18k', duration: '32m', rating: 4.8, isNew: true },
+  ];
+
+  // 1) Learning Trend Analysis
+  const TrendAnalysisCard = () => (
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Subject Progress
+          <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center space-x-2`}>
+            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <span>Learning Trend Analysis</span>
           </h3>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Current learning progress
+            Comprehensive view of your learning journey
           </p>
         </div>
-        <button className={`text-sm px-3 py-1 rounded-lg transition-all ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
-          View Details
-        </button>
       </div>
-      
-      <div className="space-y-5">
-        {analyticsData.subjectProgress.map((subject, index) => (
-          <div key={subject.subject} className="group" style={{ animationDelay: `${index * 0.1}s` }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${subject.color} shadow-lg`} />
-                <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {subject.subject}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {subject.progress}%
-                </span>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  subject.progress >= 80 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                  subject.progress >= 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {subject.progress >= 80 ? 'Excellent' : subject.progress >= 60 ? 'Good' : 'Needs Work'}
-                </div>
-              </div>
-            </div>
-            
-            <div className={`relative h-3 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'} shadow-inner`}>
-              <div 
-                className={`absolute left-0 top-0 h-full bg-gradient-to-r ${subject.color} rounded-full transition-all duration-1000 ease-out shadow-sm animate-progress-fill group-hover:shadow-lg`}
-                style={{ 
-                  width: `${subject.progress}%`,
-                  animationDelay: `${index * 0.2}s`
-                }}
-              />
-              {/* Progress shine effect */}
-              <div 
-                className="absolute top-0 h-full w-4 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 animate-shine"
-                style={{ 
-                  left: `${Math.max(subject.progress - 10, 0)}%`,
-                  animationDelay: `${index * 0.3 + 1}s`
-                }}
-              />
-            </div>
+      <ResponsiveChartBox min={240} vh={38} max={420}>
+        <Recharts.LineChart data={learningTrendData} margin={{ top: 5, right: 24, left: 12, bottom: 5 }}>
+          <Recharts.CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
+          <Recharts.XAxis dataKey="month" tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
+          <Recharts.YAxis tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
+          <Recharts.Tooltip content={<ReTooltip />} />
+          <Recharts.Legend />
+          <Recharts.Line type="monotone" dataKey="courses" stroke="#10B981" strokeWidth={3} dot={{ r: 3, fill: '#10B981' }} activeDot={{ r: 6 }} name="Courses" />
+          <Recharts.Line type="monotone" dataKey="videos" stroke="#3B82F6" strokeWidth={3} dot={{ r: 3, fill: '#3B82F6' }} activeDot={{ r: 6 }} name="Videos" />
+          <Recharts.Line type="monotone" dataKey="pdfs" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 3, fill: '#8B5CF6' }} activeDot={{ r: 6 }} name="PDFs" />
+          <Recharts.Line type="monotone" dataKey="quizzes" stroke="#F59E0B" strokeWidth={3} dot={{ r: 3, fill: '#F59E0B' }} activeDot={{ r: 6 }} name="Quizzes" />
+        </Recharts.LineChart>
+      </ResponsiveChartBox>
+    </div>
+  );
+
+  // 2) Learning Categories pie chart
+  const LearningCategoriesCard = () => (
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center space-x-2`}>
+            <BookOpen className="w-5 h-5 text-indigo-500" />
+            <span>Learning Categories</span>
+          </h3>
+          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Time distribution across topics
+          </p>
+        </div>
+      </div>
+      <ResponsiveChartBox min={210} vh={32} max={320}>
+        <Recharts.PieChart>
+          <Recharts.Pie
+            data={categoryDistribution}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={95}
+            labelLine={false}
+            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            dataKey="value"
+          >
+            {categoryDistribution.map((entry, index) => (
+              <Recharts.Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Recharts.Pie>
+          <Recharts.Tooltip content={<ReTooltip />} />
+        </Recharts.PieChart>
+      </ResponsiveChartBox>
+      <div className="grid grid-cols-2 gap-2 mt-4">
+        {categoryDistribution.map((cat) => (
+          <div key={cat.name} className="flex items-center space-x-2">
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{cat.name}</span>
           </div>
         ))}
       </div>
-      
-      {/* Progress Summary */}
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
-            <div className={`text-lg font-bold text-emerald-600 dark:text-emerald-400`}>
-              {(analyticsData.subjectProgress.reduce((acc, subj) => acc + subj.progress, 0) / analyticsData.subjectProgress.length).toFixed(1)}%
-            </div>
-            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Average Progress
-            </div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
-            <div className={`text-lg font-bold text-blue-600 dark:text-blue-400`}>
-              {analyticsData.subjectProgress.filter(s => s.progress >= 80).length}
-            </div>
-            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Subjects Mastered
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 
-  const PerformanceChart = () => (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-4 md:p-6 h-full`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
+  // 3) Quiz Performance (per course)
+  const QuizPerformanceChart = () => (
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className={`text-base md:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Weekly Performance Trends
+          <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center space-x-2`}>
+            <Target className="w-5 h-5 text-purple-500" />
+            <span>Quiz Performance (per course)</span>
           </h3>
-          <p className={`text-xs md:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Topics completed and learning velocity
+          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Average quiz scores with attempts
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
-          <span className={`text-xs md:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Completed Topics</span>
-        </div>
       </div>
-      
-      {/* Line Chart Area - Responsive height */}
-      <div className="relative h-64 md:h-80 lg:h-96 mb-4 md:mb-6">
-        <svg className="w-full h-full" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet">
-          {/* Grid lines */}
-          {[0, 1, 2, 3, 4, 5].map((line) => (
-            <line 
-              key={line}
-              x1="50" 
-              y1={50 + (line * 40)} 
-              x2="450" 
-              y2={50 + (line * 40)}
-              stroke={isDark ? '#374151' : '#e5e7eb'}
-              strokeWidth="1"
-            />
-          ))}
-          
-          {/* Vertical grid lines */}
-          {analyticsData.weeklyStudyHours.map((_, index) => (
-            <line 
-              key={index}
-              x1={80 + (index * 55)} 
-              y1="50" 
-              x2={80 + (index * 55)} 
-              y2="250"
-              stroke={isDark ? '#374151' : '#f3f4f6'}
-              strokeWidth="0.5"
-            />
-          ))}
-          
-          {/* Chart line */}
-          <defs>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#8b5cf6" />
-              <stop offset="50%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#ec4899" />
-            </linearGradient>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#ec4899" stopOpacity="0.05" />
-            </linearGradient>
-            
-            {/* Glow effect */}
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge> 
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          
-          {/* Area under curve */}
-          <path
-            d={`M 50,${230 - (analyticsData.weeklyStudyHours[0].completed * 20)} 
-               ${analyticsData.weeklyStudyHours.map((day, index) => 
-                 `L ${80 + (index * 55)},${230 - (day.completed * 20)}`
-               ).join(' ')} 
-               L 410,230 L 50,230 Z`}
-            fill="url(#areaGradient)"
-            className="animate-draw-area"
-          />
-          
-          {/* Main line */}
-          <path
-            d={`M 50,${230 - (analyticsData.weeklyStudyHours[0].completed * 20)} 
-               ${analyticsData.weeklyStudyHours.map((day, index) => 
-                 `L ${80 + (index * 55)},${230 - (day.completed * 20)}`
-               ).join(' ')}`}
-            fill="none"
-            stroke="url(#lineGradient)"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#glow)"
-            className="animate-draw-line"
-          />
-          
-          {/* Data points */}
-          {analyticsData.weeklyStudyHours.map((day, index) => (
-            <g key={index}>
-              <circle
-                cx={80 + (index * 55)}
-                cy={230 - (day.completed * 20)}
-                r="6"
-                fill="#8b5cf6"
-                className="animate-scale-in cursor-pointer hover:r-8 transition-all"
-                style={{ animationDelay: `${index * 0.1 + 0.5}s` }}
-              />
-              <circle
-                cx={80 + (index * 55)}
-                cy={230 - (day.completed * 20)}
-                r="3"
-                fill="white"
-                className="animate-scale-in"
-                style={{ animationDelay: `${index * 0.1 + 0.6}s` }}
-              />
-              
-              {/* Hover tooltip */}
-              <g className="opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
-                <rect
-                  x={80 + (index * 55) - 20}
-                  y={230 - (day.completed * 20) - 35}
-                  width="40"
-                  height="25"
-                  rx="4"
-                  fill={isDark ? '#1f2937' : '#ffffff'}
-                  stroke={isDark ? '#374151' : '#e5e7eb'}
-                  strokeWidth="1"
-                />
-                <text
-                  x={80 + (index * 55)}
-                  y={230 - (day.completed * 20) - 18}
-                  fontSize="12"
-                  fill={isDark ? '#ffffff' : '#1f2937'}
-                  textAnchor="middle"
-                  fontWeight="600"
-                >
-                  {day.completed}
-                </text>
-              </g>
-            </g>
-          ))}
-          
-          {/* Y-axis labels */}
-          {[0, 2, 4, 6, 8, 10].map((value, index) => (
-            <text 
-              key={value}
-              x="40" 
-              y={235 - (index * 40)} 
-              fontSize="12" 
-              fill={isDark ? '#9ca3af' : '#6b7280'}
-              textAnchor="end"
-            >
-              {value}
-            </text>
-          ))}
-          
-          {/* X-axis labels */}
-          {analyticsData.weeklyStudyHours.map((day, index) => (
-            <text 
-              key={index}
-              x={80 + (index * 55)} 
-              y="270" 
-              fontSize="12" 
-              fill={isDark ? '#9ca3af' : '#6b7280'}
-              textAnchor="middle"
-              fontWeight="500"
-            >
-              {day.day}
-            </text>
-          ))}
-          
-          {/* Chart title on SVG */}
-          <text 
-            x="250" 
-            y="25" 
-            fontSize="14" 
-            fill={isDark ? '#d1d5db' : '#374151'}
-            textAnchor="middle"
-            fontWeight="600"
-          >
-            Daily Learning Progress
-          </text>
-        </svg>
-      </div>
-      
-      {/* Performance Stats - Enhanced */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-center p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
-          <div className={`text-lg md:text-xl font-bold text-purple-500`}>
-            {analyticsData.weeklyStudyHours.reduce((acc, day) => acc + day.completed, 0)}
-          </div>
-          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Total Completed
-          </div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20">
-          <div className={`text-lg md:text-xl font-bold text-pink-500`}>
-            {Math.max(...analyticsData.weeklyStudyHours.map(d => d.completed))}
-          </div>
-          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Best Day
-          </div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20">
-          <div className={`text-lg md:text-xl font-bold text-indigo-500`}>
-            {(analyticsData.weeklyStudyHours.reduce((acc, day) => acc + day.completed, 0) / 7).toFixed(1)}
-          </div>
-          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Daily Avg
-          </div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20">
-          <div className={`text-lg md:text-xl font-bold text-emerald-500`}>
-            +23%
-          </div>
-          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Improvement
-          </div>
-        </div>
+      <ResponsiveChartBox min={210} vh={32} max={320}>
+        <Recharts.BarChart data={quizScoresByCourse} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+          <Recharts.CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
+          <Recharts.XAxis dataKey="course" tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} />
+          <Recharts.YAxis tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} domain={[0, 100]} />
+          <Recharts.Tooltip content={<ReTooltip />} />
+          <Recharts.Legend />
+          <Recharts.ReferenceLine y={70} stroke="#F59E0B" strokeDasharray="3 3" label={{ value: 'Target 70%', position: 'insideTopRight', fill: isDark ? '#FBBF24' : '#92400E', fontSize: 10 }} />
+          <Recharts.Bar dataKey="avgScore" name="Avg Score" fill="#3B82F6" radius={[8,8,0,0]} barSize={32}>
+            <Recharts.LabelList dataKey="avgScore" position="top" formatter={(v) => `${v}%`} style={{ fill: isDark ? '#E5E7EB' : '#374151', fontSize: 12 }} />
+          </Recharts.Bar>
+        </Recharts.BarChart>
+      </ResponsiveChartBox>
+      {/* Attempts badges */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {quizScoresByCourse.map((c) => (
+          <span key={c.course} className={`px-2 py-1 text-xs rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
+            {c.course}: {c.attempts} attempts
+          </span>
+        ))}
       </div>
     </div>
   );
+
+  // Removed assessment trend and course mastery for simplified 3-chart layout
+
+  // Removed StreakChart and GoalsWidget components
+
+  // Render content for non-overview tabs
   const renderActiveTabContent = () => {
     switch (activeTab) {
-      case 'analytics':
-        return (
-          <div className="space-y-6">
-            {/* Analytics Header */}
-            <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  📊 Learning Analytics
-                </h2>
-                <div className="flex items-center space-x-3">
-                  <select className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
-                    <option>This Month</option>
-                    <option>Last 3 Months</option>
-                    <option>This Year</option>
-                  </select>
-                  <button className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all">
-                    Export Report
-                  </button>
-                </div>
-              </div>
-              
-              {/* Key Metrics */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">156</div>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total Sessions</div>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">89%</div>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Completion Rate</div>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">4.8</div>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Avg Rating</div>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">127h</div>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total Hours</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Detailed Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <StudyHoursChart />
-              <ProgressChart />
-            </div>
-            
-            <div className="mb-6">
-              <PerformanceChart />
-            </div>
-            
-            <div className="grid lg:grid-cols-3 gap-6">
-              <GoalsWidget />
-              
-              {/* Learning Patterns */}
-              <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Learning Patterns
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Best Time</span>
-                    <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>2-4 PM</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Avg Session</span>
-                    <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>45 min</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Most Active Day</span>
-                    <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Thursday</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Focus Score</span>
-                    <span className={`text-sm font-medium text-green-500`}>8.5/10</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Achievements */}
-              <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
-                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Recent Achievements
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { icon: '🏆', title: 'Week Warrior', desc: '7-day streak' },
-                    { icon: '🎯', title: 'Quiz Master', desc: '100% accuracy' },
-                    { icon: '⚡', title: 'Speed Learner', desc: 'Completed in 30min' },
-                    { icon: '🌟', title: 'First Course', desc: 'React Basics done' }
-                  ].map((achievement, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="text-2xl">{achievement.icon}</div>
-                      <div>
-                        <div className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {achievement.title}
-                        </div>
-                        <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {achievement.desc}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
       case 'search':
         return (
           <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-6`}>
@@ -1062,7 +603,6 @@ const Dashboard = () => {
                   { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
                   { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
                   { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
-                  { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
                 ].map((item, index) => (
                   item.isLink || item.href ? (
                     <a
@@ -1150,7 +690,6 @@ const Dashboard = () => {
               { id: 'pdf-learning', label: 'PDF Learning', icon: <FileText className="w-5 h-5" />, emoji: '📄', isLink: true, href: '/pdf-learning' },
               { id: 'video-learning', label: 'Video Learning', icon: <Youtube className="w-5 h-5" />, emoji: '🎥', isLink: true, href: '/video-learning' },
               { id: 'notes', label: 'My Notes', icon: <FileText className="w-5 h-5" />, emoji: '📝' },
-              { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-5 h-5" />, emoji: '📊' },
               { id: 'help', label: 'Help & Support', icon: <MessageCircle className="w-5 h-5" />, emoji: '❓' },
             ].map((item, index) => (
               item.isLink || item.href ? (
@@ -1304,70 +843,42 @@ const Dashboard = () => {
                   key={action.title}
                   onClick={action.action}
                   className={`${isDark ? 'bg-gray-800 hover:bg-gray-700 border-gray-700' : 'bg-white hover:bg-gray-50 border-gray-200'} 
-                    border rounded-xl p-4 lg:p-6 text-left transition-all duration-300 hover:shadow-lg transform hover:scale-105 group animate-fade-in relative overflow-hidden`}
+                    border rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-xl transform hover:scale-105 group relative overflow-hidden`}
                   style={{ animationDelay: `${0.4 + index * 0.1}s` }}
                 >
-                  {/* Background Effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                  {/* Background Gradient Effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
                   
-                  <div className={`bg-gradient-to-r ${action.color} w-10 h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform relative z-10`}>
-                    <div className="text-white">
-                      {action.icon}
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <div className={`${action.color} w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg bg-gradient-to-r text-white text-2xl`}>
+                      {action.title.split(' ')[0]} {/* Extract emoji */}
                     </div>
-                  </div>
-                  <h3 className={`font-semibold text-sm lg:text-base transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'} mb-1`}>
-                    {action.title}
-                  </h3>
-                  <p className={`text-xs lg:text-sm transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-                    {action.description}
-                  </p>
-                  <div className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                    {action.stats}
+                    <h3 className={`font-bold text-base transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
+                      {action.title.substring(2)} {/* Remove emoji from title */}
+                    </h3>
+                    <p className={`text-sm transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+                      {action.description}
+                    </p>
+                    <div className={`text-xs font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                      {action.stats}
+                    </div>
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Professional Analytics Dashboard */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-lg lg:text-xl font-semibold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'} animate-fade-in`}>
-                📊 Learning Analytics
-              </h2>
-              <div className="flex items-center space-x-3">
-                <select className={`px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}>
-                  <option>Last 7 days</option>
-                  <option>Last 30 days</option>
-                  <option>Last 3 months</option>
-                </select>
-                <button 
-                  onClick={() => setActiveTab('analytics')}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 text-sm"
-                >
-                  Full Report
-                </button>
-              </div>
-            </div>
-            
-            {/* Main Charts Grid - Responsive */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-              {/* Study Hours Chart */}
-              <div className="lg:col-span-1 xl:col-span-2">
-                <StudyHoursChart />
-              </div>
-              
-              {/* Progress Chart */}
-              <div className="lg:col-span-1 xl:col-span-1">
-                <ProgressChart />
-              </div>
-            </div>
-            
-            {/* Performance Chart - Full Width */}
-            <div className="mb-6">
-              <PerformanceChart />
+          {/* Dashboard Charts (Only 3 charts) */}
+          <div className="mb-8 space-y-6">
+            <TrendAnalysisCard />
+            <div className="grid lg:grid-cols-2 gap-6">
+              <LearningCategoriesCard />
+              <QuizPerformanceChart />
             </div>
           </div>
+
+          {/* End charts */}
 
           {/* Recent Activities & Trending Topics */}
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
