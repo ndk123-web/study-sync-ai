@@ -72,6 +72,7 @@ const CoursesInterface = () => {
     (state) => state.setNotStoreNotes
   );
   const setStoredNotesFromZustand = useNotes((state) => state.setStoreNotes);
+  const clearNotesFromZustand = useNotes((state) => state.clearNotes);
 
   const setCurrentVideoIdFromZustand = useCurrentPlaylist(
     (state) => state.setCurrentVideoId
@@ -91,11 +92,11 @@ const CoursesInterface = () => {
   const setCourseIdFromZustand = useCurrentPlaylist(
     (state) => state.setCourseId
   );
+  const courseIdFromZustand = useCurrentPlaylist((state) => state.courseId);
 
   const notesLoader = useLoaders((state) => state.notesLoader);
   const setNotesLoader = useLoaders((state) => state.setNotesLoader);
   const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
-
   const chatLoader = useLoaders((state) => state.chatLoader);
   const summarizeLoader = useLoaders((state) => state.summarizeLoader);
   const assessmentLoader = useLoaders((state) => state.assessmentLoader);
@@ -236,6 +237,64 @@ const CoursesInterface = () => {
     },
   ];
 
+  // On CourseId change , change the courseId in Zustand state
+  useEffect(() => {
+    console.log("Course ID changed:", courseId);
+    setCourseIdFromZustand(courseId);
+    clearNotesFromZustand(); // it will clear the notes in zustand for the new course
+    console.log("✅ Cleared Zustand notes for new course");
+  }, [courseId])
+
+    // To Get Notes on the basis of courseId
+  useEffect(() => {
+    const fetchNotes = async () => {
+      console.log("🔍 Fetching notes for courseId:", courseId);
+
+      if (!courseId) {
+        console.log("❌ No courseId provided, skipping notes fetch");
+        return;
+      }
+
+      try {
+
+        // If no Zustand data, then fetch from backend
+        console.log("🌐 Fetching notes from backend...");
+        const apiResponse = await GetCurrentNotesApi({ courseId });
+        console.log("📝 Notes API Response:", apiResponse);
+
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("❌ Error fetching notes:", apiResponse?.message);
+          // Don't show alert for empty notes, just set empty state
+          const emptyNotes = "";
+          // setStoredNotes(emptyNotes);
+          // setNotStoreNotes(emptyNotes);
+          // setStoredNotesFromZustand(emptyNotes);
+          setNotStoreNotesFromZustand(emptyNotes);
+          return;
+        }
+
+        const notesData = apiResponse?.data?.notes || "";
+        console.log("✅ Notes fetched from backend:", notesData);
+
+        // Update both local state and Zustand
+        // setStoredNotes(notesData);
+        // setNotStoreNotes(notesData);
+        // setStoredNotesFromZustand(notesData);
+        setNotStoreNotesFromZustand(notesData);
+      } catch (error) {
+        console.error("💥 Error in fetchNotes:", error);
+        // Set empty notes on error
+        const emptyNotes = "";
+        setStoredNotes(emptyNotes);
+        setNotStoreNotes(emptyNotes);
+        setStoredNotesFromZustand(emptyNotes);
+        setNotStoreNotesFromZustand(emptyNotes);
+      }
+    };
+
+    fetchNotes();
+  }, [courseId]); // ✅ Only courseId dependency
+
   // Set current video ID from URL
   useEffect(() => {
     const getPlaylist = async () => {
@@ -369,72 +428,9 @@ const CoursesInterface = () => {
     fetchTranscript();
   }, [currentVideoId]);
 
-  // To Get Notes on the basis of courseId
-  useEffect(() => {
-    const fetchNotes = async () => {
-      console.log("🔍 Fetching notes for courseId:", courseId);
 
-      if (!courseId) {
-        console.log("❌ No courseId provided, skipping notes fetch");
-        return;
-      }
 
-      try {
-        // First check if we have notes in Zustand (local storage)
-        if (storedNotesFromZustand) {
-          console.log("📱 Using notes from Zustand:", storedNotesFromZustand);
-          setStoredNotes(storedNotesFromZustand);
-          setNotStoreNotes(notStoreNotesFromZustand || storedNotesFromZustand);
-          return;
-        }
-
-        // If no Zustand data, then fetch from backend
-        console.log("🌐 Fetching notes from backend...");
-        const apiResponse = await GetCurrentNotesApi({ courseId });
-        console.log("📝 Notes API Response:", apiResponse);
-
-        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-          console.log("❌ Error fetching notes:", apiResponse?.message);
-          // Don't show alert for empty notes, just set empty state
-          const emptyNotes = "";
-          setStoredNotes(emptyNotes);
-          setNotStoreNotes(emptyNotes);
-          setStoredNotesFromZustand(emptyNotes);
-          setNotStoreNotesFromZustand(emptyNotes);
-          return;
-        }
-
-        const notesData = apiResponse?.data?.notes || "";
-        console.log("✅ Notes fetched from backend:", notesData);
-
-        // Update both local state and Zustand
-        setStoredNotes(notesData);
-        setNotStoreNotes(notesData);
-        setStoredNotesFromZustand(notesData);
-        setNotStoreNotesFromZustand(notesData);
-
-      } catch (error) {
-        console.error("💥 Error in fetchNotes:", error);
-        // Set empty notes on error
-        const emptyNotes = "";
-        setStoredNotes(emptyNotes);
-        setNotStoreNotes(emptyNotes);
-        setStoredNotesFromZustand(emptyNotes);
-        setNotStoreNotesFromZustand(emptyNotes);
-      }
-    };
-
-    fetchNotes();
-  }, [courseId, storedNotesFromZustand]);
-
-  // Debug useEffect to log state changes
-  useEffect(() => {
-    console.log("🔄 State updated - storedNotes:", storedNotes);
-    console.log("🔄 State updated - notStoreNotes:", notStoreNotes);
-
-  }, [storedNotes, notStoreNotes]);
-
-  // Auto-save to Zustand when user types (with debounce)
+  // Auto-save to Zustand as well as dtabase after typing 1 seconds when user types (with debounce)
   useEffect(() => {
     if (!courseId || !notStoreNotes) return;
 
@@ -471,56 +467,56 @@ const CoursesInterface = () => {
     return () => clearTimeout(autoSaveTimer);
   }, [notStoreNotes, courseId]);
 
-  const handleSaveNotes = async () => {
-    try {
+  // const handleSaveNotes = async () => {
+  //   try {
 
-      console.log("notStoreNotes:", notStoreNotes);
-      console.log("storedNotesFromZustand:", storedNotesFromZustand);
-      console.log("storedNotes:", storedNotes);
-      console.log("notStoreNotesFromZustand:", notStoreNotesFromZustand);
+  //     console.log("notStoreNotes:", notStoreNotes);
+  //     console.log("storedNotesFromZustand:", storedNotesFromZustand);
+  //     console.log("storedNotes:", storedNotes);
+  //     console.log("notStoreNotesFromZustand:", notStoreNotesFromZustand);
 
-      // if stored notes are equal to not stored notes then no need to call API
-      if (notStoreNotes.trim() === notStoreNotesFromZustand.trim()) {
-        alert("No changes detected in notes.");
-        return;
-      }
+  //     // if stored notes are equal to not stored notes then no need to call API
+  //     if (notStoreNotes.trim() === notStoreNotesFromZustand.trim()) {
+  //       alert("No changes detected in notes.");
+  //       return;
+  //     }
 
-      setNotesLoader();
-      // if notStoreNotes is not equal to storedNotes then call API to create a new Note
-      const apiResponse = await SaveCourseNotesApi({
-        courseId,
-        notes: notStoreNotes,
-      });
-      console.log("Api Response for Creating Note: ", apiResponse);
-      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        // Logic For Error Notification
-        console.log(
-          "Error in fetching notes: ",
-          apiResponse?.message || "Error in fetching notes"
-        );
-        return;
-      }
+  //     setNotesLoader();
+  //     // if notStoreNotes is not equal to storedNotes then call API to create a new Note
+  //     const apiResponse = await SaveCourseNotesApi({
+  //       courseId,
+  //       notes: notStoreNotes,
+  //     });
+  //     console.log("Api Response for Creating Note: ", apiResponse);
+  //     if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+  //       // Logic For Error Notification
+  //       console.log(
+  //         "Error in fetching notes: ",
+  //         apiResponse?.message || "Error in fetching notes"
+  //       );
+  //       return;
+  //     }
 
-      unsetNotesLoader();
+  //     unsetNotesLoader();
       
-      // Update both local state and Zustand with the saved notes
-      const savedNotes = apiResponse?.data?.notes || "";
-      setStoredNotes(savedNotes);
-      setNotStoreNotes(savedNotes);
+  //     // Update both local state and Zustand with the saved notes
+  //     const savedNotes = apiResponse?.data?.notes || "";
+  //     // setStoredNotes(savedNotes);
       
-      // Update Zustand store as well
-      setStoredNotesFromZustand(savedNotes);
-      setNotStoreNotesFromZustand(savedNotes);
+  //     // Update Zustand store as well
+  //     // setStoredNotesFromZustand(savedNotes);
+  //     setNotStoreNotesFromZustand(savedNotes);
       
-      console.log("✅ Notes saved successfully and synced with Zustand");
-      alert("Notes Saved Successfully")
-    } catch (err) {
-      alert("Error fetching notes: " + err.message);
-      // unsetNotesLoader();
-    } finally {
-      unsetNotesLoader();
-    }
-  };
+  //     console.log("✅ Notes saved successfully and synced with Zustand");
+  //     alert("Notes Saved Successfully");
+
+  //   } catch (err) {
+  //     alert("Error fetching notes: " + err.message);
+  //     // unsetNotesLoader();
+  //   } finally {
+  //     unsetNotesLoader();
+  //   }
+  // };
 
   const handlePreviousVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
@@ -1333,7 +1329,7 @@ const CoursesInterface = () => {
                       >
                         Auto-saved
                       </span>
-                      <button onClick={handleSaveNotes} className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                      <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
                         { notesLoader ? "Saving..." : "Save" }
                       </button>
                     </div>
@@ -1766,7 +1762,7 @@ Tips:
 • Use timestamps like [05:30] for important moments
 • Write key concepts and definitions
 • Note questions to ask later"
-                  value={notStoreNotes} // Changed from storedNotes to notStoreNotes
+                  value={notStoreNotesFromZustand} // Changed from storedNotes to notStoreNotes
                   className={`w-full h-48 p-4 rounded-lg border resize-none ${
                     isDark
                       ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -1774,7 +1770,7 @@ Tips:
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
                   // This is important for validating notes
                   onChange={(e) => {
-                    setNotStoreNotes(e.target.value);
+                    setNotStoreNotesFromZustand(e.target.value);
                   }}
                 />
 
@@ -1786,14 +1782,14 @@ Tips:
 
                 {/* button to save notes */}
                 <button
-                  onClick={handleSaveNotes}
+                  onClick
                   className={`mt-4 px-4 py-2 rounded-lg text-white ${
                     isDark
                       ? "bg-emerald-500 hover:bg-emerald-600"
                       : "bg-emerald-600 hover:bg-emerald-700"
                   } transition-all duration-200`}
                 >
-                  {notesLoader ? "Saving..." : "Save Notes"}
+                  {notesLoader ? "Saving..." : "Saved"}
                 </button>
               </div>
             )}

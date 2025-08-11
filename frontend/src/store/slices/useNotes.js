@@ -8,6 +8,8 @@ const useNotes = createPersistedStore("notes", (set) => ({
     // Action functions to update the state
     setNotStoreNotes: (notes) => set(() => ({ notStoreNotes: notes })),
     setStoreNotes: (notes) => set(() => ({ storeNotes: notes })),
+
+    clearNotes: () => set(() => ({ notStoreNotes: "" }))
 }))
 
 export { useNotes }
