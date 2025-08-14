@@ -49,6 +49,7 @@ import { TrackPlaylistIndexApi } from "../api/TrackPlaylistIndex.js";
 import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
+import { GetSummaryOfCurrentCourse } from '../api/GetSummaryOfCurrentCourse.js'
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -509,6 +510,30 @@ const CoursesInterface = () => {
   //     unsetNotesLoader();
   //   }
   // };
+
+  const fetchSummary = async () => {
+    
+    if (!courseId) {
+      alert("No course selected for summary generation.");
+      return;
+    }
+
+    try{
+      const apiResponse = await GetSummaryOfCurrentCourse({ courseId });
+      if (apiResponse !== 200 && apiResponse !== 201) {
+        alert("Error fetching summary: " + apiResponse?.message || "Error in fetching summary");
+        return;
+      }
+
+      console.log("Summary Response: ", apiResponse);
+
+    }
+    catch(err){
+      alert(err.message || "Error in fetching summary");
+      return; 
+    }
+
+  }
 
   const handlePreviousVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
@@ -1322,7 +1347,7 @@ const CoursesInterface = () => {
                         Auto-saved
                       </span>
                       <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        {notesLoader ? "Saving..." : "Save"}
+                        {notesLoader ? "Saving..." : "Saved"}
                       </button>
                     </div>
                   </div>
@@ -1370,22 +1395,19 @@ const CoursesInterface = () => {
                     <div className="flex items-center space-x-2 mb-4">
                       <span className="text-2xl">📚</span>
                       <h3 className="text-lg font-semibold">Lesson Summary</h3>
+                        <button onClick={fetchSummary}  className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                        Generate Summary  
+                  </button>
                     </div>
                     <div
                       className={`p-4 rounded-lg ${
                         isDark ? "bg-gray-700" : "bg-gray-100"
                       }`}
                     >
-                      <h4 className="font-medium mb-2">Key Points:</h4>
-                      <ul className="text-sm space-y-1">
-                        <li>
-                          • React Hooks enable state in functional components
-                        </li>
-                        <li>
-                          • useState is the basic hook for state management
-                        </li>
-                        <li>• Always call hooks at the top level</li>
-                      </ul>
+                      
+                      {/* Here Button will come */}
+                      
+
                     </div>
                   </div>
                 )}
@@ -1754,7 +1776,7 @@ Tips:
 • Use timestamps like [05:30] for important moments
 • Write key concepts and definitions
 • Note questions to ask later"
-                  value={notStoreNotesFromZustand} // Changed from storedNotes to notStoreNotes
+                  value={notStoreNotes} // Changed from storedNotes to notStoreNotes
                   className={`w-full h-48 p-4 rounded-lg border resize-none ${
                     isDark
                       ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -1762,7 +1784,7 @@ Tips:
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
                   // This is important for validating notes
                   onChange={(e) => {
-                    setNotStoreNotesFromZustand(e.target.value);
+                    setNotStoreNotes(e.target.value);
                   }}
                 />
 
@@ -1951,53 +1973,18 @@ Tips:
             {activeTab === "summary" && (
               <div className="space-y-4">
                 <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
+                  <button onClick={fetchSummary}  className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                        Generate Summary  
+                  </button>
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
                   }`}
                 >
-                  <h4 className="font-semibold mb-3">
-                    🎯 Key Learning Points:
-                  </h4>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-start space-x-2">
-                      <span className="text-emerald-500 mt-1">•</span>
-                      <span>
-                        React Hooks allow you to use state in functional
-                        components
-                      </span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <span className="text-emerald-500 mt-1">•</span>
-                      <span>
-                        useState is the most basic hook for managing state
-                      </span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <span className="text-emerald-500 mt-1">•</span>
-                      <span>
-                        Always call hooks at the top level of your function
-                      </span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <span className="text-emerald-500 mt-1">•</span>
-                      <span>Hooks follow the naming convention "use..."</span>
-                    </li>
-                  </ul>
-                </div>
 
-                <div
-                  className={`p-4 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-gray-100"
-                  }`}
-                >
-                  <h4 className="font-semibold mb-3">💡 Quick Recap:</h4>
-                  <p className="text-sm">
-                    This lesson covered the fundamentals of React Hooks,
-                    focusing on useState for state management in functional
-                    components. You learned the rules of hooks and best
-                    practices for implementation.
-                  </p>
+                  {/* Here Actual Data From State will be here */}
+                  {/* Here Button will come */}
+
                 </div>
               </div>
             )}

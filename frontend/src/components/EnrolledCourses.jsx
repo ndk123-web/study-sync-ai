@@ -72,6 +72,9 @@ const EnrolledCoursesSample = () => {
   const [filterStatus, setFilterStatus] = useState("all"); // all, in-progress, completed
   const [sortBy, setSortBy] = useState("recent"); // recent, progress, alphabetical
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [totalEnrolledCount, setTotalEnrolledCount] = useState(0);
+  const [inProgressCount, setInProgressCount] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
 
   // Auth check
   useEffect(() => {
@@ -93,6 +96,44 @@ const EnrolledCoursesSample = () => {
         return;
       }
       console.log("Api Response for Fetching User Enrolled Api: ", apiResponse);
+
+      const enrollments = Array.isArray(apiResponse?.data)
+        ? apiResponse.data
+        : Array.isArray(apiResponse?.data?.getEnrollUserCourses)
+        ? apiResponse.data.getEnrollUserCourses
+        : [];
+
+      setTotalEnrolledCount(enrollments.length);
+
+      const inProg = enrollments.filter((e) => !e.completed).length;
+      const comp = enrollments.filter((e) => e.completed).length;
+      setInProgressCount(inProg);
+      setCompletedCount(comp);
+
+      // Normalize to UI shape used below
+      const normalized = enrollments.map((enr) => {
+        const c = enr?.courseId || {};
+        return {
+          id: c.courseId || c._id || enr._id,
+          title: c.title || "Untitled Course",
+          instructor: c.instructor || "Unknown Instructor",
+          category: c.category || "General",
+          rating: typeof c.rating === "number" ? c.rating : 0,
+          // thumbnail removed as requested
+          progress: Number(enr?.progress ?? 0),
+          totalLessons: Number(c?.lessons ?? 0),
+          completedLessons: Math.round((Number(enr?.progress ?? 0) / 100) * Number(c?.lessons ?? 0)),
+          duration: c.duration ? `${c.duration} min` : "",
+          students: c.likes || 0,
+          difficulty: c.featured ? "Advanced" : "Beginner",
+          nextLesson: c.title ? `Continue: ${c.title}` : "Continue where you left",
+          certificate: Boolean(enr?.completed),
+          lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+          completed: Boolean(enr?.completed),
+        };
+      });
+
+      setEnrolledCourses(normalized);
     };
 
     fetchUserEnrollCourses();
@@ -109,148 +150,153 @@ const EnrolledCoursesSample = () => {
   };
 
   // Dummy enrolled courses data (replace with API call later)
-  const enrolledCoursesSample = [
-    {
-      id: 1,
-      title: "Complete React Development Course",
-      instructor: "John Doe",
-      progress: 75,
-      totalLessons: 45,
-      completedLessons: 34,
-      duration: "15h 30m",
-      thumbnail: "⚛️",
-      category: "Frontend Development",
-      enrolledDate: "2 weeks ago",
-      lastAccessed: "1 day ago",
-      nextLesson: "React Context API",
-      difficulty: "Intermediate",
-      rating: 4.8,
-      students: "12.5k",
-      certificate: false,
-    },
-    {
-      id: 2,
-      title: "JavaScript ES6 Masterclass",
-      instructor: "Jane Smith",
-      progress: 45,
-      totalLessons: 32,
-      completedLessons: 14,
-      duration: "8h 45m",
-      thumbnail: "🟨",
-      category: "Programming",
-      enrolledDate: "1 month ago",
-      lastAccessed: "3 days ago",
-      nextLesson: "Arrow Functions & Destructuring",
-      difficulty: "Beginner",
-      rating: 4.9,
-      students: "8.2k",
-      certificate: false,
-    },
-    {
-      id: 3,
-      title: "CSS Grid & Flexbox Mastery",
-      instructor: "Mike Johnson",
-      progress: 100,
-      totalLessons: 28,
-      completedLessons: 28,
-      duration: "6h 15m",
-      thumbnail: "🎨",
-      category: "CSS & Design",
-      enrolledDate: "3 weeks ago",
-      lastAccessed: "2 hours ago",
-      nextLesson: "Course Completed!",
-      difficulty: "Intermediate",
-      rating: 4.7,
-      students: "5.8k",
-      certificate: true,
-    },
-    {
-      id: 4,
-      title: "Node.js Backend Development",
-      instructor: "Sarah Wilson",
-      progress: 30,
-      totalLessons: 52,
-      completedLessons: 15,
-      duration: "20h 10m",
-      thumbnail: "🟢",
-      category: "Backend Development",
-      enrolledDate: "1 week ago",
-      lastAccessed: "5 days ago",
-      nextLesson: "Express.js Routing",
-      difficulty: "Advanced",
-      rating: 4.6,
-      students: "9.1k",
-      certificate: false,
-    },
-    {
-      id: 5,
-      title: "Python Machine Learning Basics",
-      instructor: "Dr. Alex Chen",
-      progress: 100,
-      totalLessons: 38,
-      completedLessons: 38,
-      duration: "12h 20m",
-      thumbnail: "🐍",
-      category: "AI & Machine Learning",
-      enrolledDate: "2 months ago",
-      lastAccessed: "1 week ago",
-      nextLesson: "Course Completed!",
-      difficulty: "Intermediate",
-      rating: 4.9,
-      students: "15.2k",
-      certificate: true,
-    },
-    {
-      id: 6,
-      title: "TypeScript for React Developers",
-      instructor: "Emily Rodriguez",
-      progress: 60,
-      totalLessons: 25,
-      completedLessons: 15,
-      duration: "9h 45m",
-      thumbnail: "📘",
-      category: "Frontend Development",
-      enrolledDate: "10 days ago",
-      lastAccessed: "Yesterday",
-      nextLesson: "Type Guards & Assertions",
-      difficulty: "Advanced",
-      rating: 4.8,
-      students: "6.7k",
-      certificate: false,
-    },
-  ];
+  // const enrolledCoursesSample = [
+  //   {
+  //     id: 1,
+  //     title: "Complete React Development Course",
+  //     instructor: "John Doe",
+  //     progress: 75,
+  //     totalLessons: 45,
+  //     completedLessons: 34,
+  //     duration: "15h 30m",
+  //     thumbnail: "⚛️",
+  //     category: "Frontend Development",
+  //     enrolledDate: "2 weeks ago",
+  //     lastAccessed: "1 day ago",
+  //     nextLesson: "React Context API",
+  //     difficulty: "Intermediate",
+  //     rating: 4.8,
+  //     students: "12.5k",
+  //     certificate: false,
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "JavaScript ES6 Masterclass",
+  //     instructor: "Jane Smith",
+  //     progress: 45,
+  //     totalLessons: 32,
+  //     completedLessons: 14,
+  //     duration: "8h 45m",
+  //     thumbnail: "🟨",
+  //     category: "Programming",
+  //     enrolledDate: "1 month ago",
+  //     lastAccessed: "3 days ago",
+  //     nextLesson: "Arrow Functions & Destructuring",
+  //     difficulty: "Beginner",
+  //     rating: 4.9,
+  //     students: "8.2k",
+  //     certificate: false,
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "CSS Grid & Flexbox Mastery",
+  //     instructor: "Mike Johnson",
+  //     progress: 100,
+  //     totalLessons: 28,
+  //     completedLessons: 28,
+  //     duration: "6h 15m",
+  //     thumbnail: "🎨",
+  //     category: "CSS & Design",
+  //     enrolledDate: "3 weeks ago",
+  //     lastAccessed: "2 hours ago",
+  //     nextLesson: "Course Completed!",
+  //     difficulty: "Intermediate",
+  //     rating: 4.7,
+  //     students: "5.8k",
+  //     certificate: true,
+  //   },
+  //   {
+  //     id: 4,
+  //     title: "Node.js Backend Development",
+  //     instructor: "Sarah Wilson",
+  //     progress: 30,
+  //     totalLessons: 52,
+  //     completedLessons: 15,
+  //     duration: "20h 10m",
+  //     thumbnail: "🟢",
+  //     category: "Backend Development",
+  //     enrolledDate: "1 week ago",
+  //     lastAccessed: "5 days ago",
+  //     nextLesson: "Express.js Routing",
+  //     difficulty: "Advanced",
+  //     rating: 4.6,
+  //     students: "9.1k",
+  //     certificate: false,
+  //   },
+  //   {
+  //     id: 5,
+  //     title: "Python Machine Learning Basics",
+  //     instructor: "Dr. Alex Chen",
+  //     progress: 100,
+  //     totalLessons: 38,
+  //     completedLessons: 38,
+  //     duration: "12h 20m",
+  //     thumbnail: "🐍",
+  //     category: "AI & Machine Learning",
+  //     enrolledDate: "2 months ago",
+  //     lastAccessed: "1 week ago",
+  //     nextLesson: "Course Completed!",
+  //     difficulty: "Intermediate",
+  //     rating: 4.9,
+  //     students: "15.2k",
+  //     certificate: true,
+  //   },
+  //   {
+  //     id: 6,
+  //     title: "TypeScript for React Developers",
+  //     instructor: "Emily Rodriguez",
+  //     progress: 60,
+  //     totalLessons: 25,
+  //     completedLessons: 15,
+  //     duration: "9h 45m",
+  //     thumbnail: "📘",
+  //     category: "Frontend Development",
+  //     enrolledDate: "10 days ago",
+  //     lastAccessed: "Yesterday",
+  //     nextLesson: "Type Guards & Assertions",
+  //     difficulty: "Advanced",
+  //     rating: 4.8,
+  //     students: "6.7k",
+  //     certificate: false,
+  //   },
+  // ];
 
-  useEffect(() => {
-    setEnrolledCourses(enrolledCoursesSample);
-  }, []);
+  // useEffect(() => {
+  //   setEnrolledCourses(enrolledCoursesSample);
+  // }, []);
 
   // Filter and sort courses
   const filteredAndSortedCourses = enrolledCourses
     .filter((course) => {
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const title = (course?.title || "").toLowerCase();
+      const instructor = (course?.instructor || "").toLowerCase();
+      const category = (course?.category || "").toLowerCase();
+      const q = (searchQuery || "").toLowerCase();
 
+      const matchesSearch =
+        title.includes(q) || instructor.includes(q) || category.includes(q);
+
+      const p = Number(course?.progress ?? 0);
       const matchesFilter =
         filterStatus === "all" ||
-        (filterStatus === "in-progress" &&
-          course.progress < 100 &&
-          course.progress > 0) ||
-        (filterStatus === "completed" && course.progress === 100) ||
-        (filterStatus === "not-started" && course.progress === 0);
+        (filterStatus === "in-progress" && p < 100 && p > 0) ||
+        (filterStatus === "completed" && p === 100) ||
+        (filterStatus === "not-started" && p === 0);
 
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case "progress":
-          return b.progress - a.progress;
+          return Number(b?.progress ?? 0) - Number(a?.progress ?? 0);
         case "alphabetical":
-          return a.title.localeCompare(b.title);
+          return (a?.title || "").localeCompare(b?.title || "");
         case "recent":
-        default:
-          return new Date(b.lastAccessed) - new Date(a.lastAccessed);
+        default: {
+          const ad = new Date(a?.lastAccessed || 0).getTime();
+          const bd = new Date(b?.lastAccessed || 0).getTime();
+          return bd - ad;
+        }
       }
     });
 
@@ -376,17 +422,9 @@ const EnrolledCoursesSample = () => {
             }`}
           >
             <div className="flex items-center space-x-3">
-              {photoURL ? (
-                <img
-                  src={photoURL}
-                  alt={username}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-              )}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p
                   className={`font-medium text-sm truncate ${
@@ -708,32 +746,28 @@ const EnrolledCoursesSample = () => {
             {[
               {
                 title: "Total Enrolled",
-                value: enrolledCourses.length.toString(),
+                value: totalEnrolledCount,
                 icon: <BookOpen className="w-5 h-5" />,
                 color: "from-blue-500 to-blue-600",
                 bgColor: "bg-blue-50 dark:bg-blue-900/20",
               },
               {
                 title: "In Progress",
-                value: enrolledCourses
-                  .filter((c) => c.progress > 0 && c.progress < 100)
-                  .length.toString(),
+                value: inProgressCount,
                 icon: <Clock className="w-5 h-5" />,
                 color: "from-yellow-500 to-orange-500",
                 bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
               },
               {
                 title: "Completed",
-                value: enrolledCourses
-                  .filter((c) => c.progress === 100)
-                  .length.toString(),
+                value: completedCount,
                 icon: <CheckCircle className="w-5 h-5" />,
                 color: "from-green-500 to-green-600",
                 bgColor: "bg-green-50 dark:bg-green-900/20",
               },
               {
                 title: "Certificates",
-                value: 0,
+                value: "0",
                 icon: <Award className="w-5 h-5" />,
                 color: "from-purple-500 to-purple-600",
                 bgColor: "bg-purple-50 dark:bg-purple-900/20",
@@ -770,7 +804,17 @@ const EnrolledCoursesSample = () => {
                     isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  {stat.value}
+                  {stat.title === "Certificates" ? (
+                    <p
+                      className={`text-xs font-semibold italic mt-2 ${
+                        isDark ? "text-yellow-400" : "text-yellow-600"
+                      }`}
+                    >
+                      Feature coming soon 🚀
+                    </p>
+                  ) : (
+                    stat.value
+                  )}
                 </p>
               </div>
             ))}
@@ -843,11 +887,12 @@ const EnrolledCoursesSample = () => {
                     : "bg-white border-gray-200 hover:bg-gray-50"
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
-                onClick={() => (window.location.href = `/learn/${course.id}`)}
+                
+                // on click this div navigate to the /learn/courseId 
+                onClick={() => (window.location.href = `/learn/${course.id}`)} 
               >
                 {/* Course Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-4xl">{course.thumbnail}</div>
+                <div className="flex items-center justify-end mb-4">
                   <div className="flex items-center space-x-2">
                     {course.certificate && (
                       <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-1 rounded-full">
