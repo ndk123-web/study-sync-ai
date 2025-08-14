@@ -61,6 +61,7 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     uid: currentUser.uid,
     progress: "0",
     completed: false,
+    type: "course"
   });
 
   const userEnrollment = await enrollment.save();
