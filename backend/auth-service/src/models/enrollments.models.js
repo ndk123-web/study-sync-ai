@@ -7,6 +7,10 @@ const enrollmentSchema = mongoose.Schema({
         ref: "User", 
         required: true 
     },
+    type: {
+        type: String,
+        enum: ['course','video','pdf']
+    },
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
