@@ -14,6 +14,8 @@ import {
 const coursesRouter = Router();
 
 coursesRouter.get("/", verifyJWT, GetAllCoursesController);
+// Place specific/static routes BEFORE dynamic parameterized routes to avoid collisions
+coursesRouter.get('/get-enrolled-courses' , verifyJWT, GetEnrollCoursesController);
 coursesRouter.get("/:courseId", verifyJWT, GetCurrentPlayListController);
 coursesRouter.post("/enroll-course", verifyJWT, EnrollCurrentCourseController);
 coursesRouter.post(
@@ -32,7 +34,5 @@ coursesRouter.post(
   verifyJWT,
   TrackPlaylistIndexController
 );
-
-coursesRouter.get('/get-enrolled-courses' , verifyJWT, GetEnrollCoursesController);
 
 export default coursesRouter;

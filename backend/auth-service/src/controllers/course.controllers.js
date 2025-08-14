@@ -20,7 +20,7 @@ const GetCurrentPlayListController = wrapper(async (req, res) => {
   const playlist = await Course.find({ courseId: courseId });
   console.log("Playlist:", playlist);
 
-  if (!playlist) {
+  if (!playlist || playlist.length === 0) {
     throw new ApiError(404, "Playlist not found");
   }
 
@@ -295,7 +295,10 @@ const GetEnrollCoursesController = wrapper(async (req, res) => {
 
   const getEnrollUserCourses = await Enrollment.find({
     uid: currentUser.uid,
-  }).populate("courseId");
+  }).populate({
+    path: "courseId",
+  select: "courseId title description instructor price thumbnail duration category rating featured lessons createdAt availableLanguages likes"
+  });
 
   console.log("Enrolled User Courses: ", getEnrollUserCourses);
 
@@ -312,10 +315,12 @@ const GetEnrollCoursesController = wrapper(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { getEnrollUserCourses },
+        getEnrollUserCourses,
         "Successfully fetched user enrolled courses"
       )
     );
+
+  // return res.status(200).json(new ApiResponse(200,{ data: "Testing GetEnrollCoursesController" } , "Successfully fetched user enrolled courses"));
 });
 
 export {
