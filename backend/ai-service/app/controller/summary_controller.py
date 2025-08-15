@@ -66,7 +66,6 @@ async def get_summary_controller( payload: summaryRequest ):
 
 Summary should be:
 - Clear and informative
-- 3-5 sentences long
 - Focus on key points and main topics discussed"""
 
         # Run ollama.chat in a separate thread since it's blocking
