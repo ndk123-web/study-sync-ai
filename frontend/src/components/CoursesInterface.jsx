@@ -54,49 +54,116 @@ import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
   if (!text) return '<p class="text-gray-500">Start typing your notes...</p>';
-  
+
   let html = text
     // Headers
-    .replace(/^### (.*$)/gm, `<h3 class="text-lg font-bold mt-3 mb-1 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h3>`)
-    .replace(/^## (.*$)/gm, `<h2 class="text-xl font-bold mt-4 mb-2 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h2>`)
-    .replace(/^# (.*$)/gm, `<h1 class="text-2xl font-bold mt-5 mb-2 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h1>`)
+    .replace(
+      /^### (.*$)/gm,
+      `<h3 class="text-lg font-bold mt-3 mb-1 ${
+        isDark ? "text-white-400" : "text-dark-600"
+      }"">$1</h3>`
+    )
+    .replace(
+      /^## (.*$)/gm,
+      `<h2 class="text-xl font-bold mt-4 mb-2 ${
+        isDark ? "text-white-400" : "text-dark-600"
+      }"">$1</h2>`
+    )
+    .replace(
+      /^# (.*$)/gm,
+      `<h1 class="text-2xl font-bold mt-5 mb-2 ${
+        isDark ? "text-white-400" : "text-dark-600"
+      }"">$1</h1>`
+    )
 
     // Bold text
-    .replace(/\*\*(.*?)\*\*/g, `<strong class="font-bold ${isDark ? 'text-white-400' : 'text-dark-600'}">$1</strong>`)
-    
+    .replace(
+      /\*\*(.*?)\*\*/g,
+      `<strong class="font-bold ${
+        isDark ? "text-white-400" : "text-dark-600"
+      }">$1</strong>`
+    )
+
     // Italic text
-    .replace(/\*(.*?)\*/g, `<em class="italic ${isDark ? 'text-white-300' : 'text-dark-700'}">$1</em>`)
-    
+    .replace(
+      /\*(.*?)\*/g,
+      `<em class="italic ${
+        isDark ? "text-white-300" : "text-dark-700"
+      }">$1</em>`
+    )
+
     // Timestamps
-    .replace(/\[(\d{1,2}:\d{2})\]/g, `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-mono ${isDark ? 'bg-orange-900/30 text-orange-400 border border-orange-700' : 'bg-orange-100 text-orange-700 border border-orange-200'}">🕐 $1</span>`)
-    
+    .replace(
+      /\[(\d{1,2}:\d{2})\]/g,
+      `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-mono ${
+        isDark
+          ? "bg-orange-900/30 text-orange-400 border border-orange-700"
+          : "bg-orange-100 text-orange-700 border border-orange-200"
+      }">🕐 $1</span>`
+    )
+
     // Checkboxes
-    .replace(/- \[x\] (.*$)/gm, `<div class="flex items-center space-x-2 mb-1"><span class="text-green-500">✅</span><span class="line-through ${isDark ? 'text-gray-400' : 'text-gray-500'}">$1</span></div>`)
-    .replace(/- \[ \] (.*$)/gm, `<div class="flex items-center space-x-2 mb-1"><span class="${isDark ? 'text-gray-500' : 'text-gray-400'}">☐</span><span>$1</span></div>`)
-    
+    .replace(
+      /- \[x\] (.*$)/gm,
+      `<div class="flex items-center space-x-2 mb-1"><span class="text-green-500">✅</span><span class="line-through ${
+        isDark ? "text-gray-400" : "text-gray-500"
+      }">$1</span></div>`
+    )
+    .replace(
+      /- \[ \] (.*$)/gm,
+      `<div class="flex items-center space-x-2 mb-1"><span class="${
+        isDark ? "text-gray-500" : "text-gray-400"
+      }">☐</span><span>$1</span></div>`
+    )
+
     // Bullet points with sub-bullets (fix spacing)
-    .replace(/^  - (.*$)/gm, `<div class="ml-6 flex items-start space-x-2 mb-1"><span class="${isDark ? 'text-gray-400' : 'text-gray-500'}">◦</span><span>$1</span></div>`)
-    .replace(/^- (.*$)/gm, `<div class="flex items-start space-x-2 mb-1"><span class="${isDark ? 'text-emerald-400' : 'text-emerald-600'}">•</span><span>$1</span></div>`)
-    
+    .replace(
+      /^  - (.*$)/gm,
+      `<div class="ml-6 flex items-start space-x-2 mb-1"><span class="${
+        isDark ? "text-gray-400" : "text-gray-500"
+      }">◦</span><span>$1</span></div>`
+    )
+    .replace(
+      /^- (.*$)/gm,
+      `<div class="flex items-start space-x-2 mb-1"><span class="${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      }">•</span><span>$1</span></div>`
+    )
+
     // Horizontal rules
-    .replace(/^---$/gm, `<hr class="my-4 ${isDark ? 'border-gray-600' : 'border-gray-300'}">`)
-    
+    .replace(
+      /^---$/gm,
+      `<hr class="my-4 ${isDark ? "border-gray-600" : "border-gray-300"}">`
+    )
+
     // Code blocks (inline)
-    .replace(/`([^`]+)`/g, `<code class="px-2 py-1 rounded text-sm font-mono ${isDark ? 'bg-gray-800 text-green-400 border border-gray-700' : 'bg-gray-100 text-green-600 border border-gray-200'}">$1</code>`)
-    
+    .replace(
+      /`([^`]+)`/g,
+      `<code class="px-2 py-1 rounded text-sm font-mono ${
+        isDark
+          ? "bg-gray-800 text-green-400 border border-gray-700"
+          : "bg-gray-100 text-green-600 border border-gray-200"
+      }">$1</code>`
+    )
+
     // Split into paragraphs and handle line breaks properly
-    .split('\n\n')
-    .map(paragraph => {
+    .split("\n\n")
+    .map((paragraph) => {
       // If paragraph contains bullet points, checkboxes, or headers, don't wrap in <p>
       if (paragraph.match(/^(#{1,3}|<div|<h[1-3]|<hr)/m)) {
-        return paragraph.replace(/\n/g, '');
+        return paragraph.replace(/\n/g, "");
       }
       // Regular paragraphs
-      return `<p class="mb-2 leading-relaxed">${paragraph.replace(/\n/g, '<br>')}</p>`;
+      return `<p class="mb-2 leading-relaxed">${paragraph.replace(
+        /\n/g,
+        "<br>"
+      )}</p>`;
     })
-    .join('');
-  
-  return `<div class="${isDark ? 'text-gray-100' : 'text-gray-800'}">${html}</div>`;
+    .join("");
+
+  return `<div class="${
+    isDark ? "text-gray-100" : "text-gray-800"
+  }">${html}</div>`;
 };
 
 const CoursesInterface = () => {
@@ -106,6 +173,7 @@ const CoursesInterface = () => {
       import.meta.env.VITE_ENCRYPTION_SECRET
     ).toString(CryptoJS.enc.Utf8)
   );
+  const { courseId } = useParams();
   const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
   const [coursePlaylist, setCoursePlaylist] = useState([]);
@@ -115,6 +183,7 @@ const CoursesInterface = () => {
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
   const [summaryText, setSummaryText] = useState("");
   const [notesViewMode, setNotesViewMode] = useState("editor"); // "editor" or "preview"
+  const [showAllTranscript, setShowAllTranscript] = useState(false); // For transcript show more
   const navigate = useNavigate();
 
   const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
@@ -149,6 +218,16 @@ const CoursesInterface = () => {
   const setNotesLoader = useLoaders((state) => state.setNotesLoader);
   const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
   const removeAuth = useIsAuth((state) => state.removeAuth);
+
+  const summaryLoader = useLoaders((state) => state.summarizeLoader);
+  const transcriptLoader = useLoaders((state) => state.transcriptLoader);
+  const setSummaryLoader = useLoaders((state) => state.setSummarizeLoader);
+  const unsetSummaryLoader = useLoaders((state) => state.unsetSummarizeLoader);
+  const setTranscriptLoader = useLoaders((state) => state.setTranscriptLoader);
+  const unsetTranscriptLoader = useLoaders(
+    (state) => state.unsetTranscriptLoader
+  );
+
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
   const [chatMessage, setChatMessage] = useState("");
@@ -157,24 +236,7 @@ const CoursesInterface = () => {
     {
       id: 1,
       type: "ai",
-      message:
-        "Hello! I'm your AI study assistant. I can help you understand React Hooks concepts. What would you like to learn about?",
-      timestamp: new Date(),
-      avatar: "🤖",
-    },
-    {
-      id: 2,
-      type: "user",
-      message:
-        "Can you explain the difference between useState and useReducer?",
-      timestamp: new Date(),
-      avatar: "👤",
-    },
-    {
-      id: 3,
-      type: "ai",
-      message:
-        "Great question! useState is perfect for simple state management, while useReducer is better for complex state logic with multiple sub-values or when the next state depends on the previous one. useReducer follows the Redux pattern with actions and reducers.",
+      message: `Hello! I'm your AI study assistant for course "${courseId}" , how can I assist you today ?`,
       timestamp: new Date(),
       avatar: "🤖",
     },
@@ -193,8 +255,6 @@ const CoursesInterface = () => {
     totalLessons: "12",
     youtubeVideoId: "O6P86uwfdR0", // Default video
   };
-
-  const { courseId } = useParams();
 
   const coursePlaylistDemo = [
     {
@@ -567,8 +627,13 @@ const CoursesInterface = () => {
       return;
     }
 
+    setSummaryLoader(); // Start loading
+
     try {
-      const apiResponse = await GetSummaryOfCurrentCourse({ courseId , videoId: currentVideoIdFromZustand });
+      const apiResponse = await GetSummaryOfCurrentCourse({
+        courseId,
+        videoId: currentVideoIdFromZustand,
+      });
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         alert(
           "Error fetching summary: " + apiResponse?.message ||
@@ -577,11 +642,16 @@ const CoursesInterface = () => {
         return;
       }
 
-      console.log("Summary Response: ", apiResponse?.summary || "No summary available");
+      console.log(
+        "Summary Response: ",
+        apiResponse?.summary || "No summary available"
+      );
       setSummaryText(apiResponse?.summary || "No summary available");
     } catch (err) {
       alert(err.message || "Error in fetching summary");
       return;
+    } finally {
+      unsetSummaryLoader(); // Stop loading
     }
   };
 
@@ -591,6 +661,8 @@ const CoursesInterface = () => {
       return;
     }
 
+    setTranscriptLoader(); // Start loading
+
     try {
       const apiResponse = await GetCurrentVideoTranscriptApi({
         currentVideoId,
@@ -599,17 +671,25 @@ const CoursesInterface = () => {
       console.log("Manual Transcript Fetch Response: ", apiResponse);
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
+        alert(
+          "Error fetching video transcript: " + apiResponse?.error ||
+            apiResponse?.message ||
+            "Error in fetching transcript"
+        );
         return;
       }
 
       // Fix: Access the correct nested path - apiResponse.data.data.transcript
       setTranscriptText(apiResponse?.data?.data?.transcript || []);
-      console.log("Transcript set to state: ", apiResponse?.data?.data?.transcript);
-
+      console.log(
+        "Transcript set to state: ",
+        apiResponse?.data?.data?.transcript
+      );
     } catch (err) {
       console.error("Error in manual transcript fetch:", err);
       alert(err.message || "Error in fetching transcript");
+    } finally {
+      unsetTranscriptLoader(); // Stop loading
     }
   };
 
@@ -1327,6 +1407,7 @@ const CoursesInterface = () => {
                     </div>
 
                     {/* Chat Messages */}
+
                     <div className="flex-1 space-y-3 mb-4 max-h-60 overflow-y-auto">
                       {chatMessages.slice(-3).map((message) => (
                         <div
@@ -1407,7 +1488,7 @@ const CoursesInterface = () => {
                         <span className="text-2xl">📝</span>
                         <h3 className="text-lg font-semibold">My Notes</h3>
                       </div>
-                      
+
                       {/* Mobile Tab Switcher */}
                       <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-gray-800 rounded-md">
                         <button
@@ -1456,40 +1537,61 @@ const CoursesInterface = () => {
                         onChange={(e) => setNotStoreNotes(e.target.value)}
                       />
                     ) : (
-                      <div className={`w-full h-48 p-3 rounded-lg border overflow-y-auto text-sm ${
-                        isDark
-                          ? "bg-gray-700 border-gray-600 text-white"
-                          : "bg-gray-50 border-gray-300 text-gray-900"
-                      }`}>
-                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
-                          __html: formatNotesToHTML(notStoreNotes, isDark)
-                        }} />
+                      <div
+                        className={`w-full h-48 p-3 rounded-lg border overflow-y-auto text-sm ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white"
+                            : "bg-gray-50 border-gray-300 text-gray-900"
+                        }`}
+                      >
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: formatNotesToHTML(notStoreNotes, isDark),
+                          }}
+                        />
                       </div>
                     )}
 
                     {/* Status & Actions */}
                     <div className="flex justify-between items-center mt-3">
                       {/* Professional Mobile Auto-Save Loader */}
-                      <div className={`flex items-center space-x-2 px-2 py-1 rounded-full transition-all duration-300 ${
-                        notesLoader 
-                          ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30" 
-                          : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30"
-                      }`}>
+                      <div
+                        className={`flex items-center space-x-2 px-2 py-1 rounded-full transition-all duration-300 ${
+                          notesLoader
+                            ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30"
+                            : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30"
+                        }`}
+                      >
                         {notesLoader ? (
                           <>
                             <div className="flex items-center space-x-0.5">
                               <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce"></div>
-                              <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                              <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              <div
+                                className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
                             </div>
-                            <span className={`text-xs font-medium ${isDark ? "text-yellow-400" : "text-yellow-600"}`}>
+                            <span
+                              className={`text-xs font-medium ${
+                                isDark ? "text-yellow-400" : "text-yellow-600"
+                              }`}
+                            >
                               Saving...
                             </span>
                           </>
                         ) : (
                           <>
                             <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span className={`text-xs font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
+                            <span
+                              className={`text-xs font-medium ${
+                                isDark ? "text-green-400" : "text-green-600"
+                              }`}
+                            >
                               Saved
                             </span>
                           </>
@@ -1543,9 +1645,34 @@ const CoursesInterface = () => {
                       <h3 className="text-lg font-semibold">Lesson Summary</h3>
                       <button
                         onClick={fetchSummary}
-                        className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        disabled={summaryLoader}
+                        className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-300 flex items-center space-x-1.5 ${
+                          summaryLoader
+                            ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
+                            : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+                        }`}
                       >
-                        Generate Summary
+                        {summaryLoader ? (
+                          <>
+                            <div className="flex items-center space-x-0.5">
+                              <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                              <div
+                                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
+                            </div>
+                            <span>Generating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🤖</span>
+                            <span>Generate</span>
+                          </>
+                        )}
                       </button>
                     </div>
                     <div
@@ -1556,18 +1683,28 @@ const CoursesInterface = () => {
                       {summaryText ? (
                         <div className="space-y-4">
                           {/* Summary Header */}
-                          <div className={`p-4 rounded-xl border transition-all duration-300 ${
-                            isDark 
-                              ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30" 
-                              : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                          }`}>
+                          <div
+                            className={`p-4 rounded-xl border transition-all duration-300 ${
+                              isDark
+                                ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30"
+                                : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                            }`}
+                          >
                             <div className="flex items-center space-x-3">
                               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
                                 <span className="text-white text-xl">📚</span>
                               </div>
                               <div>
-                                <h4 className="font-semibold text-lg">AI Generated Summary</h4>
-                                <p className={`text-sm ${isDark ? "text-orange-300" : "text-orange-600"}`}>
+                                <h4 className="font-semibold text-lg">
+                                  AI Generated Summary
+                                </h4>
+                                <p
+                                  className={`text-sm ${
+                                    isDark
+                                      ? "text-orange-300"
+                                      : "text-orange-600"
+                                  }`}
+                                >
                                   Key insights from this lesson
                                 </p>
                               </div>
@@ -1575,80 +1712,117 @@ const CoursesInterface = () => {
                           </div>
 
                           {/* Summary Content */}
-                          <div className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                            isDark 
-                              ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750" 
-                              : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-                          }`}>
+                          <div
+                            className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                              isDark
+                                ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750"
+                                : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                            }`}
+                          >
                             {/* Copy Button */}
                             <button
-                              onClick={() => navigator.clipboard.writeText(summaryText)}
+                              onClick={() =>
+                                navigator.clipboard.writeText(summaryText)
+                              }
                               className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                isDark 
-                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                isDark
+                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white"
                                   : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
                               }`}
                               title="Copy summary"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
                               </svg>
                             </button>
 
                             {/* Summary Badge */}
                             <div className="flex items-center space-x-2 mb-4">
-                              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                isDark 
-                                  ? "bg-orange-900/30 text-orange-400 border border-orange-700" 
-                                  : "bg-orange-100 text-orange-700 border border-orange-200"
-                              }`}>
+                              <div
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  isDark
+                                    ? "bg-orange-900/30 text-orange-400 border border-orange-700"
+                                    : "bg-orange-100 text-orange-700 border border-orange-200"
+                                }`}
+                              >
                                 AI Summary
                               </div>
-                              <div className={`px-2 py-1 rounded text-xs ${
-                                isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                              }`}>
+                              <div
+                                className={`px-2 py-1 rounded text-xs ${
+                                  isDark
+                                    ? "bg-gray-700 text-gray-300"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
+                              >
                                 Auto-generated
                               </div>
                             </div>
-                            
+
                             {/* Summary Text */}
-                            <div className={`text-sm leading-relaxed ${
-                              isDark ? "text-gray-100" : "text-gray-800"
-                            }`}>
+                            <div
+                              className={`text-sm leading-relaxed ${
+                                isDark ? "text-gray-100" : "text-gray-800"
+                              }`}
+                            >
                               <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
-                                {summaryText.split('\n').map((paragraph, index) => (
-                                  paragraph.trim() && (
-                                    <p key={index} className="mb-3 last:mb-0">
-                                      {paragraph}
-                                    </p>
-                                  )
-                                ))}
+                                {summaryText.split("\n").map(
+                                  (paragraph, index) =>
+                                    paragraph.trim() && (
+                                      <p key={index} className="mb-3 last:mb-0">
+                                        {paragraph}
+                                      </p>
+                                    )
+                                )}
                               </div>
                             </div>
-                            
+
                             {/* Summary Stats */}
-                            <div className={`mt-4 pt-4 border-t flex items-center justify-between ${
-                              isDark ? "border-gray-700" : "border-gray-200"
-                            }`}>
+                            <div
+                              className={`mt-4 pt-4 border-t flex items-center justify-between ${
+                                isDark ? "border-gray-700" : "border-gray-200"
+                              }`}
+                            >
                               <div className="flex items-center space-x-4 text-xs">
                                 <div className="flex items-center space-x-1">
                                   <span className="text-orange-500">📊</span>
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                    {summaryText.split(' ').length} words
+                                  <span
+                                    className={
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }
+                                  >
+                                    {summaryText.split(" ").length} words
                                   </span>
                                 </div>
                                 <div className="flex items-center space-x-1">
                                   <span className="text-orange-500">⏱️</span>
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                    ~{Math.ceil(summaryText.split(' ').length / 200)} min read
+                                  <span
+                                    className={
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }
+                                  >
+                                    ~
+                                    {Math.ceil(
+                                      summaryText.split(" ").length / 200
+                                    )}{" "}
+                                    min read
                                   </span>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <button
                                   className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
-                                    isDark 
-                                      ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
+                                    isDark
+                                      ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
                                       : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                                   }`}
                                   onClick={fetchSummary}
@@ -1660,12 +1834,19 @@ const CoursesInterface = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className={`text-center py-12 ${
-                          isDark ? "text-gray-400" : "text-gray-500"
-                        }`}>
+                        <div
+                          className={`text-center py-12 ${
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
                           <div className="text-4xl mb-4">📚</div>
-                          <p className="text-lg font-medium mb-2">No summary available</p>
-                          <p className="text-sm">Click "Generate Summary" to create an AI-powered lesson summary</p>
+                          <p className="text-lg font-medium mb-2">
+                            No summary available
+                          </p>
+                          <p className="text-sm">
+                            Click "Generate Summary" to create an AI-powered
+                            lesson summary
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1677,8 +1858,36 @@ const CoursesInterface = () => {
                     <div className="flex items-center space-x-2 mb-4">
                       <span className="text-2xl">📜</span>
                       <h3 className="text-lg font-semibold">Transcript</h3>
-                      <button onClick={fetchTranscript} className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        Fetch Transcript
+                      <button
+                        onClick={fetchTranscript}
+                        disabled={transcriptLoader}
+                        className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-300 flex items-center space-x-1.5 ${
+                          transcriptLoader
+                            ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
+                            : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                        }`}
+                      >
+                        {transcriptLoader ? (
+                          <>
+                            <div className="flex items-center space-x-0.5">
+                              <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                              <div
+                                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
+                            </div>
+                            <span>Fetching...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>📜</span>
+                            <span>Fetch</span>
+                          </>
+                        )}
                       </button>
                     </div>
                     <div
@@ -1690,77 +1899,164 @@ const CoursesInterface = () => {
                         <div>
                           {transcriptText && transcriptText.length > 0 ? (
                             <div className="space-y-3">
-                              {transcriptText.map((snippet, index) => (
-                                <div 
-                                  key={index} 
+                              {(showAllTranscript
+                                ? transcriptText
+                                : transcriptText.slice(0, 3)
+                              ).map((snippet, index) => (
+                                <div
+                                  key={index}
                                   className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                                    isDark 
-                                      ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750" 
+                                    isDark
+                                      ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750"
                                       : "bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"
                                   }`}
                                 >
                                   {/* Timestamp Badge */}
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center space-x-2">
-                                      <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
-                                        isDark 
-                                          ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700" 
-                                          : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                      }`}>
-                                        {Math.floor(snippet.startTime)}s - {Math.floor(snippet.endTime)}s
+                                      <div
+                                        className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                          isDark
+                                            ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700"
+                                            : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                        }`}
+                                      >
+                                        {Math.floor(snippet.startTime)}s -{" "}
+                                        {Math.floor(snippet.endTime)}s
                                       </div>
-                                      <div className={`px-2 py-1 rounded text-xs ${
-                                        isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                                      }`}>
-                                        #{index + 1}
+                                      <div
+                                        className={`px-2 py-1 rounded text-xs ${
+                                          isDark
+                                            ? "bg-gray-700 text-gray-300"
+                                            : "bg-gray-100 text-gray-600"
+                                        }`}
+                                      >
+                                        #
+                                        {showAllTranscript
+                                          ? index + 1
+                                          : index + 1}
                                       </div>
                                     </div>
                                     {/* Copy Button */}
                                     <button
-                                      onClick={() => navigator.clipboard.writeText(snippet.text)}
+                                      onClick={() =>
+                                        navigator.clipboard.writeText(
+                                          snippet.text
+                                        )
+                                      }
                                       className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                        isDark 
-                                          ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                        isDark
+                                          ? "hover:bg-gray-700 text-gray-400 hover:text-white"
                                           : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
                                       }`}
                                       title="Copy text"
                                     >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                        />
                                       </svg>
                                     </button>
                                   </div>
-                                  
+
                                   {/* Transcript Text */}
-                                  <div className={`text-sm leading-relaxed ${
-                                    isDark ? "text-gray-100" : "text-gray-800"
-                                  }`}>
+                                  <div
+                                    className={`text-sm leading-relaxed ${
+                                      isDark ? "text-gray-100" : "text-gray-800"
+                                    }`}
+                                  >
                                     <p className="selection:bg-emerald-200 selection:text-emerald-900">
                                       {snippet.text}
                                     </p>
                                   </div>
-                                  
+
                                   {/* Progress Bar */}
-                                  <div className={`mt-3 h-1 rounded-full overflow-hidden ${
-                                    isDark ? "bg-gray-700" : "bg-gray-200"
-                                  }`}>
-                                    <div 
+                                  <div
+                                    className={`mt-3 h-1 rounded-full overflow-hidden ${
+                                      isDark ? "bg-gray-700" : "bg-gray-200"
+                                    }`}
+                                  >
+                                    <div
                                       className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300"
-                                      style={{ 
-                                        width: `${((snippet.endTime - snippet.startTime) / Math.max(...transcriptText.map(s => s.endTime))) * 100}%` 
+                                      style={{
+                                        width: `${
+                                          ((snippet.endTime -
+                                            snippet.startTime) /
+                                            Math.max(
+                                              ...transcriptText.map(
+                                                (s) => s.endTime
+                                              )
+                                            )) *
+                                          100
+                                        }%`,
                                       }}
                                     ></div>
                                   </div>
                                 </div>
                               ))}
+
+                              {/* Mobile Show More/Less Button */}
+                              {transcriptText.length > 3 && (
+                                <div className="flex justify-center pt-2">
+                                  <button
+                                    onClick={() =>
+                                      setShowAllTranscript(!showAllTranscript)
+                                    }
+                                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all duration-300 ${
+                                      isDark
+                                        ? "border-emerald-600 bg-emerald-900/20 hover:bg-emerald-800/30 text-emerald-400"
+                                        : "border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
+                                    }`}
+                                  >
+                                    <span className="text-sm">
+                                      {showAllTranscript ? "📋" : "📜"}
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {showAllTranscript
+                                        ? `Show Less`
+                                        : `+${transcriptText.length - 3} More`}
+                                    </span>
+                                    <svg
+                                      className={`w-3 h-3 transition-transform duration-300 ${
+                                        showAllTranscript ? "rotate-180" : ""
+                                      }`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           ) : (
-                            <div className={`text-center py-12 ${
-                              isDark ? "text-gray-400" : "text-gray-500"
-                            }`}>
+                            <div
+                              className={`text-center py-12 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
                               <div className="text-4xl mb-4">📜</div>
-                              <p className="text-lg font-medium mb-2">No transcript available</p>
-                              <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
+                              <p className="text-lg font-medium mb-2">
+                                No transcript available
+                              </p>
+                              <p className="text-sm">
+                                Click "Fetch Transcript" to load the video
+                                transcript
+                              </p>
                             </div>
                           )}
                         </div>
@@ -1969,6 +2265,7 @@ const CoursesInterface = () => {
                 </div>
 
                 {/* Chat Messages */}
+
                 <div className="flex-1 space-y-4 mb-4 overflow-y-auto">
                   {chatMessages.map((message) => (
                     <div
@@ -2101,9 +2398,11 @@ const CoursesInterface = () => {
                 </div>
 
                 {/* Editor/Preview Tab Switcher */}
-                <div className={`flex items-center space-x-1 p-1 rounded-lg ${
-                  isDark ? "bg-gray-800" : "bg-gray-100"
-                }`}>
+                <div
+                  className={`flex items-center space-x-1 p-1 rounded-lg ${
+                    isDark ? "bg-gray-800" : "bg-gray-100"
+                  }`}
+                >
                   <button
                     onClick={() => setNotesViewMode("editor")}
                     className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
@@ -2143,7 +2442,9 @@ const CoursesInterface = () => {
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
                         <span>✏️ Editor Mode</span>
                         <span>•</span>
-                        <span>Use # for headings, - for bullets, ** for bold</span>
+                        <span>
+                          Use # for headings, - for bullets, ** for bold
+                        </span>
                       </div>
                       <textarea
                         placeholder="# My Lesson Notes
@@ -2182,14 +2483,19 @@ const CoursesInterface = () => {
                         <span>•</span>
                         <span>Real-time formatting</span>
                       </div>
-                      <div className={`w-full h-full p-4 rounded-lg border overflow-y-auto ${
-                        isDark
-                          ? "bg-dark-700 border-gray-600 text-white"
-                          : "bg-white-50 border-gray-300 text-gray-900"
-                      }`}>
-                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
-                          __html: formatNotesToHTML(notStoreNotes, isDark)
-                        }} />
+                      <div
+                        className={`w-full h-full p-4 rounded-lg border overflow-y-auto ${
+                          isDark
+                            ? "bg-dark-700 border-gray-600 text-white"
+                            : "bg-white-50 border-gray-300 text-gray-900"
+                        }`}
+                      >
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: formatNotesToHTML(notStoreNotes, isDark),
+                          }}
+                        />
                       </div>
                     </div>
                   )}
@@ -2199,36 +2505,55 @@ const CoursesInterface = () => {
                 <div className="flex items-center justify-between mt-10">
                   <div className="flex items-center space-x-3">
                     {/* Professional Auto-Save Loader */}
-                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-all duration-300 ${
-                      notesLoader 
-                        ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border border-yellow-300 dark:border-yellow-700" 
-                        : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-300 dark:border-green-700"
-                    }`}>
+                    <div
+                      className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-all duration-300 ${
+                        notesLoader
+                          ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border border-yellow-300 dark:border-yellow-700"
+                          : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-300 dark:border-green-700"
+                      }`}
+                    >
                       {notesLoader ? (
                         <>
                           <div className="flex items-center space-x-1">
                             <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
-                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            <div
+                              className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.1s" }}
+                            ></div>
+                            <div
+                              className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
                           </div>
-                          <span className={`text-xs font-medium ${isDark ? "text-yellow-400" : "text-yellow-600"}`}>
+                          <span
+                            className={`text-xs font-medium ${
+                              isDark ? "text-yellow-400" : "text-yellow-600"
+                            }`}
+                          >
                             Saving...
                           </span>
                         </>
                       ) : (
                         <>
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className={`text-xs font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
+                          <span
+                            className={`text-xs font-medium ${
+                              isDark ? "text-green-400" : "text-green-600"
+                            }`}
+                          >
                             Auto-saved
                           </span>
                         </>
                       )}
                     </div>
-                    
-                    <div className={`text-xs ${
-                      isDark ? "text-gray-500" : "text-gray-400"
-                    }`}>
-                      {notStoreNotes.split(' ').length} words • {notStoreNotes.split('\n').length} lines
+
+                    <div
+                      className={`text-xs ${
+                        isDark ? "text-gray-500" : "text-gray-400"
+                      }`}
+                    >
+                      {notStoreNotes.split(" ").length} words •{" "}
+                      {notStoreNotes.split("\n").length} lines
                     </div>
                   </div>
                 </div>
@@ -2379,14 +2704,39 @@ const CoursesInterface = () => {
               <div className="space-y-4 max-w-full">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold">Video Transcript 📜</h3>
-                  <button 
+                  <button
                     onClick={fetchTranscript}
-                    className="px-4 py-2 text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 shadow-lg transform hover:scale-105"
+                    disabled={transcriptLoader}
+                    className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center space-x-2 ${
+                      transcriptLoader
+                        ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
+                        : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                    }`}
                   >
-                    Fetch Transcript
+                    {transcriptLoader ? (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                          <div
+                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                        <span>Fetching...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📜</span>
+                        <span>Fetch Transcript</span>
+                      </>
+                    )}
                   </button>
                 </div>
-                
+
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
@@ -2395,18 +2745,26 @@ const CoursesInterface = () => {
                   {transcriptText && transcriptText.length > 0 ? (
                     <div className="space-y-4">
                       {/* Transcript Header */}
-                      <div className={`p-4 rounded-xl border transition-all duration-300 ${
-                        isDark 
-                          ? "bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/30" 
-                          : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200"
-                      }`}>
+                      <div
+                        className={`p-4 rounded-xl border transition-all duration-300 ${
+                          isDark
+                            ? "bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/30"
+                            : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200"
+                        }`}
+                      >
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
                             <span className="text-white text-xl">📜</span>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-lg">Video Transcript</h4>
-                            <p className={`text-sm ${isDark ? "text-purple-300" : "text-purple-600"}`}>
+                            <h4 className="font-semibold text-lg">
+                              Video Transcript
+                            </h4>
+                            <p
+                              className={`text-sm ${
+                                isDark ? "text-purple-300" : "text-purple-600"
+                              }`}
+                            >
                               {transcriptText.length} segments • Auto-generated
                             </p>
                           </div>
@@ -2415,80 +2773,159 @@ const CoursesInterface = () => {
 
                       {/* Transcript Segments */}
                       <div className="space-y-3">
-                        {transcriptText.map((item, index) => (
-                          <div 
-                            key={index} 
+                        {(showAllTranscript
+                          ? transcriptText
+                          : transcriptText.slice(0, 5)
+                        ).map((item, index) => (
+                          <div
+                            key={index}
                             className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                              isDark 
-                                ? "bg-gray-800 border-gray-600 hover:border-purple-500 hover:bg-gray-750" 
+                              isDark
+                                ? "bg-gray-800 border-gray-600 hover:border-purple-500 hover:bg-gray-750"
                                 : "bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50"
                             }`}
                           >
                             {/* Timestamp Badge */}
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
-                                <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
-                                  isDark 
-                                    ? "bg-purple-900/30 text-purple-400 border border-purple-700" 
-                                    : "bg-purple-100 text-purple-700 border border-purple-200"
-                                }`}>
-                                  {Math.floor(item.startTime)}s - {Math.floor(item.endTime)}s
+                                <div
+                                  className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                    isDark
+                                      ? "bg-purple-900/30 text-purple-400 border border-purple-700"
+                                      : "bg-purple-100 text-purple-700 border border-purple-200"
+                                  }`}
+                                >
+                                  {Math.floor(item.startTime)}s -{" "}
+                                  {Math.floor(item.endTime)}s
                                 </div>
-                                <div className={`px-2 py-1 rounded text-xs ${
-                                  isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                                }`}>
-                                  #{index + 1}
+                                <div
+                                  className={`px-2 py-1 rounded text-xs ${
+                                    isDark
+                                      ? "bg-gray-700 text-gray-300"
+                                      : "bg-gray-100 text-gray-600"
+                                  }`}
+                                >
+                                  #{showAllTranscript ? index + 1 : index + 1}
                                 </div>
                               </div>
                               {/* Copy Button */}
                               <button
-                                onClick={() => navigator.clipboard.writeText(item.text)}
+                                onClick={() =>
+                                  navigator.clipboard.writeText(item.text)
+                                }
                                 className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                  isDark 
-                                    ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                  isDark
+                                    ? "hover:bg-gray-700 text-gray-400 hover:text-white"
                                     : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
                                 }`}
                                 title="Copy text"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                  />
                                 </svg>
                               </button>
                             </div>
-                            
+
                             {/* Transcript Text */}
-                            <div className={`text-sm leading-relaxed ${
-                              isDark ? "text-gray-100" : "text-gray-800"
-                            }`}>
+                            <div
+                              className={`text-sm leading-relaxed ${
+                                isDark ? "text-gray-100" : "text-gray-800"
+                              }`}
+                            >
                               <p className="selection:bg-purple-200 selection:text-purple-900">
                                 {item.text}
                               </p>
                             </div>
-                            
+
                             {/* Duration Indicator */}
-                            <div className={`mt-3 flex items-center justify-between text-xs ${
-                              isDark ? "text-gray-400" : "text-gray-600"
-                            }`}>
+                            <div
+                              className={`mt-3 flex items-center justify-between text-xs ${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
                               <div className="flex items-center space-x-2">
                                 <span className="text-purple-500">⏱️</span>
-                                <span>{(item.endTime - item.startTime).toFixed(1)}s duration</span>
+                                <span>
+                                  {(item.endTime - item.startTime).toFixed(1)}s
+                                  duration
+                                </span>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <span className="text-purple-500">📝</span>
-                                <span>{item.text.split(' ').length} words</span>
+                                <span>{item.text.split(" ").length} words</span>
                               </div>
                             </div>
                           </div>
                         ))}
+
+                        {/* Show More/Less Button */}
+                        {transcriptText.length > 5 && (
+                          <div className="flex justify-center pt-4">
+                            <button
+                              onClick={() =>
+                                setShowAllTranscript(!showAllTranscript)
+                              }
+                              className={`flex items-center space-x-2 px-6 py-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
+                                isDark
+                                  ? "border-purple-600 bg-purple-900/20 hover:bg-purple-800/30 text-purple-400 hover:text-purple-300"
+                                  : "border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-600 hover:text-purple-700"
+                              }`}
+                            >
+                              <span className="text-lg">
+                                {showAllTranscript ? "📋" : "📜"}
+                              </span>
+                              <span className="font-medium">
+                                {showAllTranscript
+                                  ? `Show Less (${
+                                      transcriptText.length - 5
+                                    } hidden)`
+                                  : `Show More (${
+                                      transcriptText.length - 5
+                                    } remaining)`}
+                              </span>
+                              <svg
+                                className={`w-4 h-4 transition-transform duration-300 ${
+                                  showAllTranscript ? "rotate-180" : ""
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
-                    <div className={`text-center py-12 ${
-                      isDark ? "text-gray-400" : "text-gray-500"
-                    }`}>
+                    <div
+                      className={`text-center py-12 ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       <div className="text-4xl mb-4">📜</div>
-                      <p className="text-lg font-medium mb-2">No transcript available</p>
-                      <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
+                      <p className="text-lg font-medium mb-2">
+                        No transcript available
+                      </p>
+                      <p className="text-sm">
+                        Click "Fetch Transcript" to load the video transcript
+                      </p>
                     </div>
                   )}
                 </div>
@@ -2501,12 +2938,37 @@ const CoursesInterface = () => {
                   <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
                   <button
                     onClick={fetchSummary}
-                    className="px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 shadow-lg transform hover:scale-105"
+                    disabled={summaryLoader}
+                    className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center space-x-2 ${
+                      summaryLoader
+                        ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
+                        : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+                    }`}
                   >
-                    Generate Summary
+                    {summaryLoader ? (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                          <div
+                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🤖</span>
+                        <span>Generate Summary</span>
+                      </>
+                    )}
                   </button>
                 </div>
-                
+
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
@@ -2515,18 +2977,26 @@ const CoursesInterface = () => {
                   {summaryText ? (
                     <div className="space-y-4">
                       {/* Summary Header */}
-                      <div className={`p-4 rounded-xl border transition-all duration-300 ${
-                        isDark 
-                          ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30" 
-                          : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                      }`}>
+                      <div
+                        className={`p-4 rounded-xl border transition-all duration-300 ${
+                          isDark
+                            ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30"
+                            : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                        }`}
+                      >
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
                             <span className="text-white text-xl">📚</span>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-lg">AI Generated Summary</h4>
-                            <p className={`text-sm ${isDark ? "text-orange-300" : "text-orange-600"}`}>
+                            <h4 className="font-semibold text-lg">
+                              AI Generated Summary
+                            </h4>
+                            <p
+                              className={`text-sm ${
+                                isDark ? "text-orange-300" : "text-orange-600"
+                              }`}
+                            >
                               Key insights from this lesson
                             </p>
                           </div>
@@ -2534,80 +3004,115 @@ const CoursesInterface = () => {
                       </div>
 
                       {/* Summary Content */}
-                      <div className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                        isDark 
-                          ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750" 
-                          : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-                      }`}>
+                      <div
+                        className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                          isDark
+                            ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750"
+                            : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                        }`}
+                      >
                         {/* Copy Button */}
                         <button
-                          onClick={() => navigator.clipboard.writeText(summaryText)}
+                          onClick={() =>
+                            navigator.clipboard.writeText(summaryText)
+                          }
                           className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                            isDark 
-                              ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                            isDark
+                              ? "hover:bg-gray-700 text-gray-400 hover:text-white"
                               : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
                           }`}
                           title="Copy summary"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
                           </svg>
                         </button>
 
                         {/* Summary Badge */}
                         <div className="flex items-center space-x-2 mb-4">
-                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            isDark 
-                              ? "bg-orange-900/30 text-orange-400 border border-orange-700" 
-                              : "bg-orange-100 text-orange-700 border border-orange-200"
-                          }`}>
+                          <div
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              isDark
+                                ? "bg-orange-900/30 text-orange-400 border border-orange-700"
+                                : "bg-orange-100 text-orange-700 border border-orange-200"
+                            }`}
+                          >
                             AI Summary
                           </div>
-                          <div className={`px-2 py-1 rounded text-xs ${
-                            isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                          }`}>
+                          <div
+                            className={`px-2 py-1 rounded text-xs ${
+                              isDark
+                                ? "bg-gray-700 text-gray-300"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
                             Auto-generated
                           </div>
                         </div>
-                        
+
                         {/* Summary Text */}
-                        <div className={`text-sm leading-relaxed ${
-                          isDark ? "text-gray-100" : "text-gray-800"
-                        }`}>
+                        <div
+                          className={`text-sm leading-relaxed ${
+                            isDark ? "text-gray-100" : "text-gray-800"
+                          }`}
+                        >
                           <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
-                            {summaryText.split('\n').map((paragraph, index) => (
-                              paragraph.trim() && (
-                                <p key={index} className="mb-3 last:mb-0">
-                                  {paragraph}
-                                </p>
-                              )
-                            ))}
+                            {summaryText.split("\n").map(
+                              (paragraph, index) =>
+                                paragraph.trim() && (
+                                  <p key={index} className="mb-3 last:mb-0">
+                                    {paragraph}
+                                  </p>
+                                )
+                            )}
                           </div>
                         </div>
-                        
+
                         {/* Summary Stats */}
-                        <div className={`mt-4 pt-4 border-t flex items-center justify-between ${
-                          isDark ? "border-gray-700" : "border-gray-200"
-                        }`}>
+                        <div
+                          className={`mt-4 pt-4 border-t flex items-center justify-between ${
+                            isDark ? "border-gray-700" : "border-gray-200"
+                          }`}
+                        >
                           <div className="flex items-center space-x-4 text-xs">
                             <div className="flex items-center space-x-1">
                               <span className="text-orange-500">📊</span>
-                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                {summaryText.split(' ').length} words
+                              <span
+                                className={
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }
+                              >
+                                {summaryText.split(" ").length} words
                               </span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <span className="text-orange-500">⏱️</span>
-                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                ~{Math.ceil(summaryText.split(' ').length / 200)} min read
+                              <span
+                                className={
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }
+                              >
+                                ~
+                                {Math.ceil(summaryText.split(" ").length / 200)}{" "}
+                                min read
                               </span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
                               className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
-                                isDark 
-                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
+                                isDark
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
                                   : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                               }`}
                               onClick={fetchSummary}
@@ -2619,12 +3124,19 @@ const CoursesInterface = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className={`text-center py-12 ${
-                      isDark ? "text-gray-400" : "text-gray-500"
-                    }`}>
+                    <div
+                      className={`text-center py-12 ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       <div className="text-4xl mb-4">📚</div>
-                      <p className="text-lg font-medium mb-2">No summary available</p>
-                      <p className="text-sm">Click "Generate Summary" to create an AI-powered lesson summary</p>
+                      <p className="text-lg font-medium mb-2">
+                        No summary available
+                      </p>
+                      <p className="text-sm">
+                        Click "Generate Summary" to create an AI-powered lesson
+                        summary
+                      </p>
                     </div>
                   )}
                 </div>
