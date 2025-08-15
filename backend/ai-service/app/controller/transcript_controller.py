@@ -1,72 +1,60 @@
+# You'll need to import asyncio
+import asyncio
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import (
+    TranscriptsDisabled,
+    NoTranscriptFound,
+    VideoUnavailable,
+)
 from ..utils.ApiResponse import ApiResponse
 from ..utils.ApiError import ApiError
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.proxies import GenericProxyConfig
-import requests
+from typing import Optional, List
 
-# Fetch free HTTPS proxies list from free-proxy-list.net
-def fetch_free_https_proxies():
-    url = "https://free-proxy-list.net/"
-    resp = requests.get(url)
-    lines = resp.text.splitlines()
-    proxies = []
-    for line in lines:
-        if "<td>" in line:
-            parts = line.strip().split("<td>")
-            if len(parts) >= 7 and "yes" in parts[6]:  # HTTPS support
-                ip = parts[1].split("</td>")[0]
-                port = parts[2].split("</td>")[0]
-                proxies.append(f"{ip}:{port}")
-    return proxies
-
-async def getTranscriptController(videoId: str):
+async def getTranscriptController(videoId: str, languages: Optional[List[str]] = None):
     try:
-        print("videoId", videoId)
+        print("Fetching transcript for:", videoId)
 
-        # Get proxies
-        proxy_list = fetch_free_https_proxies()
-        print(f"Fetched {len(proxy_list)} HTTPS proxies")
+        preferred = languages or ['en', 'hi', 'mar']
 
-        fetched_transcript = None
-        for proxy in proxy_list[:10]:  # Try top 10
-            proxy_url = f"http://{proxy}"
-            print(f"Trying proxy {proxy}")
-            proxy_config = GenericProxyConfig(
-                http_url=proxy_url,
-                https_url=proxy_url
-            )
-            try:
-                ytt_api = YouTubeTranscriptApi()
-                fetched_transcript = ytt_api.fetch(videoId, languages=['en', 'hi', 'mar'])
-                if fetched_transcript:
-                    print(f"Success with proxy {proxy}")
-                    break
-            except Exception as e:
-                print(f"Proxy {proxy} failed: {e}")
-                continue
+        # Use the same approach as your working script
+        ytt_api = YouTubeTranscriptApi()
+        raw_transcript = await asyncio.to_thread(
+            ytt_api.fetch,  # The method to run
+            videoId,        # Positional arguments for the method
+            languages=preferred  # Keyword arguments for the method
+        )
 
-        if not fetched_transcript:
-            # Fallback to direct fetch
-            print("All proxies failed, trying direct fetch")
-            ytt_api = YouTubeTranscriptApi()
-            fetched_transcript = ytt_api.fetch(videoId, languages=['en', 'hi', 'mar'])
+        formatted_transcript = [
+            {
+                "startTime": snippet.start,
+                "endTime": snippet.start + snippet.duration,
+                "text": snippet.text.strip(),
+            }
+            for snippet in raw_transcript
+        ]
 
-        transcript = []
-        for snippet in fetched_transcript:
-            transcript.append({
-                "startTime": snippet['start'],
-                "endTime": snippet['start'] + snippet['duration'],
-                "text": snippet['text'].strip()
-            })
+        # print("Fetched Transcript: ", formatted_transcript)
 
         return ApiResponse.send(
             200,
-            {"transcript": transcript},
+            {"transcript": formatted_transcript},
             message="Transcript fetched successfully."
         )
 
+    except NoTranscriptFound as e:
+        print("No transcript found:", str(e))
+        return ApiError.send(404, {"error": "No transcript available for this video."}, message="Transcript not found")
+    except TranscriptsDisabled as e:
+        print("Transcripts disabled:", str(e))
+        return ApiError.send(403, {"error": "Transcripts are disabled for this video."}, message="Access denied")
+    except VideoUnavailable as e:
+        print("Video unavailable:", str(e))
+        return ApiError.send(404, {"error": "Video is unavailable or private."}, message="Video unavailable")
     except Exception as e:
-        print("Transcript fetch error:", str(e))
+        if '429' in str(e) or 'Too Many Requests' in str(e):
+            print("Rate limited (in generic handler):", str(e))
+            return ApiError.send(429, {"error": "Rate limit exceeded. Please try again later."}, message="Too many requests")
+        print("Error fetching transcript:", str(e))
         return ApiError.send(
             500,
             {"error": str(e)},
