@@ -2211,7 +2211,7 @@ const CoursesInterface = () => {
                         </>
                       ) : (
                         <>
-                          <div className="w-2 h-2 mt-2  bg-green-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           <span className={`text-xs font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
                             Auto-saved
                           </span>
@@ -2224,23 +2224,6 @@ const CoursesInterface = () => {
                     }`}>
                       {notStoreNotes.split(' ').length} words • {notStoreNotes.split('\n').length} lines
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 ${
-                      isDark
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                    }`}>
-                      🔄 Sync
-                    </button>
-                    <button className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 ${
-                      isDark
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-emerald-500 hover:bg-emerald-600"
-                    } text-white`}>
-                      💾 Save
-                    </button>
                   </div>
                 </div>
               </div>
