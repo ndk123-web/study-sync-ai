@@ -19,7 +19,7 @@ const GetCurrentVideoTranscriptApi = async ({ currentVideoId }) => {
 
     return {
       status: backendResponse.status,
-      data: backendResponse.data.data,
+      data: backendResponse.data,
     };
   } catch (err) {
     console.log("Err in GetCurrentVideoTranscript Api: ", err.message);

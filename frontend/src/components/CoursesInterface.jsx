@@ -49,7 +49,7 @@ import { TrackPlaylistIndexApi } from "../api/TrackPlaylistIndex.js";
 import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
-import { GetSummaryOfCurrentCourse } from '../api/GetSummaryOfCurrentCourse.js'
+import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -65,6 +65,7 @@ const CoursesInterface = () => {
   const [notStoreNotes, setNotStoreNotes] = useState("");
   const [storedNotes, setStoredNotes] = useState("");
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
+  const [summaryText, setSummaryText] = useState("");
   const navigate = useNavigate();
 
   const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
@@ -406,25 +407,25 @@ const CoursesInterface = () => {
   }, [currentVideoId]);
 
   // get the transcript of current going video
-  useEffect(() => {
-    const fetchTranscript = async () => {
-      const apiResponse = await GetCurrentVideoTranscriptApi({
-        currentVideoId,
-      });
+  // useEffect(() => {
+  // const fetchTranscript = async () => {
+  //   const apiResponse = await GetCurrentVideoTranscriptApi({
+  //     currentVideoId,
+  //   });
 
-      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        // alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
-        return;
-      }
+  //   if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+  //     // alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
+  //     return;
+  //   }
 
-      setTranscriptText(apiResponse?.data?.transcript);
-      console.log("Transcript: ", transcriptText);
+  //   setTranscriptText(apiResponse?.data?.transcript);
+  //   console.log("Transcript: ", transcriptText);
 
-      console.log("ApiResponse for Transcript: ", apiResponse);
-    };
+  //   console.log("ApiResponse for Transcript: ", apiResponse);
+  // };
 
-    fetchTranscript();
-  }, [currentVideoId]);
+  //   fetchTranscript();
+  // }, [currentVideoId]);
 
   // Auto-save to Zustand as well as dtabase after typing 1 seconds when user types (with debounce)
   useEffect(() => {
@@ -512,28 +513,56 @@ const CoursesInterface = () => {
   // };
 
   const fetchSummary = async () => {
-    
     if (!courseId) {
       alert("No course selected for summary generation.");
       return;
     }
 
-    try{
-      const apiResponse = await GetSummaryOfCurrentCourse({ courseId });
-      if (apiResponse !== 200 && apiResponse !== 201) {
-        alert("Error fetching summary: " + apiResponse?.message || "Error in fetching summary");
+    try {
+      const apiResponse = await GetSummaryOfCurrentCourse({ courseId , videoId: currentVideoIdFromZustand });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          "Error fetching summary: " + apiResponse?.message ||
+            "Error in fetching summary"
+        );
         return;
       }
 
-      console.log("Summary Response: ", apiResponse);
-
-    }
-    catch(err){
+      console.log("Summary Response: ", apiResponse?.summary || "No summary available");
+      setSummaryText(apiResponse?.summary || "No summary available");
+    } catch (err) {
       alert(err.message || "Error in fetching summary");
-      return; 
+      return;
+    }
+  };
+
+  const fetchTranscript = async () => {
+    if (!currentVideoId) {
+      alert("No video selected for transcript generation.");
+      return;
     }
 
-  }
+    try {
+      const apiResponse = await GetCurrentVideoTranscriptApi({
+        currentVideoId,
+      });
+
+      console.log("Manual Transcript Fetch Response: ", apiResponse);
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error fetching video transcript: " + apiResponse?.error || apiResponse?.message || "Error in fetching transcript");
+        return;
+      }
+
+      // Fix: Access the correct nested path - apiResponse.data.data.transcript
+      setTranscriptText(apiResponse?.data?.data?.transcript || []);
+      console.log("Transcript set to state: ", apiResponse?.data?.data?.transcript);
+
+    } catch (err) {
+      console.error("Error in manual transcript fetch:", err);
+      alert(err.message || "Error in fetching transcript");
+    }
+  };
 
   const handlePreviousVideo = async () => {
     const currentIndex = coursePlaylist.findIndex(
@@ -1395,19 +1424,133 @@ const CoursesInterface = () => {
                     <div className="flex items-center space-x-2 mb-4">
                       <span className="text-2xl">📚</span>
                       <h3 className="text-lg font-semibold">Lesson Summary</h3>
-                        <button onClick={fetchSummary}  className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        Generate Summary  
-                  </button>
+                      <button
+                        onClick={fetchSummary}
+                        className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                      >
+                        Generate Summary
+                      </button>
                     </div>
                     <div
                       className={`p-4 rounded-lg ${
                         isDark ? "bg-gray-700" : "bg-gray-100"
-                      }`}
+                      } max-h-96 overflow-y-auto`}
                     >
-                      
-                      {/* Here Button will come */}
-                      
+                      {summaryText ? (
+                        <div className="space-y-4">
+                          {/* Summary Header */}
+                          <div className={`p-4 rounded-xl border transition-all duration-300 ${
+                            isDark 
+                              ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30" 
+                              : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                          }`}>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
+                                <span className="text-white text-xl">📚</span>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-lg">AI Generated Summary</h4>
+                                <p className={`text-sm ${isDark ? "text-orange-300" : "text-orange-600"}`}>
+                                  Key insights from this lesson
+                                </p>
+                              </div>
+                            </div>
+                          </div>
 
+                          {/* Summary Content */}
+                          <div className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                            isDark 
+                              ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750" 
+                              : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                          }`}>
+                            {/* Copy Button */}
+                            <button
+                              onClick={() => navigator.clipboard.writeText(summaryText)}
+                              className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                isDark 
+                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                              }`}
+                              title="Copy summary"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </button>
+
+                            {/* Summary Badge */}
+                            <div className="flex items-center space-x-2 mb-4">
+                              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                isDark 
+                                  ? "bg-orange-900/30 text-orange-400 border border-orange-700" 
+                                  : "bg-orange-100 text-orange-700 border border-orange-200"
+                              }`}>
+                                AI Summary
+                              </div>
+                              <div className={`px-2 py-1 rounded text-xs ${
+                                isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                              }`}>
+                                Auto-generated
+                              </div>
+                            </div>
+                            
+                            {/* Summary Text */}
+                            <div className={`text-sm leading-relaxed ${
+                              isDark ? "text-gray-100" : "text-gray-800"
+                            }`}>
+                              <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
+                                {summaryText.split('\n').map((paragraph, index) => (
+                                  paragraph.trim() && (
+                                    <p key={index} className="mb-3 last:mb-0">
+                                      {paragraph}
+                                    </p>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Summary Stats */}
+                            <div className={`mt-4 pt-4 border-t flex items-center justify-between ${
+                              isDark ? "border-gray-700" : "border-gray-200"
+                            }`}>
+                              <div className="flex items-center space-x-4 text-xs">
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-orange-500">📊</span>
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    {summaryText.split(' ').length} words
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-orange-500">⏱️</span>
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    ~{Math.ceil(summaryText.split(' ').length / 200)} min read
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
+                                    isDark 
+                                      ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
+                                      : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                                  }`}
+                                  onClick={fetchSummary}
+                                >
+                                  🔄 Regenerate
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`text-center py-12 ${
+                          isDark ? "text-gray-400" : "text-gray-500"
+                        }`}>
+                          <div className="text-4xl mb-4">📚</div>
+                          <p className="text-lg font-medium mb-2">No summary available</p>
+                          <p className="text-sm">Click "Generate Summary" to create an AI-powered lesson summary</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1417,6 +1560,9 @@ const CoursesInterface = () => {
                     <div className="flex items-center space-x-2 mb-4">
                       <span className="text-2xl">📜</span>
                       <h3 className="text-lg font-semibold">Transcript</h3>
+                      <button onClick={fetchTranscript} className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                        Fetch Transcript
+                      </button>
                     </div>
                     <div
                       className={`p-4 rounded-lg ${
@@ -1425,18 +1571,81 @@ const CoursesInterface = () => {
                     >
                       <div className="space-y-2 text-sm">
                         <div>
-                          {transcriptText &&
-                            transcriptText.map((snippet, index) => (
-                              <div key={index}>
-                                <span className="text-emerald-500 font-mono text-xs">
-                                  {snippet.startTime +
-                                    " - " +
-                                    snippet.endTime +
-                                    "\n"}
-                                </span>
-                                <p>{snippet.text}</p>
-                              </div>
-                            ))}
+                          {transcriptText && transcriptText.length > 0 ? (
+                            <div className="space-y-3">
+                              {transcriptText.map((snippet, index) => (
+                                <div 
+                                  key={index} 
+                                  className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                                    isDark 
+                                      ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750" 
+                                      : "bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"
+                                  }`}
+                                >
+                                  {/* Timestamp Badge */}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-2">
+                                      <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                        isDark 
+                                          ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700" 
+                                          : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                      }`}>
+                                        {Math.floor(snippet.startTime)}s - {Math.floor(snippet.endTime)}s
+                                      </div>
+                                      <div className={`px-2 py-1 rounded text-xs ${
+                                        isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                                      }`}>
+                                        #{index + 1}
+                                      </div>
+                                    </div>
+                                    {/* Copy Button */}
+                                    <button
+                                      onClick={() => navigator.clipboard.writeText(snippet.text)}
+                                      className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                        isDark 
+                                          ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                          : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                                      }`}
+                                      title="Copy text"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Transcript Text */}
+                                  <div className={`text-sm leading-relaxed ${
+                                    isDark ? "text-gray-100" : "text-gray-800"
+                                  }`}>
+                                    <p className="selection:bg-emerald-200 selection:text-emerald-900">
+                                      {snippet.text}
+                                    </p>
+                                  </div>
+                                  
+                                  {/* Progress Bar */}
+                                  <div className={`mt-3 h-1 rounded-full overflow-hidden ${
+                                    isDark ? "bg-gray-700" : "bg-gray-200"
+                                  }`}>
+                                    <div 
+                                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300"
+                                      style={{ 
+                                        width: `${((snippet.endTime - snippet.startTime) / Math.max(...transcriptText.map(s => s.endTime))) * 100}%` 
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={`text-center py-12 ${
+                              isDark ? "text-gray-400" : "text-gray-500"
+                            }`}>
+                              <div className="text-4xl mb-4">📜</div>
+                              <p className="text-lg font-medium mb-2">No transcript available</p>
+                              <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1796,7 +2005,6 @@ Tips:
 
                 {/* button to save notes */}
                 <button
-                  onClick
                   className={`mt-4 px-4 py-2 rounded-lg text-white ${
                     isDark
                       ? "bg-emerald-500 hover:bg-emerald-600"
@@ -1951,20 +2159,88 @@ Tips:
             {activeTab === "transcript" && (
               <div className="space-y-4 max-w-full">
                 <h3 className="text-xl font-bold">Video Transcript 📜</h3>
+                <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors" onClick={fetchTranscript}>
+                  Fetch Transcript
+                </button>
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
                   } max-h-96 overflow-y-auto`}
                 >
                   <div className="space-y-3 text-sm leading-relaxed">
-                    {transcriptText?.map((item, index) => (
-                      <div key={index}>
-                        <span className="font-semibold">
-                          {item.startTime} - {item.endTime}:{" "}
-                        </span>
-                        <span>{item.text}</span>
+                    {transcriptText && transcriptText.length > 0 ? (
+                      transcriptText.map((item, index) => (
+                        <div 
+                          key={index} 
+                          className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                            isDark 
+                              ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750" 
+                              : "bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"
+                          }`}
+                        >
+                          {/* Timestamp Badge */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                isDark 
+                                  ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700" 
+                                  : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                              }`}>
+                                {Math.floor(item.startTime)}s - {Math.floor(item.endTime)}s
+                              </div>
+                              <div className={`px-2 py-1 rounded text-xs ${
+                                isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                              }`}>
+                                #{index + 1}
+                              </div>
+                            </div>
+                            {/* Copy Button */}
+                            <button
+                              onClick={() => navigator.clipboard.writeText(item.text)}
+                              className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                isDark 
+                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                              }`}
+                              title="Copy text"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </button>
+                          </div>
+                          
+                          {/* Transcript Text */}
+                          <div className={`text-sm leading-relaxed ${
+                            isDark ? "text-gray-100" : "text-gray-800"
+                          }`}>
+                            <p className="selection:bg-emerald-200 selection:text-emerald-900">
+                              {item.text}
+                            </p>
+                          </div>
+                          
+                          {/* Progress Bar */}
+                          <div className={`mt-3 h-1 rounded-full overflow-hidden ${
+                            isDark ? "bg-gray-700" : "bg-gray-200"
+                          }`}>
+                            <div 
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: `${((item.endTime - item.startTime) / Math.max(...transcriptText.map(s => s.endTime))) * 100}%` 
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`text-center py-12 ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        <div className="text-4xl mb-4">📜</div>
+                        <p className="text-lg font-medium mb-2">No transcript available</p>
+                        <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -1972,19 +2248,136 @@ Tips:
 
             {activeTab === "summary" && (
               <div className="space-y-4">
-                <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
-                  <button onClick={fetchSummary}  className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        Generate Summary  
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
+                  <button
+                    onClick={fetchSummary}
+                    className="px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 shadow-lg transform hover:scale-105"
+                  >
+                    Generate Summary
                   </button>
+                </div>
+                
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
-                  }`}
+                  } max-h-96 overflow-y-auto`}
                 >
+                  {summaryText ? (
+                    <div className="space-y-4">
+                      {/* Summary Header */}
+                      <div className={`p-4 rounded-xl border transition-all duration-300 ${
+                        isDark 
+                          ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30" 
+                          : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                      }`}>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
+                            <span className="text-white text-xl">📚</span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-lg">AI Generated Summary</h4>
+                            <p className={`text-sm ${isDark ? "text-orange-300" : "text-orange-600"}`}>
+                              Key insights from this lesson
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Here Actual Data From State will be here */}
-                  {/* Here Button will come */}
+                      {/* Summary Content */}
+                      <div className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                        isDark 
+                          ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750" 
+                          : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                      }`}>
+                        {/* Copy Button */}
+                        <button
+                          onClick={() => navigator.clipboard.writeText(summaryText)}
+                          className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                            isDark 
+                              ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                              : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                          }`}
+                          title="Copy summary"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
 
+                        {/* Summary Badge */}
+                        <div className="flex items-center space-x-2 mb-4">
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            isDark 
+                              ? "bg-orange-900/30 text-orange-400 border border-orange-700" 
+                              : "bg-orange-100 text-orange-700 border border-orange-200"
+                          }`}>
+                            AI Summary
+                          </div>
+                          <div className={`px-2 py-1 rounded text-xs ${
+                            isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                          }`}>
+                            Auto-generated
+                          </div>
+                        </div>
+                        
+                        {/* Summary Text */}
+                        <div className={`text-sm leading-relaxed ${
+                          isDark ? "text-gray-100" : "text-gray-800"
+                        }`}>
+                          <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
+                            {summaryText.split('\n').map((paragraph, index) => (
+                              paragraph.trim() && (
+                                <p key={index} className="mb-3 last:mb-0">
+                                  {paragraph}
+                                </p>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Summary Stats */}
+                        <div className={`mt-4 pt-4 border-t flex items-center justify-between ${
+                          isDark ? "border-gray-700" : "border-gray-200"
+                        }`}>
+                          <div className="flex items-center space-x-4 text-xs">
+                            <div className="flex items-center space-x-1">
+                              <span className="text-orange-500">📊</span>
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                {summaryText.split(' ').length} words
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-orange-500">⏱️</span>
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                ~{Math.ceil(summaryText.split(' ').length / 200)} min read
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
+                                isDark 
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300" 
+                                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                              }`}
+                              onClick={fetchSummary}
+                            >
+                              🔄 Regenerate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`text-center py-12 ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}>
+                      <div className="text-4xl mb-4">📚</div>
+                      <p className="text-lg font-medium mb-2">No summary available</p>
+                      <p className="text-sm">Click "Generate Summary" to create an AI-powered lesson summary</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
