@@ -51,6 +51,54 @@ import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
 
+// Notion-style formatting function
+const formatNotesToHTML = (text, isDark = false) => {
+  if (!text) return '<p class="text-gray-500">Start typing your notes...</p>';
+  
+  let html = text
+    // Headers
+    .replace(/^### (.*$)/gm, `<h3 class="text-lg font-bold mt-3 mb-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}"">$1</h3>`)
+    .replace(/^## (.*$)/gm, `<h2 class="text-xl font-bold mt-4 mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}"">$1</h2>`)
+    .replace(/^# (.*$)/gm, `<h1 class="text-2xl font-bold mt-5 mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}"">$1</h1>`)
+    
+    // Bold text
+    .replace(/\*\*(.*?)\*\*/g, `<strong class="font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}">$1</strong>`)
+    
+    // Italic text
+    .replace(/\*(.*?)\*/g, `<em class="italic ${isDark ? 'text-gray-300' : 'text-gray-700'}">$1</em>`)
+    
+    // Timestamps
+    .replace(/\[(\d{1,2}:\d{2})\]/g, `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-mono ${isDark ? 'bg-orange-900/30 text-orange-400 border border-orange-700' : 'bg-orange-100 text-orange-700 border border-orange-200'}">🕐 $1</span>`)
+    
+    // Checkboxes
+    .replace(/- \[x\] (.*$)/gm, `<div class="flex items-center space-x-2 mb-1"><span class="text-green-500">✅</span><span class="line-through ${isDark ? 'text-gray-400' : 'text-gray-500'}">$1</span></div>`)
+    .replace(/- \[ \] (.*$)/gm, `<div class="flex items-center space-x-2 mb-1"><span class="${isDark ? 'text-gray-500' : 'text-gray-400'}">☐</span><span>$1</span></div>`)
+    
+    // Bullet points with sub-bullets (fix spacing)
+    .replace(/^  - (.*$)/gm, `<div class="ml-6 flex items-start space-x-2 mb-1"><span class="${isDark ? 'text-gray-400' : 'text-gray-500'}">◦</span><span>$1</span></div>`)
+    .replace(/^- (.*$)/gm, `<div class="flex items-start space-x-2 mb-1"><span class="${isDark ? 'text-emerald-400' : 'text-emerald-600'}">•</span><span>$1</span></div>`)
+    
+    // Horizontal rules
+    .replace(/^---$/gm, `<hr class="my-4 ${isDark ? 'border-gray-600' : 'border-gray-300'}">`)
+    
+    // Code blocks (inline)
+    .replace(/`([^`]+)`/g, `<code class="px-2 py-1 rounded text-sm font-mono ${isDark ? 'bg-gray-800 text-green-400 border border-gray-700' : 'bg-gray-100 text-green-600 border border-gray-200'}">$1</code>`)
+    
+    // Split into paragraphs and handle line breaks properly
+    .split('\n\n')
+    .map(paragraph => {
+      // If paragraph contains bullet points, checkboxes, or headers, don't wrap in <p>
+      if (paragraph.match(/^(#{1,3}|<div|<h[1-3]|<hr)/m)) {
+        return paragraph.replace(/\n/g, '');
+      }
+      // Regular paragraphs
+      return `<p class="mb-2 leading-relaxed">${paragraph.replace(/\n/g, '<br>')}</p>`;
+    })
+    .join('');
+  
+  return `<div class="${isDark ? 'text-gray-100' : 'text-gray-800'}">${html}</div>`;
+};
+
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
     CryptoJS.AES.decrypt(
@@ -66,6 +114,7 @@ const CoursesInterface = () => {
   const [storedNotes, setStoredNotes] = useState("");
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
   const [summaryText, setSummaryText] = useState("");
+  const [notesViewMode, setNotesViewMode] = useState("editor"); // "editor" or "preview"
   const navigate = useNavigate();
 
   const notStoreNotesFromZustand = useNotes((state) => state.notStoreNotes);
@@ -1353,30 +1402,102 @@ const CoursesInterface = () => {
 
                 {activeTab === "notes" && (
                   <div>
-                    <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-2xl">📝</span>
-                      <h3 className="text-lg font-semibold">My Notes</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">📝</span>
+                        <h3 className="text-lg font-semibold">My Notes</h3>
+                      </div>
+                      
+                      {/* Mobile Tab Switcher */}
+                      <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-gray-800 rounded-md">
+                        <button
+                          onClick={() => setNotesViewMode("editor")}
+                          className={`px-2 py-1 rounded text-xs transition-all duration-200 ${
+                            notesViewMode === "editor"
+                              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                              : "text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => setNotesViewMode("preview")}
+                          className={`px-2 py-1 rounded text-xs transition-all duration-200 ${
+                            notesViewMode === "preview"
+                              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                              : "text-gray-600 dark:text-gray-400"
+                          }`}
+                        >
+                          👁️ View
+                        </button>
+                      </div>
                     </div>
-                    <textarea
-                      placeholder="Take notes while watching..."
-                      className={`w-full h-48 p-3 rounded-lg border text-sm resize-none ${
+
+                    {/* Content Area */}
+                    {notesViewMode === "editor" ? (
+                      <textarea
+                        placeholder="# My Notes
+
+## Key Points
+- **Important concept**
+- Another point
+
+## Questions  
+- [ ] What to learn?
+- [x] Completed
+
+[05:30] - Key moment"
+                        className={`w-full h-48 p-3 rounded-lg border text-sm resize-none font-mono ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                        value={notStoreNotes}
+                        onChange={(e) => setNotStoreNotes(e.target.value)}
+                      />
+                    ) : (
+                      <div className={`w-full h-48 p-3 rounded-lg border overflow-y-auto text-sm ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                      } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                      value={notStoreNotes}
-                      onChange={(e) => setNotStoreNotes(e.target.value)}
-                    />
+                          ? "bg-gray-700 border-gray-600 text-white"
+                          : "bg-gray-50 border-gray-300 text-gray-900"
+                      }`}>
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
+                          __html: formatNotesToHTML(notStoreNotes, isDark)
+                        }} />
+                      </div>
+                    )}
+
+                    {/* Status & Actions */}
                     <div className="flex justify-between items-center mt-3">
-                      <span
-                        className={`text-xs ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
-                      >
-                        Auto-saved
-                      </span>
-                      <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                        {notesLoader ? "Saving..." : "Saved"}
+                      {/* Professional Mobile Auto-Save Loader */}
+                      <div className={`flex items-center space-x-2 px-2 py-1 rounded-full transition-all duration-300 ${
+                        notesLoader 
+                          ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30" 
+                          : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30"
+                      }`}>
+                        {notesLoader ? (
+                          <>
+                            <div className="flex items-center space-x-0.5">
+                              <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                            <span className={`text-xs font-medium ${isDark ? "text-yellow-400" : "text-yellow-600"}`}>
+                              Saving...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            <span className={`text-xs font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
+                              Saved
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <button className="px-3 py-1.5 text-xs bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium">
+                        💾 Save
                       </button>
                     </div>
                   </div>
@@ -1973,46 +2094,155 @@ const CoursesInterface = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold">My Notes 📝</h3>
-                  <button className="text-emerald-500 text-sm hover:text-emerald-600 transition-colors">
-                    Export PDF
+                  <div className="flex items-center space-x-2">
+                    <button className="text-emerald-500 text-sm hover:text-emerald-600 transition-colors">
+                      Export PDF
+                    </button>
+                    <button className="text-gray-500 text-sm hover:text-gray-600 transition-colors">
+                      📋 Templates
+                    </button>
+                  </div>
+                </div>
+
+                {/* Editor/Preview Tab Switcher */}
+                <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <button
+                    onClick={() => setNotesViewMode("editor")}
+                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                      notesViewMode === "editor"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-md"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <span>✏️</span>
+                    <span className="font-medium">Editor</span>
+                  </button>
+                  <button
+                    onClick={() => setNotesViewMode("preview")}
+                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                      notesViewMode === "preview"
+                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-md"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <span>👁️</span>
+                    <span className="font-medium">Preview</span>
                   </button>
                 </div>
 
-                <textarea
-                  placeholder="Take notes while watching the video...
+                {/* Content Area */}
+                <div className="h-96">
+                  {notesViewMode === "editor" ? (
+                    <div className="space-y-2 h-full">
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <span>✏️ Editor Mode</span>
+                        <span>•</span>
+                        <span>Use # for headings, - for bullets, ** for bold</span>
+                      </div>
+                      <textarea
+                        placeholder="# My Lesson Notes
 
-Tips:
-• Use timestamps like [05:30] for important moments
-• Write key concepts and definitions
-• Note questions to ask later"
-                  value={notStoreNotes} // Changed from storedNotes to notStoreNotes
-                  className={`w-full h-48 p-4 rounded-lg border resize-none ${
-                    isDark
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
-                  // This is important for validating notes
-                  onChange={(e) => {
-                    setNotStoreNotes(e.target.value);
-                  }}
-                />
+## Key Concepts
+- **Important point 1**
+- Important point 2
+  - Sub point
 
-                {/* Debug info - you can remove this later */}
-                {/* <div className="mt-2 text-xs text-gray-500">
-                  <p>Debug: notStoreNotes length: {notStoreNotes.length}</p>
-                  <p>Debug: storedNotes length: {storedNotes.length}</p>
-                </div> */}
+## Questions
+- [ ] What is useEffect?
+- [x] Completed task
 
-                {/* button to save notes */}
-                <button
-                  className={`mt-4 px-4 py-2 rounded-lg text-white ${
-                    isDark
-                      ? "bg-emerald-500 hover:bg-emerald-600"
-                      : "bg-emerald-600 hover:bg-emerald-700"
-                  } transition-all duration-200`}
-                >
-                  {notesLoader ? "Saving..." : "Saved"}
-                </button>
+## Timestamps
+[05:30] - Important moment
+[12:45] - Another key point
+
+---
+
+**Summary**: Write your summary here..."
+                        value={notStoreNotes}
+                        onChange={(e) => {
+                          setNotStoreNotes(e.target.value);
+                        }}
+                        className={`w-full h-full p-4 rounded-lg border resize-none font-mono text-sm ${
+                          isDark
+                            ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2 h-full">
+                      <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <span>👁️ Preview Mode</span>
+                        <span>•</span>
+                        <span>Real-time formatting</span>
+                      </div>
+                      <div className={`w-full h-full p-4 rounded-lg border overflow-y-auto ${
+                        isDark
+                          ? "bg-gray-700 border-gray-600 text-white"
+                          : "bg-gray-50 border-gray-300 text-gray-900"
+                      }`}>
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
+                          __html: formatNotesToHTML(notStoreNotes, isDark)
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Status & Actions */}
+                <div className="flex items-center justify-between mt-10">
+                  <div className="flex items-center space-x-3">
+                    {/* Professional Auto-Save Loader */}
+                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-all duration-300 ${
+                      notesLoader 
+                        ? "bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border border-yellow-300 dark:border-yellow-700" 
+                        : "bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-300 dark:border-green-700"
+                    }`}>
+                      {notesLoader ? (
+                        <>
+                          <div className="flex items-center space-x-1">
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                          <span className={`text-xs font-medium ${isDark ? "text-yellow-400" : "text-yellow-600"}`}>
+                            Saving...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 mt-2  bg-green-500 rounded-full"></div>
+                          <span className={`text-xs font-medium ${isDark ? "text-green-400" : "text-green-600"}`}>
+                            Auto-saved
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className={`text-xs ${
+                      isDark ? "text-gray-500" : "text-gray-400"
+                    }`}>
+                      {notStoreNotes.split(' ').length} words • {notStoreNotes.split('\n').length} lines
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 ${
+                      isDark
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                    }`}>
+                      🔄 Sync
+                    </button>
+                    <button className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 ${
+                      isDark
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-emerald-500 hover:bg-emerald-600"
+                    } text-white`}>
+                      💾 Save
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -2158,90 +2388,120 @@ Tips:
 
             {activeTab === "transcript" && (
               <div className="space-y-4 max-w-full">
-                <h3 className="text-xl font-bold">Video Transcript 📜</h3>
-                <button className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors" onClick={fetchTranscript}>
-                  Fetch Transcript
-                </button>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold">Video Transcript 📜</h3>
+                  <button 
+                    onClick={fetchTranscript}
+                    className="px-4 py-2 text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 shadow-lg transform hover:scale-105"
+                  >
+                    Fetch Transcript
+                  </button>
+                </div>
+                
                 <div
                   className={`p-4 rounded-lg ${
                     isDark ? "bg-gray-700" : "bg-gray-100"
                   } max-h-96 overflow-y-auto`}
                 >
-                  <div className="space-y-3 text-sm leading-relaxed">
-                    {transcriptText && transcriptText.length > 0 ? (
-                      transcriptText.map((item, index) => (
-                        <div 
-                          key={index} 
-                          className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                            isDark 
-                              ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750" 
-                              : "bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"
-                          }`}
-                        >
-                          {/* Timestamp Badge */}
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
-                                isDark 
-                                  ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700" 
-                                  : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                              }`}>
-                                {Math.floor(item.startTime)}s - {Math.floor(item.endTime)}s
-                              </div>
-                              <div className={`px-2 py-1 rounded text-xs ${
-                                isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
-                              }`}>
-                                #{index + 1}
-                              </div>
-                            </div>
-                            {/* Copy Button */}
-                            <button
-                              onClick={() => navigator.clipboard.writeText(item.text)}
-                              className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                isDark 
-                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
-                                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                              }`}
-                              title="Copy text"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </button>
+                  {transcriptText && transcriptText.length > 0 ? (
+                    <div className="space-y-4">
+                      {/* Transcript Header */}
+                      <div className={`p-4 rounded-xl border transition-all duration-300 ${
+                        isDark 
+                          ? "bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/30" 
+                          : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200"
+                      }`}>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
+                            <span className="text-white text-xl">📜</span>
                           </div>
-                          
-                          {/* Transcript Text */}
-                          <div className={`text-sm leading-relaxed ${
-                            isDark ? "text-gray-100" : "text-gray-800"
-                          }`}>
-                            <p className="selection:bg-emerald-200 selection:text-emerald-900">
-                              {item.text}
+                          <div>
+                            <h4 className="font-semibold text-lg">Video Transcript</h4>
+                            <p className={`text-sm ${isDark ? "text-purple-300" : "text-purple-600"}`}>
+                              {transcriptText.length} segments • Auto-generated
                             </p>
                           </div>
-                          
-                          {/* Progress Bar */}
-                          <div className={`mt-3 h-1 rounded-full overflow-hidden ${
-                            isDark ? "bg-gray-700" : "bg-gray-200"
-                          }`}>
-                            <div 
-                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300"
-                              style={{ 
-                                width: `${((item.endTime - item.startTime) / Math.max(...transcriptText.map(s => s.endTime))) * 100}%` 
-                              }}
-                            ></div>
-                          </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className={`text-center py-12 ${
-                        isDark ? "text-gray-400" : "text-gray-500"
-                      }`}>
-                        <div className="text-4xl mb-4">📜</div>
-                        <p className="text-lg font-medium mb-2">No transcript available</p>
-                        <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Transcript Segments */}
+                      <div className="space-y-3">
+                        {transcriptText.map((item, index) => (
+                          <div 
+                            key={index} 
+                            className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                              isDark 
+                                ? "bg-gray-800 border-gray-600 hover:border-purple-500 hover:bg-gray-750" 
+                                : "bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50"
+                            }`}
+                          >
+                            {/* Timestamp Badge */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <div className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                  isDark 
+                                    ? "bg-purple-900/30 text-purple-400 border border-purple-700" 
+                                    : "bg-purple-100 text-purple-700 border border-purple-200"
+                                }`}>
+                                  {Math.floor(item.startTime)}s - {Math.floor(item.endTime)}s
+                                </div>
+                                <div className={`px-2 py-1 rounded text-xs ${
+                                  isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                                }`}>
+                                  #{index + 1}
+                                </div>
+                              </div>
+                              {/* Copy Button */}
+                              <button
+                                onClick={() => navigator.clipboard.writeText(item.text)}
+                                className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                  isDark 
+                                    ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                                    : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                                }`}
+                                title="Copy text"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                            
+                            {/* Transcript Text */}
+                            <div className={`text-sm leading-relaxed ${
+                              isDark ? "text-gray-100" : "text-gray-800"
+                            }`}>
+                              <p className="selection:bg-purple-200 selection:text-purple-900">
+                                {item.text}
+                              </p>
+                            </div>
+                            
+                            {/* Duration Indicator */}
+                            <div className={`mt-3 flex items-center justify-between text-xs ${
+                              isDark ? "text-gray-400" : "text-gray-600"
+                            }`}>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-purple-500">⏱️</span>
+                                <span>{(item.endTime - item.startTime).toFixed(1)}s duration</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-purple-500">📝</span>
+                                <span>{item.text.split(' ').length} words</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`text-center py-12 ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}>
+                      <div className="text-4xl mb-4">📜</div>
+                      <p className="text-lg font-medium mb-2">No transcript available</p>
+                      <p className="text-sm">Click "Fetch Transcript" to load the video transcript</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
