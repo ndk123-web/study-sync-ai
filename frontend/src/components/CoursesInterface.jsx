@@ -57,15 +57,15 @@ const formatNotesToHTML = (text, isDark = false) => {
   
   let html = text
     // Headers
-    .replace(/^### (.*$)/gm, `<h3 class="text-lg font-bold mt-3 mb-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}"">$1</h3>`)
-    .replace(/^## (.*$)/gm, `<h2 class="text-xl font-bold mt-4 mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}"">$1</h2>`)
-    .replace(/^# (.*$)/gm, `<h1 class="text-2xl font-bold mt-5 mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}"">$1</h1>`)
-    
+    .replace(/^### (.*$)/gm, `<h3 class="text-lg font-bold mt-3 mb-1 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h3>`)
+    .replace(/^## (.*$)/gm, `<h2 class="text-xl font-bold mt-4 mb-2 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h2>`)
+    .replace(/^# (.*$)/gm, `<h1 class="text-2xl font-bold mt-5 mb-2 ${isDark ? 'text-white-400' : 'text-dark-600'}"">$1</h1>`)
+
     // Bold text
-    .replace(/\*\*(.*?)\*\*/g, `<strong class="font-bold ${isDark ? 'text-yellow-400' : 'text-yellow-600'}">$1</strong>`)
+    .replace(/\*\*(.*?)\*\*/g, `<strong class="font-bold ${isDark ? 'text-white-400' : 'text-dark-600'}">$1</strong>`)
     
     // Italic text
-    .replace(/\*(.*?)\*/g, `<em class="italic ${isDark ? 'text-gray-300' : 'text-gray-700'}">$1</em>`)
+    .replace(/\*(.*?)\*/g, `<em class="italic ${isDark ? 'text-white-300' : 'text-dark-700'}">$1</em>`)
     
     // Timestamps
     .replace(/\[(\d{1,2}:\d{2})\]/g, `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-mono ${isDark ? 'bg-orange-900/30 text-orange-400 border border-orange-700' : 'bg-orange-100 text-orange-700 border border-orange-200'}">🕐 $1</span>`)
@@ -1495,10 +1495,6 @@ const CoursesInterface = () => {
                           </>
                         )}
                       </div>
-                      
-                      <button className="px-3 py-1.5 text-xs bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium">
-                        💾 Save
-                      </button>
                     </div>
                   </div>
                 )}
@@ -2105,13 +2101,19 @@ const CoursesInterface = () => {
                 </div>
 
                 {/* Editor/Preview Tab Switcher */}
-                <div className="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className={`flex items-center space-x-1 p-1 rounded-lg ${
+                  isDark ? "bg-gray-800" : "bg-gray-100"
+                }`}>
                   <button
                     onClick={() => setNotesViewMode("editor")}
                     className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
                       notesViewMode === "editor"
-                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-md"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                        ? isDark
+                          ? "bg-gray-700 text-emerald-400 shadow-md"
+                          : "bg-white text-emerald-600 shadow-md"
+                        : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-800"
                     }`}
                   >
                     <span>✏️</span>
@@ -2121,8 +2123,12 @@ const CoursesInterface = () => {
                     onClick={() => setNotesViewMode("preview")}
                     className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
                       notesViewMode === "preview"
-                        ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-md"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                        ? isDark
+                          ? "bg-gray-700 text-emerald-400 shadow-md"
+                          : "bg-white text-emerald-600 shadow-md"
+                        : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-800"
                     }`}
                   >
                     <span>👁️</span>
@@ -2178,8 +2184,8 @@ const CoursesInterface = () => {
                       </div>
                       <div className={`w-full h-full p-4 rounded-lg border overflow-y-auto ${
                         isDark
-                          ? "bg-gray-700 border-gray-600 text-white"
-                          : "bg-gray-50 border-gray-300 text-gray-900"
+                          ? "bg-dark-700 border-gray-600 text-white"
+                          : "bg-white-50 border-gray-300 text-gray-900"
                       }`}>
                         <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
                           __html: formatNotesToHTML(notStoreNotes, isDark)
