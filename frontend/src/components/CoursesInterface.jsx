@@ -182,7 +182,9 @@ const CoursesInterface = () => {
   const [storedNotes, setStoredNotes] = useState("");
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
   const [summaryText, setSummaryText] = useState("");
-  const [notesViewMode, setNotesViewMode] = useState("editor"); // "editor" or "preview"
+  // Real-time markdown editor - no view mode switching needed
+  const [activeNotesTab, setActiveNotesTab] = useState("editor"); // "editor", "preview", "split"
+  const [showPreview, setShowPreview] = useState(false); // Mobile preview toggle
   const [showAllTranscript, setShowAllTranscript] = useState(false); // For transcript show more
   const navigate = useNavigate();
 
@@ -1488,72 +1490,113 @@ const CoursesInterface = () => {
                         <span className="text-2xl">📝</span>
                         <h3 className="text-lg font-semibold">My Notes</h3>
                       </div>
-
-                      {/* Mobile Tab Switcher */}
-                      <div className="flex items-center space-x-1 p-0.5 bg-gray-100 dark:bg-gray-800 rounded-md">
-                        <button
-                          onClick={() => setNotesViewMode("editor")}
-                          className={`px-2 py-1 rounded text-xs transition-all duration-200 ${
-                            notesViewMode === "editor"
-                              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                              : "text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => setNotesViewMode("preview")}
-                          className={`px-2 py-1 rounded text-xs transition-all duration-200 ${
-                            notesViewMode === "preview"
-                              ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                              : "text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          👁️ View
-                        </button>
+                      
+                      {/* Live Preview Indicator */}
+                      <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Live Preview</span>
                       </div>
                     </div>
 
-                    {/* Content Area */}
-                    {notesViewMode === "editor" ? (
-                      <textarea
-                        placeholder="# My Notes
-
-## Key Points
-- **Important concept**
-- Another point
-
-## Questions  
-- [ ] What to learn?
-- [x] Completed
-
-[05:30] - Key moment"
-                        className={`w-full h-48 p-3 rounded-lg border text-sm resize-none font-mono ${
-                          isDark
-                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                        } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                        value={notStoreNotes}
-                        onChange={(e) => setNotStoreNotes(e.target.value)}
-                      />
-                    ) : (
-                      <div
-                        className={`w-full h-48 p-3 rounded-lg border overflow-y-auto text-sm ${
-                          isDark
-                            ? "bg-gray-700 border-gray-600 text-white"
-                            : "bg-gray-50 border-gray-300 text-gray-900"
-                        }`}
-                      >
-                        <div
-                          className="prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: formatNotesToHTML(notStoreNotes, isDark),
-                          }}
-                        />
+                    {/* Professional Notes Interface */}
+                    <div className="space-y-4">
+                      {/* Header with Toggle */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">📝</span>
+                          <span className="font-medium text-sm">Notes Editor</span>
+                        </div>
+                        <button
+                          onClick={() => setShowPreview(!showPreview)}
+                          className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition-all duration-300 ${
+                            showPreview
+                              ? isDark
+                                ? "border-emerald-600 bg-emerald-900/20 text-emerald-400"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-600"
+                              : isDark
+                              ? "border-gray-600 bg-gray-700 text-gray-300"
+                              : "border-gray-200 bg-gray-50 text-gray-600"
+                          }`}
+                        >
+                          <span className="text-xs">{showPreview ? '👁️' : '📝'}</span>
+                          <span className="text-xs font-medium">
+                            {showPreview ? 'Preview' : 'Editor'}
+                          </span>
+                        </button>
                       </div>
-                    )}
 
-                    {/* Status & Actions */}
+                      {/* Main Editor */}
+                      <div className="relative">
+                        <textarea
+                          placeholder="# My Lesson Notes
+
+## Key Concepts
+- **Important insight**
+- Another key point
+- Third important item
+
+## Questions & Thoughts
+- [ ] What should I research more?
+- [x] Understood this concept
+- [ ] Practice this tomorrow
+
+## Timestamps
+[05:30] - Key explanation
+[12:45] - Important example
+[18:20] - Summary
+
+---
+
+**Personal Summary**: Write your key takeaways here..."
+                          className={`w-full p-4 rounded-xl border text-sm font-mono resize-none transition-all duration-300 ${
+                            isDark
+                              ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500 focus:bg-gray-750"
+                              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-400 focus:bg-gray-50"
+                          } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          value={notStoreNotes}
+                          onChange={(e) => setNotStoreNotes(e.target.value)}
+                          style={{ height: showPreview ? '200px' : '300px' }}
+                        />
+                        
+                        {/* Character count */}
+                        <div className={`absolute bottom-3 right-3 text-xs px-2 py-1 rounded-full ${
+                          isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          {notStoreNotes.length} chars
+                        </div>
+                      </div>
+
+                      {/* Preview Panel */}
+                      {showPreview && (
+                        <div className="border-t pt-4 space-y-2">
+                          <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400">
+                            <span>✨</span>
+                            <span>Live Preview</span>
+                          </div>
+                          <div
+                            className={`p-4 rounded-xl border min-h-[200px] overflow-y-auto ${
+                              isDark
+                                ? "bg-gray-900/50 border-gray-600 text-white"
+                                : "bg-gradient-to-br from-gray-50 to-white border-gray-200 text-gray-900"
+                            }`}
+                          >
+                            {notStoreNotes ? (
+                              <div
+                                className="prose prose-sm max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300"
+                                dangerouslySetInnerHTML={{
+                                  __html: formatNotesToHTML(notStoreNotes, isDark),
+                                }}
+                              />
+                            ) : (
+                              <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <span className="text-2xl mb-2 block">📝</span>
+                                <p className="text-sm">Start typing to see your formatted notes...</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>                    {/* Status & Actions */}
                     <div className="flex justify-between items-center mt-3">
                       {/* Professional Mobile Auto-Save Loader */}
                       <div
@@ -2397,112 +2440,230 @@ const CoursesInterface = () => {
                   </div>
                 </div>
 
-                {/* Editor/Preview Tab Switcher */}
+                {/* Real-time Editor Header */}
                 <div
-                  className={`flex items-center space-x-1 p-1 rounded-lg ${
+                  className={`flex items-center justify-between p-3 rounded-lg ${
                     isDark ? "bg-gray-800" : "bg-gray-100"
                   }`}
                 >
-                  <button
-                    onClick={() => setNotesViewMode("editor")}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
-                      notesViewMode === "editor"
-                        ? isDark
-                          ? "bg-gray-700 text-emerald-400 shadow-md"
-                          : "bg-white text-emerald-600 shadow-md"
-                        : isDark
-                        ? "text-gray-400 hover:text-gray-200"
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                  >
+                  <div className="flex items-center space-x-3">
                     <span>✏️</span>
-                    <span className="font-medium">Editor</span>
-                  </button>
-                  <button
-                    onClick={() => setNotesViewMode("preview")}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-all duration-200 ${
-                      notesViewMode === "preview"
-                        ? isDark
-                          ? "bg-gray-700 text-emerald-400 shadow-md"
-                          : "bg-white text-emerald-600 shadow-md"
-                        : isDark
-                        ? "text-gray-400 hover:text-gray-200"
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                  >
-                    <span>👁️</span>
-                    <span className="font-medium">Preview</span>
-                  </button>
+                    <span className="font-medium">Live Markdown Editor</span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Real-time Preview</span>
+                  </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="h-96">
-                  {notesViewMode === "editor" ? (
-                    <div className="space-y-2 h-full">
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>✏️ Editor Mode</span>
-                        <span>•</span>
-                        <span>
-                          Use # for headings, - for bullets, ** for bold
-                        </span>
-                      </div>
-                      <textarea
-                        placeholder="# My Lesson Notes
+                {/* Professional Notes Interface */}
+                <div className="h-[500px] space-y-4">
+                  {/* Header with Tabs */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📝</span>
+                      <h3 className="font-semibold text-lg">Notes</h3>
+                    </div>
+                    
+                    {/* Tab Switcher */}
+                    <div className={`flex items-center space-x-1 p-1 rounded-xl border ${
+                      isDark ? "bg-gray-800 border-gray-600" : "bg-gray-50 border-gray-200"
+                    }`}>
+                      <button
+                        onClick={() => setActiveNotesTab('editor')}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                          activeNotesTab === 'editor'
+                            ? isDark
+                              ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
+                              : "bg-emerald-100 text-emerald-700 shadow-md"
+                            : isDark
+                            ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                            : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>✏️</span>
+                        <span className="font-medium">Editor</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveNotesTab('preview')}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                          activeNotesTab === 'preview'
+                            ? isDark
+                              ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
+                              : "bg-emerald-100 text-emerald-700 shadow-md"
+                            : isDark
+                            ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                            : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>👁️</span>
+                        <span className="font-medium">Preview</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveNotesTab('split')}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                          activeNotesTab === 'split'
+                            ? isDark
+                              ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
+                              : "bg-emerald-100 text-emerald-700 shadow-md"
+                            : isDark
+                            ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+                            : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>📊</span>
+                        <span className="font-medium">Split</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Content Area */}
+                  <div className="h-full">
+                    {activeNotesTab === 'editor' && (
+                      <div className="h-full space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center space-x-2 text-gray-500">
+                            <span>⚡</span>
+                            <span>Markdown Editor</span>
+                          </div>
+                          <div className={`px-2 py-1 rounded-full ${
+                            isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {notStoreNotes.length} characters
+                          </div>
+                        </div>
+                        <textarea
+                          placeholder="# My Lesson Notes
 
 ## Key Concepts
-- **Important point 1**
-- Important point 2
-  - Sub point
+- **Important insight** - This is crucial for understanding
+- Another key point with detailed explanation
+- Third important item that I need to remember
 
-## Questions
-- [ ] What is useEffect?
-- [x] Completed task
+## Questions & Thoughts
+- [ ] What should I research more about this topic?
+- [x] I understand this concept now
+- [ ] Practice this tomorrow with examples
+- [ ] Create a project using this knowledge
 
-## Timestamps
-[05:30] - Important moment
-[12:45] - Another key point
+## Timestamps & References
+[05:30] - Key explanation about the main concept
+[12:45] - Important example that clarifies everything
+[18:20] - Summary and next steps
+
+## Code Snippets
+```javascript
+// Example code I want to remember
+const example = 'This is important';
+```
 
 ---
 
-**Summary**: Write your summary here..."
-                        value={notStoreNotes}
-                        onChange={(e) => {
-                          setNotStoreNotes(e.target.value);
-                        }}
-                        className={`w-full h-full p-4 rounded-lg border resize-none font-mono text-sm ${
-                          isDark
-                            ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                        } focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200`}
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2 h-full">
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <span>👁️ Preview Mode</span>
-                        <span>•</span>
-                        <span>Real-time formatting</span>
-                      </div>
-                      <div
-                        className={`w-full h-full p-4 rounded-lg border overflow-y-auto ${
-                          isDark
-                            ? "bg-dark-700 border-gray-600 text-white"
-                            : "bg-white-50 border-gray-300 text-gray-900"
-                        }`}
-                      >
-                        <div
-                          className="prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: formatNotesToHTML(notStoreNotes, isDark),
-                          }}
+**Personal Summary**: 
+Write your key takeaways and insights here. What did you learn? How will you apply this knowledge?"
+                          className={`w-full h-full p-6 rounded-xl border text-sm font-mono resize-none transition-all duration-300 ${
+                            isDark
+                              ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500 focus:bg-gray-750"
+                              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-400 focus:bg-gray-50"
+                          } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          value={notStoreNotes}
+                          onChange={(e) => setNotStoreNotes(e.target.value)}
                         />
                       </div>
-                    </div>
-                  )}
+                    )}
+
+                    {activeNotesTab === 'preview' && (
+                      <div className="h-full space-y-3">
+                        <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400">
+                          <span>✨</span>
+                          <span>Formatted Preview</span>
+                        </div>
+                        <div
+                          className={`w-full h-full p-6 rounded-xl border overflow-y-auto ${
+                            isDark
+                              ? "bg-gradient-to-br from-gray-900 to-gray-800 border-gray-600 text-white"
+                              : "bg-gradient-to-br from-white to-gray-50 border-gray-200 text-gray-900"
+                          }`}
+                        >
+                          {notStoreNotes ? (
+                            <div
+                              className="prose prose-base max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300 prose-code:bg-gray-100 dark:prose-code:bg-gray-800"
+                              dangerouslySetInnerHTML={{
+                                __html: formatNotesToHTML(notStoreNotes, isDark),
+                              }}
+                            />
+                          ) : (
+                            <div className={`text-center py-16 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <span className="text-4xl mb-4 block">📝</span>
+                              <h3 className="text-lg font-medium mb-2">No notes yet</h3>
+                              <p className="text-sm">Switch to Editor tab to start writing your notes</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeNotesTab === 'split' && (
+                      <div className="h-full grid grid-cols-2 gap-6">
+                        {/* Editor Side */}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            <span>✏️</span>
+                            <span>Editor</span>
+                          </div>
+                          <textarea
+                            placeholder="# Start writing your notes here...
+
+## Use markdown for formatting
+- **Bold text**
+- *Italic text*
+- [Links](url)
+- `code snippets`"
+                            value={notStoreNotes}
+                            onChange={(e) => setNotStoreNotes(e.target.value)}
+                            className={`w-full h-full p-4 rounded-xl border resize-none font-mono text-sm transition-all duration-300 ${
+                              isDark
+                                ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
+                                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-400"
+                            } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                          />
+                        </div>
+                        
+                        {/* Preview Side */}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            <span>👁️</span>
+                            <span>Live Preview</span>
+                          </div>
+                          <div
+                            className={`w-full h-full p-4 rounded-xl border overflow-y-auto ${
+                              isDark
+                                ? "bg-gray-900 border-gray-600 text-white"
+                                : "bg-gray-50 border-gray-300 text-gray-900"
+                            }`}
+                          >
+                            {notStoreNotes ? (
+                              <div
+                                className="prose prose-sm max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300"
+                                dangerouslySetInnerHTML={{
+                                  __html: formatNotesToHTML(notStoreNotes, isDark),
+                                }}
+                              />
+                            ) : (
+                              <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <span className="text-2xl mb-2 block">✨</span>
+                                <p className="text-sm">Live preview will appear here...</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Save Status & Actions */}
-                <div className="flex items-center justify-between mt-10">
+                <div className="flex items-center justify-between mt-30">
                   <div className="flex items-center space-x-3">
                     {/* Professional Auto-Save Loader */}
                     <div
