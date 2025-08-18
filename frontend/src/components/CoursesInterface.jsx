@@ -167,77 +167,37 @@ const formatNotesToHTML = (text, isDark = false) => {
   }">${html}</div>`;
 };
 
-// Enhanced chat message formatter with syntax highlighting
+// Simple chat message formatter matching notes style
 const formatChatMessageHTML = (text, isDark = false) => {
-  if (!text) return '<p class="text-gray-500">No message</p>';
-
-  // Helper function to escape HTML
-  const escapeHtml = (unsafe) => {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
+  if (!text) return '';
 
   let html = text
-    // Code blocks with Prism.js syntax highlighting (process first)
+    // Code blocks (multiline) - Handle BEFORE converting newlines to <br>
     .replace(
-      /```(\w+)?\n?([\s\S]*?)```/g,
+      /```(\w*)\n?([\s\S]*?)\n?```/g,
       (match, language, code) => {
         const lang = language || 'text';
-        const cleanCode = code.trim();
-        const highlightedCode = formatTextContent(cleanCode, lang, isDark);
-        
-        return `<div class="my-4 rounded-lg overflow-hidden border ${
-          isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
-        } shadow-sm">
-          <div class="flex items-center justify-between px-4 py-2 ${
-            isDark ? 'bg-gray-700 border-b border-gray-600' : 'bg-gray-50 border-b border-gray-200'
-          }">
-            <div class="flex items-center space-x-2">
-              <div class="flex space-x-1">
-                <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div class="w-3 h-3 rounded-full bg-green-500"></div>
-              </div>
-              <span class="text-sm font-mono font-medium ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }">${lang}</span>
-            </div>
-            <button onclick="navigator.clipboard.writeText(\`${cleanCode.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="text-sm px-3 py-1 rounded-md transition-colors ${
-              isDark ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
-            }">
-              <span class="text-xs">📋</span> Copy
-            </button>
-          </div>
-          <div class="${
-            isDark ? 'bg-gray-900' : 'bg-gray-50'
-          } p-4 overflow-x-auto">
-            <pre class="line-numbers"><code class="language-${lang} text-sm leading-relaxed">${highlightedCode}</code></pre>
-          </div>
-        </div>`;
+        return `<pre class="line-numbers bg-gray-900 rounded-lg p-3 my-2 overflow-x-auto"><code class="language-${lang} text-sm">${escapeHtml(code.trim())}</code></pre>`;
       }
     )
     
-    // Headers (same as notes formatting)
+    // Headers
     .replace(
       /^### (.*$)/gm,
-      `<h3 class="text-lg font-bold mt-3 mb-1 ${
-        isDark ? "text-emerald-400" : "text-emerald-600"
+      `<h3 class="text-lg font-bold mt-4 mb-2 ${
+        isDark ? "text-white-400" : "text-dark-600"
       }">$1</h3>`
     )
     .replace(
       /^## (.*$)/gm,
-      `<h2 class="text-xl font-bold mt-4 mb-2 ${
-        isDark ? "text-emerald-400" : "text-emerald-600"
+      `<h2 class="text-xl font-bold mt-5 mb-2 ${
+        isDark ? "text-white-400" : "text-dark-600"
       }">$1</h2>`
     )
     .replace(
       /^# (.*$)/gm,
-      `<h1 class="text-2xl font-bold mt-5 mb-2 ${
-        isDark ? "text-emerald-400" : "text-emerald-600"
+      `<h1 class="text-2xl font-bold mt-6 mb-3 ${
+        isDark ? "text-white-400" : "text-dark-600"
       }">$1</h1>`
     )
 
@@ -245,7 +205,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
     .replace(
       /\*\*(.*?)\*\*/g,
       `<strong class="font-bold ${
-        isDark ? "text-white" : "text-gray-900"
+        isDark ? "text-white-400" : "text-dark-600"
       }">$1</strong>`
     )
 
@@ -253,75 +213,78 @@ const formatChatMessageHTML = (text, isDark = false) => {
     .replace(
       /\*(.*?)\*/g,
       `<em class="italic ${
-        isDark ? "text-gray-300" : "text-gray-700"
+        isDark ? "text-white-300" : "text-dark-700"
       }">$1</em>`
     )
 
-    // Inline code
+    // Bullet points
+    .replace(
+      /^- (.*$)/gm,
+      `<div class="flex items-start space-x-2 mb-2"><span class="${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      }">•</span><span>$1</span></div>`
+    )
+
+    // Code blocks (inline)
     .replace(
       /`([^`]+)`/g,
-      `<code class="px-1.5 py-0.5 rounded text-sm font-mono ${
+      `<code class="px-2 py-1 rounded text-sm font-mono ${
         isDark
           ? "bg-gray-800 text-green-400 border border-gray-700"
           : "bg-gray-100 text-green-600 border border-gray-200"
       }">$1</code>`
     )
 
-    // Bullet points  
-    .replace(
-      /^- (.*$)/gm,
-      `<div class="flex items-start space-x-2 mb-1"><span class="${
-        isDark ? "text-emerald-400" : "text-emerald-600"
-      } mt-1">•</span><span>$1</span></div>`
-    )
-    
-    // Numbered lists
-    .replace(
-      /^(\d+)\. (.*$)/gm,
-      `<div class="flex items-start space-x-2 mb-1"><span class="${
-        isDark ? "text-emerald-400" : "text-emerald-600"
-      } font-medium min-w-[20px]">$1.</span><span>$2</span></div>`
-    )
-
     // Blockquotes
     .replace(
       /^> (.*$)/gm,
-      `<blockquote class="border-l-4 ${
-        isDark ? "border-emerald-500 bg-emerald-900/20" : "border-emerald-500 bg-emerald-50"
-      } pl-4 py-2 my-2 italic">$1</blockquote>`
-    )
+      `<div class="border-l-4 pl-4 py-3 my-3 ${
+        isDark
+          ? "border-blue-500 bg-blue-900/20 text-blue-200"
+          : "border-blue-500 bg-blue-50 text-blue-800"
+      }">$1</div>`
+    );
 
-    // Handle paragraphs
-    .split('\n\n')
-    .map((paragraph) => {
-      if (paragraph.match(/^(#{1,3}|<div|<h[1-3]|<blockquote|<pre)/m)) {
-        return paragraph.replace(/\n/g, '');
-      }
-      return `<p class="mb-2 leading-relaxed">${paragraph.replace(/\n/g, '<br>')}</p>`;
-    })
-    .join('');
+  // Split into sections and handle properly
+  const sections = html.split('\n\n').filter(s => s.trim());
+  
+  const formattedSections = sections.map(section => {
+    const trimmed = section.trim();
+    
+    // If it's already a formatted element (header, div, pre, etc.), keep as is
+    if (trimmed.match(/^<(h[1-6]|div|pre|blockquote)/)) {
+      return trimmed;
+    }
+    
+    // If it contains bullet points, keep as is
+    if (trimmed.includes('<div class="flex items-start')) {
+      return trimmed;
+    }
+    
+    // Regular text - wrap in paragraph with proper spacing
+    return `<p class="mb-3 leading-relaxed">${trimmed.replace(/\n/g, ' ')}</p>`;
+  });
 
   return `<div class="${
     isDark ? "text-gray-100" : "text-gray-800"
-  }">${html}</div>`;
+  }">${formattedSections.join('')}</div>`;
 };
 
-// Prism.js syntax highlighter integration
-const formatTextContent = (code, language, isDark = false) => {
-  // Create a temporary element to use Prism highlighting
-  const tempElement = document.createElement('code');
-  tempElement.className = `language-${language.toLowerCase()}`;
-  tempElement.textContent = code;
-  
-  // Apply Prism highlighting
-  if (window.Prism) {
-    window.Prism.highlightElement(tempElement);
-    return tempElement.innerHTML;
-  }
-  
-  // Fallback if Prism is not loaded
-  return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Helper function to escape HTML
+const escapeHtml = (unsafe) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 };
+
+
+
+
+
+// (Prism highlight is handled inside component-level hooks where chatMessages/isDark are available)
 
 const CoursesInterface = () => {
   const theme = useThemeStore((state) =>
@@ -515,13 +478,15 @@ const CoursesInterface = () => {
 
   }, [] )
 
-  // Re-highlight code blocks when chat messages change or theme changes
+  // Simple Prism highlighting on chat message updates
   useEffect(() => {
     if (window.Prism) {
-      // Re-highlight all code blocks
-      window.Prism.highlightAll();
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        window.Prism.highlightAll();
+      }, 100);
     }
-  }, [chatMessages, isDark]);
+  }, [chatMessages]);
 
   // To Get Notes on the basis of courseId
   useEffect(() => {
@@ -944,6 +909,7 @@ const CoursesInterface = () => {
     // }, 1000);
 
     const apiResponse = await SendAiChatApi({ prompt: chatMessage, courseId })
+    setChatMessage("");
 
     console.log("Api Response for send Chat: ", apiResponse)
 
@@ -961,7 +927,6 @@ const CoursesInterface = () => {
       };
 
     setChatMessages((prev) => [...prev , aiMessage]);
-    setChatMessage("");
   };
 
   return (

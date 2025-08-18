@@ -4,13 +4,196 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/zap.png" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+    
+    <!-- JetBrains Mono font for code -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Prism.js CSS - VS Dark Theme -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vs-dark.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
     
-    <!-- Clipboard.js for copy functionality -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+    <!-- Custom Simple Code Block Styles -->
+    <style>
+      /* Simple code block styling matching notes */
+      pre {
+        background: #1e1e1e !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+        margin: 12px 0 !important;
+        overflow-x: auto !important;
+        font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        border: 1px solid #333 !important;
+        white-space: pre !important;
+      }
+      
+      /* Override Tailwind prose styles completely for chat messages */
+      .prose {
+        max-width: none !important;
+      }
+      
+      .prose p {
+        margin-bottom: 12px !important;
+        margin-top: 0 !important;
+        line-height: 1.6 !important;
+      }
+      
+      .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+        margin-top: 20px !important;
+        margin-bottom: 8px !important;
+        line-height: 1.3 !important;
+        font-weight: bold !important;
+        color: inherit !important;
+      }
+      
+      .prose h1:first-child, .prose h2:first-child, .prose h3:first-child {
+        margin-top: 0 !important;
+      }
+      
+      .prose h1 {
+        font-size: 1.5rem !important;
+      }
+      
+      .prose h2 {
+        font-size: 1.25rem !important;
+      }
+      
+      .prose h3 {
+        font-size: 1.125rem !important;
+      }
+      
+      /* Force strong and em styling */
+      .prose strong {
+        font-weight: bold !important;
+        color: inherit !important;
+      }
+      
+      .prose em {
+        font-style: italic !important;
+        color: inherit !important;
+      }
+      
+      /* Code styling in prose */
+      .prose code {
+        background-color: #374151 !important;
+        color: #10b981 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 0.875rem !important;
+        font-family: 'JetBrains Mono', monospace !important;
+      }
+      
+      .prose pre {
+        background: #1e1e1e !important;
+        margin: 16px 0 !important;
+        padding: 12px !important;
+        border-radius: 6px !important;
+        overflow-x: auto !important;
+      }
+      
+      .prose pre code {
+        background: transparent !important;
+        color: #d1d5db !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+      }
+      
+      /* Lists in prose */
+      .prose ul, .prose ol {
+        margin: 8px 0 !important;
+        padding-left: 0 !important;
+      }
+      
+      .prose li {
+        margin: 4px 0 !important;
+      }
+      
+      /* Blockquotes in prose */
+      .prose blockquote {
+        margin: 16px 0 !important;
+        border-left: 4px solid #3b82f6 !important;
+        padding-left: 16px !important;
+        background: rgba(59, 130, 246, 0.1) !important;
+        font-style: italic !important;
+      }
+      
+      pre code {
+        background: none !important;
+        color: #d4d4d4 !important;
+        padding: 0 !important;
+        font-family: inherit !important;
+        font-size: inherit !important;
+      }
+      
+      /* Line numbers styling */
+      .line-numbers .line-numbers-rows {
+        border-right: 1px solid #3e3e42 !important;
+        background: #1e1e1e !important;
+        padding-right: 8px !important;
+      }
+      
+      .line-numbers .line-numbers-rows > span:before {
+        color: #858585 !important;
+        font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+      }
+      
+      /* VS Code Dark theme colors */
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #6a9955 !important; /* Green for comments */
+      }
+      
+      .token.punctuation {
+        color: #d4d4d4 !important;
+      }
+      
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #b5cea8 !important; /* Light green for numbers */
+      }
+      
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.inserted {
+        color: #ce9178 !important; /* Orange for strings */
+      }
+      
+      .token.operator,
+      .token.entity,
+      .token.url,
+      .language-css .token.string,
+      .style .token.string {
+        color: #d4d4d4 !important;
+      }
+      
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #569cd6 !important; /* Blue for keywords */
+      }
+      
+      .token.function,
+      .token.class-name {
+        color: #dcdcaa !important; /* Yellow for functions */
+      }
+      
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #d16969 !important;
+      }
+    </style>
     
     <!-- Prism.js Core -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -27,6 +210,34 @@
     
     <!-- Prism.js Plugins -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <!-- Initialize Prism settings -->
+    <script>
+      // Configure Prism for better line numbers and VS Code theme
+      window.Prism = window.Prism || {};
+      window.Prism.manual = true;
+      
+      // Ensure proper initialization after DOM load
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.Prism) {
+          // Set up line numbers plugin
+          window.Prism.plugins.lineNumbers = window.Prism.plugins.lineNumbers || {};
+          
+          // Custom line number styling
+          const style = document.createElement('style');
+          style.textContent = `
+            .line-numbers .line-numbers-rows {
+              padding-left: 0 !important;
+              padding-right: 8px !important;
+              width: auto !important;
+              min-width: 2em !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      });
+    </script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StudySync Ai</title>
