@@ -50,6 +50,7 @@ import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.j
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
+import { SendAiChatApi } from '../api/SendAiChatApi.js'
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -164,6 +165,162 @@ const formatNotesToHTML = (text, isDark = false) => {
   return `<div class="${
     isDark ? "text-gray-100" : "text-gray-800"
   }">${html}</div>`;
+};
+
+// Enhanced chat message formatter with syntax highlighting
+const formatChatMessageHTML = (text, isDark = false) => {
+  if (!text) return '<p class="text-gray-500">No message</p>';
+
+  // Helper function to escape HTML
+  const escapeHtml = (unsafe) => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  let html = text
+    // Code blocks with Prism.js syntax highlighting (process first)
+    .replace(
+      /```(\w+)?\n?([\s\S]*?)```/g,
+      (match, language, code) => {
+        const lang = language || 'text';
+        const cleanCode = code.trim();
+        const highlightedCode = formatTextContent(cleanCode, lang, isDark);
+        
+        return `<div class="my-4 rounded-lg overflow-hidden border ${
+          isDark ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'
+        } shadow-sm">
+          <div class="flex items-center justify-between px-4 py-2 ${
+            isDark ? 'bg-gray-700 border-b border-gray-600' : 'bg-gray-50 border-b border-gray-200'
+          }">
+            <div class="flex items-center space-x-2">
+              <div class="flex space-x-1">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <span class="text-sm font-mono font-medium ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }">${lang}</span>
+            </div>
+            <button onclick="navigator.clipboard.writeText(\`${cleanCode.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="text-sm px-3 py-1 rounded-md transition-colors ${
+              isDark ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
+            }">
+              <span class="text-xs">📋</span> Copy
+            </button>
+          </div>
+          <div class="${
+            isDark ? 'bg-gray-900' : 'bg-gray-50'
+          } p-4 overflow-x-auto">
+            <pre class="line-numbers"><code class="language-${lang} text-sm leading-relaxed">${highlightedCode}</code></pre>
+          </div>
+        </div>`;
+      }
+    )
+    
+    // Headers (same as notes formatting)
+    .replace(
+      /^### (.*$)/gm,
+      `<h3 class="text-lg font-bold mt-3 mb-1 ${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      }">$1</h3>`
+    )
+    .replace(
+      /^## (.*$)/gm,
+      `<h2 class="text-xl font-bold mt-4 mb-2 ${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      }">$1</h2>`
+    )
+    .replace(
+      /^# (.*$)/gm,
+      `<h1 class="text-2xl font-bold mt-5 mb-2 ${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      }">$1</h1>`
+    )
+
+    // Bold text
+    .replace(
+      /\*\*(.*?)\*\*/g,
+      `<strong class="font-bold ${
+        isDark ? "text-white" : "text-gray-900"
+      }">$1</strong>`
+    )
+
+    // Italic text
+    .replace(
+      /\*(.*?)\*/g,
+      `<em class="italic ${
+        isDark ? "text-gray-300" : "text-gray-700"
+      }">$1</em>`
+    )
+
+    // Inline code
+    .replace(
+      /`([^`]+)`/g,
+      `<code class="px-1.5 py-0.5 rounded text-sm font-mono ${
+        isDark
+          ? "bg-gray-800 text-green-400 border border-gray-700"
+          : "bg-gray-100 text-green-600 border border-gray-200"
+      }">$1</code>`
+    )
+
+    // Bullet points  
+    .replace(
+      /^- (.*$)/gm,
+      `<div class="flex items-start space-x-2 mb-1"><span class="${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      } mt-1">•</span><span>$1</span></div>`
+    )
+    
+    // Numbered lists
+    .replace(
+      /^(\d+)\. (.*$)/gm,
+      `<div class="flex items-start space-x-2 mb-1"><span class="${
+        isDark ? "text-emerald-400" : "text-emerald-600"
+      } font-medium min-w-[20px]">$1.</span><span>$2</span></div>`
+    )
+
+    // Blockquotes
+    .replace(
+      /^> (.*$)/gm,
+      `<blockquote class="border-l-4 ${
+        isDark ? "border-emerald-500 bg-emerald-900/20" : "border-emerald-500 bg-emerald-50"
+      } pl-4 py-2 my-2 italic">$1</blockquote>`
+    )
+
+    // Handle paragraphs
+    .split('\n\n')
+    .map((paragraph) => {
+      if (paragraph.match(/^(#{1,3}|<div|<h[1-3]|<blockquote|<pre)/m)) {
+        return paragraph.replace(/\n/g, '');
+      }
+      return `<p class="mb-2 leading-relaxed">${paragraph.replace(/\n/g, '<br>')}</p>`;
+    })
+    .join('');
+
+  return `<div class="${
+    isDark ? "text-gray-100" : "text-gray-800"
+  }">${html}</div>`;
+};
+
+// Prism.js syntax highlighter integration
+const formatTextContent = (code, language, isDark = false) => {
+  // Create a temporary element to use Prism highlighting
+  const tempElement = document.createElement('code');
+  tempElement.className = `language-${language.toLowerCase()}`;
+  tempElement.textContent = code;
+  
+  // Apply Prism highlighting
+  if (window.Prism) {
+    window.Prism.highlightElement(tempElement);
+    return tempElement.innerHTML;
+  }
+  
+  // Fallback if Prism is not loaded
+  return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 };
 
 const CoursesInterface = () => {
@@ -352,6 +509,19 @@ const CoursesInterface = () => {
     clearNotesFromZustand(); // it will clear the notes in zustand for the new course
     console.log("✅ Cleared Zustand notes for new course");
   }, [courseId]);
+
+  // fetch the ai chat response
+  useEffect( () => {
+
+  }, [] )
+
+  // Re-highlight code blocks when chat messages change or theme changes
+  useEffect(() => {
+    if (window.Prism) {
+      // Re-highlight all code blocks
+      window.Prism.highlightAll();
+    }
+  }, [chatMessages, isDark]);
 
   // To Get Notes on the basis of courseId
   useEffect(() => {
@@ -747,7 +917,7 @@ const CoursesInterface = () => {
     setCurrentVideoId(newVideoId);
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!chatMessage.trim()) return;
 
     const newMessage = {
@@ -760,19 +930,37 @@ const CoursesInterface = () => {
 
     setChatMessages([...chatMessages, newMessage]);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
+    // // Simulate AI response
+    // setTimeout(() => {
+    //   const aiResponse = {
+    //     id: chatMessages.length + 2,
+    //     type: "ai",
+    //     message:
+    //       "That's an excellent question about React Hooks! Let me explain that concept in detail...",
+    //     timestamp: new Date(),
+    //     avatar: "🤖",
+    //   };
+    //   setChatMessages((prev) => [...prev, aiResponse]);
+    // }, 1000);
+
+    const apiResponse = await SendAiChatApi({ prompt: chatMessage, courseId })
+
+    console.log("Api Response for send Chat: ", apiResponse)
+
+    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+      alert("Error sending message: " + apiResponse?.message || "Error in sending message");
+      return; 
+    }
+
+      const aiMessage = {
         id: chatMessages.length + 2,
         type: "ai",
-        message:
-          "That's an excellent question about React Hooks! Let me explain that concept in detail...",
+        message: apiResponse?.data?.response,
         timestamp: new Date(),
         avatar: "🤖",
       };
-      setChatMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
 
+    setChatMessages((prev) => [...prev , aiMessage]);
     setChatMessage("");
   };
 
@@ -1433,7 +1621,16 @@ const CoursesInterface = () => {
                                 : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
                             }`}
                           >
-                            <p className="leading-relaxed">{message.message}</p>
+                            {message.type === "ai" ? (
+                              <div 
+                                className="leading-relaxed prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{
+                                  __html: formatChatMessageHTML(message.message, isDark)
+                                }}
+                              />
+                            ) : (
+                              <p className="leading-relaxed">{message.message}</p>
+                            )}
                           </div>
 
                           {message.type === "user" && (
@@ -2334,9 +2531,18 @@ const CoursesInterface = () => {
                             : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
                         }`}
                       >
-                        <p className="text-sm leading-relaxed">
-                          {message.message}
-                        </p>
+                        {message.type === "ai" ? (
+                          <div 
+                            className="text-sm leading-relaxed prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{
+                              __html: formatChatMessageHTML(message.message, isDark)
+                            }}
+                          />
+                        ) : (
+                          <p className="text-sm leading-relaxed">
+                            {message.message}
+                          </p>
+                        )}
                         <p className={`text-xs mt-2 opacity-70`}>
                           {message.timestamp.toLocaleTimeString([], {
                             hour: "2-digit",

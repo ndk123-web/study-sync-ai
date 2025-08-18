@@ -6,6 +6,7 @@ import asyncio
 
 from app.routes.transcript_router import transcriptRouter
 from app.routes.summary_router import summaryRouter
+from app.routes.chat_router import chatRouter
 
 # from api.utils.addMiddlewares import setupMiddlewares
 from app.config.firebase import initialize_firebase , check_firebase_connection
@@ -59,3 +60,4 @@ async def read_root():
 # Routes
 app.include_router(transcriptRouter, prefix='/api/v1/transcripts')
 app.include_router(summaryRouter, prefix='/api/v1/summaries')
+app.include_router(chatRouter, prefix='/api/v1/chat')
