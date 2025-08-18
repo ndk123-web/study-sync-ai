@@ -171,79 +171,95 @@ const formatNotesToHTML = (text, isDark = false) => {
 const formatChatMessageHTML = (text, isDark = false) => {
   if (!text) return '';
 
-  let html = text
-    // Code blocks (multiline) - Handle BEFORE converting newlines to <br>
-    .replace(
-      /```(\w*)\n?([\s\S]*?)\n?```/g,
-      (match, language, code) => {
-        const lang = language || 'text';
-        return `<pre class="line-numbers bg-gray-900 rounded-lg p-3 my-2 overflow-x-auto"><code class="language-${lang} text-sm">${escapeHtml(code.trim())}</code></pre>`;
-      }
-    )
-    
-    // Headers
+  // Strictly preserve code block formatting and Prism compatibility
+  const codeBlockPlaceholders = [];
+  let tempText = text.replace(
+    /```(\w*)\n?([\s\S]*?)\n?```/g,
+    (match, language, code) => {
+      const placeholder = `__CODE_BLOCK_${codeBlockPlaceholders.length}__`;
+      // Prism expects language class, default to 'python' if not specified
+      const lang = language && language !== '' ? language : 'python';
+      // Strictly escape HTML but preserve ALL whitespace and newlines
+      // DO NOT trim or modify whitespace in code blocks
+      const formattedCode = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+      codeBlockPlaceholders.push(
+        `<pre class="line-numbers ${
+          isDark 
+            ? "bg-gray-800 text-green-400 border border-gray-700" 
+            : "bg-gray-100 text-green-600 border border-gray-200"
+        } rounded-lg p-4 my-4 overflow-x-auto"><code class="language-${lang}" style="white-space: pre; font-family: 'Fira Mono', 'Menlo', 'Consolas', 'monospace'; font-size: 1em; display: block; line-height: 1.5;">${formattedCode}</code></pre>`
+      );
+      return placeholder;
+    }
+  );
+
+  // Also protect inline code blocks
+  const inlineCodePlaceholders = [];
+  tempText = tempText.replace(
+    /`([^`]+)`/g,
+    (match, code) => {
+      const placeholder = `__INLINE_CODE_${inlineCodePlaceholders.length}__`;
+      const escapedCode = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+      
+      inlineCodePlaceholders.push(
+        `<code class="px-2 py-1 rounded text-sm font-mono ${
+          isDark
+            ? "bg-gray-800 text-green-400 border border-gray-700"
+            : "bg-gray-100 text-green-600 border border-gray-200"
+        }">${escapedCode}</code>`
+      );
+      return placeholder;
+    }
+  );
+
+  // Now process other markdown elements on the protected text
+  let html = tempText
+    // Headers - only process lines that start with # (not inside code)
     .replace(
       /^### (.*$)/gm,
       `<h3 class="text-lg font-bold mt-4 mb-2 ${
-        isDark ? "text-white-400" : "text-dark-600"
+        isDark ? "text-blue-400" : "text-blue-600"
       }">$1</h3>`
     )
     .replace(
       /^## (.*$)/gm,
       `<h2 class="text-xl font-bold mt-5 mb-2 ${
-        isDark ? "text-white-400" : "text-dark-600"
+        isDark ? "text-blue-400" : "text-blue-600"
       }">$1</h2>`
     )
     .replace(
       /^# (.*$)/gm,
       `<h1 class="text-2xl font-bold mt-6 mb-3 ${
-        isDark ? "text-white-400" : "text-dark-600"
+        isDark ? "text-blue-400" : "text-blue-600"
       }">$1</h1>`
     )
-
     // Bold text
     .replace(
       /\*\*(.*?)\*\*/g,
       `<strong class="font-bold ${
-        isDark ? "text-white-400" : "text-dark-600"
+        isDark ? "text-yellow-400" : "text-gray-900"
       }">$1</strong>`
     )
 
-    // Italic text
-    .replace(
-      /\*(.*?)\*/g,
-      `<em class="italic ${
-        isDark ? "text-white-300" : "text-dark-700"
-      }">$1</em>`
-    )
+  // Restore inline code blocks first
+  inlineCodePlaceholders.forEach((replacement, index) => {
+    html = html.replace(`__INLINE_CODE_${index}__`, replacement);
+  });
 
-    // Bullet points
-    .replace(
-      /^- (.*$)/gm,
-      `<div class="flex items-start space-x-2 mb-2"><span class="${
-        isDark ? "text-emerald-400" : "text-emerald-600"
-      }">•</span><span>$1</span></div>`
-    )
-
-    // Code blocks (inline)
-    .replace(
-      /`([^`]+)`/g,
-      `<code class="px-2 py-1 rounded text-sm font-mono ${
-        isDark
-          ? "bg-gray-800 text-green-400 border border-gray-700"
-          : "bg-gray-100 text-green-600 border border-gray-200"
-      }">$1</code>`
-    )
-
-    // Blockquotes
-    .replace(
-      /^> (.*$)/gm,
-      `<div class="border-l-4 pl-4 py-3 my-3 ${
-        isDark
-          ? "border-blue-500 bg-blue-900/20 text-blue-200"
-          : "border-blue-500 bg-blue-50 text-blue-800"
-      }">$1</div>`
-    );
+  // Restore code blocks
+  codeBlockPlaceholders.forEach((replacement, index) => {
+    html = html.replace(`__CODE_BLOCK_${index}__`, replacement);
+  });
 
   // Split into sections and handle properly
   const sections = html.split('\n\n').filter(s => s.trim());
@@ -261,11 +277,17 @@ const formatChatMessageHTML = (text, isDark = false) => {
       return trimmed;
     }
     
-    // Regular text - wrap in paragraph with proper spacing
-    return `<p class="mb-3 leading-relaxed">${trimmed.replace(/\n/g, ' ')}</p>`;
+    // If it contains code placeholders or code blocks, keep as is
+    if (trimmed.includes('__CODE_BLOCK_') || trimmed.includes('__INLINE_CODE_') || trimmed.includes('<code') || trimmed.includes('<pre')) {
+      return trimmed;
+    }
+    
+    // Regular text - wrap in paragraph with proper spacing and preserve line breaks
+    const withLineBreaks = trimmed.replace(/\n/g, '<br>');
+    return `<p class="mb-3 leading-relaxed">${withLineBreaks}</p>`;
   });
 
-  return `<div class="${
+  return `<div class="prose prose-sm max-w-none ${
     isDark ? "text-gray-100" : "text-gray-800"
   }">${formattedSections.join('')}</div>`;
 };
@@ -279,9 +301,6 @@ const escapeHtml = (unsafe) => {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 };
-
-
-
 
 
 // (Prism highlight is handled inside component-level hooks where chatMessages/isDark are available)
@@ -471,39 +490,42 @@ const CoursesInterface = () => {
     setCourseIdFromZustand(courseId);
     clearNotesFromZustand(); // it will clear the notes in zustand for the new course
     console.log("✅ Cleared Zustand notes for new course");
+
+
+    //   const demoMessage = {
+    //   id: chatMessages.length + 1,
+    //   type: "ai",
+    //   message: "## This is Heading \n ```python print(\"hello\")  ```",
+    //   timestamp: new Date(),
+    //   avatar: "👤",
+    // };
+
+    // setChatMessages((prev) => [...prev, demoMessage]);
   }, [courseId]);
 
   // fetch the ai chat response
-  useEffect( () => {
+  // useEffect( () => {
 
-  }, [] )
+  // }, [] )
 
   // Simple Prism highlighting on chat message updates
-  useEffect(() => {
-    if (window.Prism) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        window.Prism.highlightAll();
-      }, 100);
-    }
-  }, [chatMessages]);
-
+  
   // To Get Notes on the basis of courseId
   useEffect(() => {
     const fetchNotes = async () => {
       console.log("🔍 Fetching notes for courseId:", courseId);
-
+      
       if (!courseId) {
         console.log("❌ No courseId provided, skipping notes fetch");
         return;
       }
-
+      
       try {
         // If no Zustand data, then fetch from backend
         console.log("🌐 Fetching notes from backend...");
         const apiResponse = await GetCurrentNotesApi({ courseId });
         console.log("📝 Notes API Response:", apiResponse);
-
+        
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("❌ Error fetching notes:", apiResponse?.message);
           // Don't show alert for empty notes, just set empty state
@@ -514,13 +536,13 @@ const CoursesInterface = () => {
           setNotStoreNotesFromZustand(emptyNotes);
           return;
         }
-
+        
         const notesData = apiResponse?.data?.notes || "";
         console.log("✅ Notes fetched from backend:", notesData);
-
+        
         // Update both local state and Zustand
         // setStoredNotes(notesData);
-
+        
         // this is the main that it re renders the component because of the useState
         setNotStoreNotes(notesData);
 
@@ -536,38 +558,38 @@ const CoursesInterface = () => {
         setNotStoreNotesFromZustand(emptyNotes);
       }
     };
-
+    
     fetchNotes();
   }, [courseId]); // ✅ Only courseId dependency
-
+  
   // Set current video ID from URL
   useEffect(() => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
-
+      
       try {
         const apiResponse = await GetPlayListApi(courseId);
         const playlist = apiResponse?.data?.[0]?.videoLinks;
-
+        
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           if (!playlist || playlist.length === 0) {
             alert("No videos found in this course.");
             return;
           }
-
+          
           setCoursePlaylist(playlist);
           setCurrentPlaylistFromZustand(playlist);
-
+          
           // Only set videoId if it exists and is valid
           const firstVideoId =
-            playlist[0]?.youtubeVideoId || playlist[0]?.url?.split("v=")[1];
+          playlist[0]?.youtubeVideoId || playlist[0]?.url?.split("v=")[1];
 
           if (firstVideoId) {
             setCurrentVideoId(firstVideoId);
           } else {
             alert("No valid video ID found.");
           }
-
+          
           // After playlist is loaded, get progress and set correct video
           await getCurrentCourseProgress(playlist);
         } else {
@@ -579,7 +601,7 @@ const CoursesInterface = () => {
         removeAuth();
       }
     };
-
+    
     const getCurrentCourseProgress = async (playlistData = coursePlaylist) => {
       try {
         const apiResponse = await GetCurrentCourseProgressApi(courseId);
@@ -587,22 +609,22 @@ const CoursesInterface = () => {
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert(
             "Error fetching course progress: " +
-              (apiResponse?.message || "Err in 201")
+            (apiResponse?.message || "Err in 201")
           );
           return;
         }
-
+        
         // Fix: Access data from the correct structure
         console.log("Current Progress:", apiResponse?.data?.progress);
         console.log("Current Index:", apiResponse?.data?.currentIndex);
         console.log("Total Videos:", apiResponse?.data?.totalVideos);
-
+        
         const progressValue = parseInt(apiResponse?.data?.progress) ?? 0;
         const currentIndex = apiResponse?.data?.currentIndex ?? 0;
-
+        
         setProgress(progressValue);
         setCompletedVideosIndex(currentIndex);
-
+        
         // Set the current video based on the progress index
         if (playlistData.length > 0 && currentIndex < playlistData.length) {
           const currentVideo = playlistData[currentIndex];
@@ -622,10 +644,19 @@ const CoursesInterface = () => {
         // removeAuth();
       }
     };
-
+    
     getPlaylist();
   }, []);
-
+  
+  useEffect(() => {
+    if (window.Prism) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        window.Prism.highlightAll();
+      }, 100);
+    }
+  }, [chatMessages]);
+  
   // Track completed videos index
   useEffect(() => {
     const trackPlaylistIndex = async () => {
@@ -885,48 +916,43 @@ const CoursesInterface = () => {
   const sendMessage = async () => {
     if (!chatMessage.trim()) return;
 
+    const currentMessage = chatMessage.trim();
+    
     const newMessage = {
       id: chatMessages.length + 1,
       type: "user",
-      message: chatMessage,
+      message: currentMessage,
       timestamp: new Date(),
       avatar: "👤",
     };
 
+    // Clear input immediately after getting the message
+    setChatMessage("");
     setChatMessages([...chatMessages, newMessage]);
 
-    // // Simulate AI response
-    // setTimeout(() => {
-    //   const aiResponse = {
-    //     id: chatMessages.length + 2,
-    //     type: "ai",
-    //     message:
-    //       "That's an excellent question about React Hooks! Let me explain that concept in detail...",
-    //     timestamp: new Date(),
-    //     avatar: "🤖",
-    //   };
-    //   setChatMessages((prev) => [...prev, aiResponse]);
-    // }, 1000);
+    try {
+      const apiResponse = await SendAiChatApi({ prompt: currentMessage, courseId });
+      
+      console.log("Api Response for send Chat: ", apiResponse);
 
-    const apiResponse = await SendAiChatApi({ prompt: chatMessage, courseId })
-    setChatMessage("");
-
-    console.log("Api Response for send Chat: ", apiResponse)
-
-    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-      alert("Error sending message: " + apiResponse?.message || "Error in sending message");
-      return; 
-    }
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error sending message: " + (apiResponse?.message || "Error in sending message"));
+        return; 
+      }
 
       const aiMessage = {
-        id: chatMessages.length + 2,
-        type: "ai",
-        message: apiResponse?.data?.response,
+        id: Date.now(), // Use timestamp for unique ID
+        type: "ai", 
+        message: apiResponse?.data?.response || "No response received",
         timestamp: new Date(),
         avatar: "🤖",
       };
 
-    setChatMessages((prev) => [...prev , aiMessage]);
+      setChatMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error sending chat message:", error);
+      alert("Failed to send message. Please try again.");
+    }
   };
 
   return (
@@ -2439,12 +2465,12 @@ const CoursesInterface = () => {
           </div>
 
           {/* Enhanced Tab Content - Optimized for horizontal scrollable tabs */}
-          <div className="flex-1 p-4 lg:p-6 overflow-y-auto overflow-x-hidden max-w-full">
+          <div className="flex-1 p-4 lg:p-6 overflow-hidden max-w-full">
             {activeTab === "chat" && (
-              <div className="h-full flex flex-col max-w-full">
+              <div className="h-full flex flex-col max-w-full max-h-[calc(100vh-12rem)]">
                 {/* AI Assistant Header */}
                 <div
-                  className={`p-4 rounded-2xl mb-4 bg-gradient-to-r max-w-full ${
+                  className={`p-4 rounded-2xl mb-4 bg-gradient-to-r max-w-full flex-shrink-0 ${
                     isDark
                       ? "from-blue-900/30 to-indigo-900/30 border border-blue-500/30"
                       : "from-blue-50 to-indigo-50 border border-blue-200"
@@ -2469,9 +2495,8 @@ const CoursesInterface = () => {
                   </div>
                 </div>
 
-                {/* Chat Messages */}
-
-                <div className="flex-1 space-y-4 mb-4 overflow-y-auto">
+                {/* Chat Messages - Scrollable Container */}
+                <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 max-h-[calc(100vh-20rem)]">
                   {chatMessages.map((message) => (
                     <div
                       key={message.id}
@@ -2527,9 +2552,9 @@ const CoursesInterface = () => {
                   ))}
                 </div>
 
-                {/* Enhanced Chat Input */}
+                {/* Enhanced Chat Input - Fixed at bottom */}
                 <div
-                  className={`border rounded-xl p-4 ${
+                  className={`border rounded-xl p-4 flex-shrink-0 ${
                     isDark
                       ? "border-gray-600 bg-gray-700"
                       : "border-gray-200 bg-gray-50"
