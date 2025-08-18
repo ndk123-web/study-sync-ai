@@ -11,50 +11,18 @@ class ChatRequest(BaseModel):
 
 async def get_chat_response( chatRequest: ChatRequest):
 
-    systemPrompt = f"""You are an AI assistant for StudySync AI, an educational platform that helps students learn from video courses. 
+    systemPrompt = f"""You are StudySync AI assistant. Help with course content, explain concepts, and guide learning.
 
-Your role is to:
-- Answer questions about the course content
-- Help explain concepts from the lessons
-- Provide additional examples and clarifications
-- Guide students through learning difficulties
-- Be encouraging and supportive
+Format responses with:
+- **bold** for key terms
+- ## for headings
+- `code` for code
+- - for lists
 
-IMPORTANT FORMATTING GUIDELINES (Keep it minimal and clean):
-- Use - for bullet points/lists
-- Use **bold** for important terms and concepts
-- Use *italic* for emphasis
-- Use ## for main headings and ### for subheadings
-- Use `code` for inline code snippets
-- Use ```language
-code content here
-``` for code blocks (specify language like python, javascript, java, etc.)
-- Use > for important quotes or key takeaways
-- Keep responses concise but comprehensive
-- Format like ChatGPT with proper markdown structure
+Keep responses clear if the user asks other things instead of learning then kindly reply user"""
 
-Example response format:
-## Main Topic
-
-**Key Concept**: Explanation here
-
-### Important Points:
-- Point 1 with **emphasis**
-- Point 2 with `inline code`
-- Point 3
-
-```python
-# Code example
-def example():
-    return "formatted code"
-```
-
-> **Key Takeaway**: Important summary
-
-Always respond in a helpful, clear, and educational manner with proper markdown formatting."""
-
-    # Use the actual user's prompt/question
-    user_message = f"Course ID: {chatRequest.courseId}\n\nStudent Question: {chatRequest.prompt}"
+    # Use the actual user's prompt/question  
+    user_message = chatRequest.prompt
 
     # Previous chats will come from a database for context 
     previousChats = [
@@ -62,22 +30,35 @@ Always respond in a helpful, clear, and educational manner with proper markdown 
         {"role": "user", "content": user_message}
     ]
 
-    ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=previousChats
+    try:
+        ai_response = await asyncio.to_thread(
+                ollama.chat,
+                model="mistral",
+                messages=previousChats,
+                options={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "num_predict": 512  # Limit response length for faster processing
+                }
+            )
+
+        print("AI Response for chat: ", ai_response)
+        
+        # Extract only the message content from the Ollama response
+        response_text = ai_response.get('message', {}).get('content', 'No response generated')
+
+        return ApiResponse.send(
+            200,
+            data={
+                "response": response_text,  # Only send the text content
+                "courseId": chatRequest.courseId,
+                "userData": chatRequest.userData  
+            }
         )
-
-    print("AI Response for chat: ", ai_response)
-    
-    # Extract only the message content from the Ollama response
-    response_text = ai_response.get('message', {}).get('content', 'No response generated')
-
-    return ApiResponse.send(
-        200,
-        data={
-            "response": response_text,  # Only send the text content
-            "courseId": chatRequest.courseId,
-            "userData": chatRequest.userData  
-        }
-    )
+    except Exception as e:
+        print(f"Error in chat response: {str(e)}")
+        return ApiError.send(
+            500,
+            message="Failed to generate AI response",
+            error=str(e)
+        )
