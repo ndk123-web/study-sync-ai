@@ -6,6 +6,7 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
     googleLoader: false,
     pageLoader: false,
     chatLoader: false,
+    chatPageLoader: false,
     summarizeLoader: false,
     assessmentLoader: false,
     playlistLoader: false,
@@ -22,6 +23,9 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
 
     setGoogleLoader: () => set(() => ({ googleLoader: true })),
     unsetGoogleLoader: () => set(() => ({ googleLoader: false })),
+
+    setChatPageLoader: () => set(() => ({ chatPageLoader: true })),
+    unsetChatPageLoader: () => set(() => ({ chatPageLoader: false })),
 
     setPageLoader: () => set(() => ({ pageLoader: true })),
     unsetPageLoader: () => set(() => ({ pageLoader: false })),

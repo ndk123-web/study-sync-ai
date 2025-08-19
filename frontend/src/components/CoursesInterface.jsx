@@ -50,7 +50,8 @@ import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.j
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
-import { SendAiChatApi } from '../api/SendAiChatApi.js'
+import { SendAiChatApi } from "../api/SendAiChatApi.js";
+import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -169,7 +170,7 @@ const formatNotesToHTML = (text, isDark = false) => {
 
 // Simple chat message formatter matching notes style
 const formatChatMessageHTML = (text, isDark = false) => {
-  if (!text) return '';
+  if (!text) return "";
 
   // Strictly preserve code block formatting and Prism compatibility
   const codeBlockPlaceholders = [];
@@ -178,7 +179,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
     (match, language, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlockPlaceholders.length}__`;
       // Prism expects language class, default to 'python' if not specified
-      const lang = language && language !== '' ? language : 'python';
+      const lang = language && language !== "" ? language : "python";
       // Strictly escape HTML but preserve ALL whitespace and newlines
       // DO NOT trim or modify whitespace in code blocks
       const formattedCode = code
@@ -189,8 +190,8 @@ const formatChatMessageHTML = (text, isDark = false) => {
         .replace(/'/g, "&#039;");
       codeBlockPlaceholders.push(
         `<pre class="line-numbers ${
-          isDark 
-            ? "bg-gray-800 text-green-400 border border-gray-700" 
+          isDark
+            ? "bg-gray-800 text-green-400 border border-gray-700"
             : "bg-gray-100 text-green-600 border border-gray-200"
         } rounded-lg p-4 my-4 overflow-x-auto"><code class="language-${lang}" style="white-space: pre; font-family: 'Fira Mono', 'Menlo', 'Consolas', 'monospace'; font-size: 1em; display: block; line-height: 1.5;">${formattedCode}</code></pre>`
       );
@@ -200,27 +201,24 @@ const formatChatMessageHTML = (text, isDark = false) => {
 
   // Also protect inline code blocks
   const inlineCodePlaceholders = [];
-  tempText = tempText.replace(
-    /`([^`]+)`/g,
-    (match, code) => {
-      const placeholder = `__INLINE_CODE_${inlineCodePlaceholders.length}__`;
-      const escapedCode = code
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-      
-      inlineCodePlaceholders.push(
-        `<code class="px-2 py-1 rounded text-sm font-mono ${
-          isDark
-            ? "bg-gray-800 text-green-400 border border-gray-700"
-            : "bg-gray-100 text-green-600 border border-gray-200"
-        }">${escapedCode}</code>`
-      );
-      return placeholder;
-    }
-  );
+  tempText = tempText.replace(/`([^`]+)`/g, (match, code) => {
+    const placeholder = `__INLINE_CODE_${inlineCodePlaceholders.length}__`;
+    const escapedCode = code
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+    inlineCodePlaceholders.push(
+      `<code class="px-2 py-1 rounded text-sm font-mono ${
+        isDark
+          ? "bg-gray-800 text-green-400 border border-gray-700"
+          : "bg-gray-100 text-green-600 border border-gray-200"
+      }">${escapedCode}</code>`
+    );
+    return placeholder;
+  });
 
   // Now process other markdown elements on the protected text
   let html = tempText
@@ -249,7 +247,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
       `<strong class="font-bold ${
         isDark ? "text-yellow-400" : "text-gray-900"
       }">$1</strong>`
-    )
+    );
 
   // Restore inline code blocks first
   inlineCodePlaceholders.forEach((replacement, index) => {
@@ -262,34 +260,39 @@ const formatChatMessageHTML = (text, isDark = false) => {
   });
 
   // Split into sections and handle properly
-  const sections = html.split('\n\n').filter(s => s.trim());
-  
-  const formattedSections = sections.map(section => {
+  const sections = html.split("\n\n").filter((s) => s.trim());
+
+  const formattedSections = sections.map((section) => {
     const trimmed = section.trim();
-    
+
     // If it's already a formatted element (header, div, pre, etc.), keep as is
     if (trimmed.match(/^<(h[1-6]|div|pre|blockquote)/)) {
       return trimmed;
     }
-    
+
     // If it contains bullet points, keep as is
     if (trimmed.includes('<div class="flex items-start')) {
       return trimmed;
     }
-    
+
     // If it contains code placeholders or code blocks, keep as is
-    if (trimmed.includes('__CODE_BLOCK_') || trimmed.includes('__INLINE_CODE_') || trimmed.includes('<code') || trimmed.includes('<pre')) {
+    if (
+      trimmed.includes("__CODE_BLOCK_") ||
+      trimmed.includes("__INLINE_CODE_") ||
+      trimmed.includes("<code") ||
+      trimmed.includes("<pre")
+    ) {
       return trimmed;
     }
-    
+
     // Regular text - wrap in paragraph with proper spacing and preserve line breaks
-    const withLineBreaks = trimmed.replace(/\n/g, '<br>');
+    const withLineBreaks = trimmed.replace(/\n/g, "<br>");
     return `<p class="mb-3 leading-relaxed">${withLineBreaks}</p>`;
   });
 
   return `<div class="prose prose-sm max-w-none ${
     isDark ? "text-gray-100" : "text-gray-800"
-  }">${formattedSections.join('')}</div>`;
+  }">${formattedSections.join("")}</div>`;
 };
 
 // Helper function to escape HTML
@@ -301,7 +304,6 @@ const escapeHtml = (unsafe) => {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 };
-
 
 // (Prism highlight is handled inside component-level hooks where chatMessages/isDark are available)
 
@@ -359,6 +361,13 @@ const CoursesInterface = () => {
   const setNotesLoader = useLoaders((state) => state.setNotesLoader);
   const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
   const removeAuth = useIsAuth((state) => state.removeAuth);
+
+  const chatLoader = useLoaders((state) => state.chatLoader);
+  const setChatLoader = useLoaders((state) => state.setChatLoader);
+  const unsetChatLoader = useLoaders((state) => state.unsetChatLoader);
+  const chatPageLoader = useLoaders((state) => state.chatPageLoader);
+  const setChatPageLoader = useLoaders((state) => state.setChatPageLoader);
+  const unsetChatPageLoader = useLoaders((state) => state.unsetChatPageLoader);
 
   const summaryLoader = useLoaders((state) => state.summarizeLoader);
   const transcriptLoader = useLoaders((state) => state.transcriptLoader);
@@ -491,7 +500,6 @@ const CoursesInterface = () => {
     clearNotesFromZustand(); // it will clear the notes in zustand for the new course
     console.log("✅ Cleared Zustand notes for new course");
 
-
     //   const demoMessage = {
     //   id: chatMessages.length + 1,
     //   type: "ai",
@@ -504,28 +512,58 @@ const CoursesInterface = () => {
   }, [courseId]);
 
   // fetch the ai chat response
-  // useEffect( () => {
+useEffect(() => {
+  const fetchUserChats = async () => {
+    try {
+      setChatPageLoader();
+      const apiResponse = await FetchUserChatsApi({ courseId });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error fetching user chats");
+        return;
+      }
+      
+      const messages = apiResponse?.data?.chats || [];
+      
+      // Convert backend messages to frontend format
+      const formattedMessages = messages.map((message, idx) => ({
+        id: message.id || idx,
+        type: message.type,
+        message: message.message,
+        timestamp: new Date(message.timestamp), // Convert string back to Date
+        avatar: message.avatar,
+      }));
 
-  // }, [] )
+      // Set the formatted messages to state
+      setChatMessages(formattedMessages);
+      
+    } catch (error) {
+      console.error("💥 Error fetching user chats:", error);
+    } finally {
+      unsetChatPageLoader();
+    }
+  };
+
+  fetchUserChats();
+}, [courseId]);
 
   // Simple Prism highlighting on chat message updates
-  
+
   // To Get Notes on the basis of courseId
   useEffect(() => {
     const fetchNotes = async () => {
       console.log("🔍 Fetching notes for courseId:", courseId);
-      
+
       if (!courseId) {
         console.log("❌ No courseId provided, skipping notes fetch");
         return;
       }
-      
+
       try {
         // If no Zustand data, then fetch from backend
         console.log("🌐 Fetching notes from backend...");
         const apiResponse = await GetCurrentNotesApi({ courseId });
         console.log("📝 Notes API Response:", apiResponse);
-        
+
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("❌ Error fetching notes:", apiResponse?.message);
           // Don't show alert for empty notes, just set empty state
@@ -536,13 +574,13 @@ const CoursesInterface = () => {
           setNotStoreNotesFromZustand(emptyNotes);
           return;
         }
-        
+
         const notesData = apiResponse?.data?.notes || "";
         console.log("✅ Notes fetched from backend:", notesData);
-        
+
         // Update both local state and Zustand
         // setStoredNotes(notesData);
-        
+
         // this is the main that it re renders the component because of the useState
         setNotStoreNotes(notesData);
 
@@ -558,38 +596,38 @@ const CoursesInterface = () => {
         setNotStoreNotesFromZustand(emptyNotes);
       }
     };
-    
+
     fetchNotes();
   }, [courseId]); // ✅ Only courseId dependency
-  
+
   // Set current video ID from URL
   useEffect(() => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
-      
+
       try {
         const apiResponse = await GetPlayListApi(courseId);
         const playlist = apiResponse?.data?.[0]?.videoLinks;
-        
+
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           if (!playlist || playlist.length === 0) {
             alert("No videos found in this course.");
             return;
           }
-          
+
           setCoursePlaylist(playlist);
           setCurrentPlaylistFromZustand(playlist);
-          
+
           // Only set videoId if it exists and is valid
           const firstVideoId =
-          playlist[0]?.youtubeVideoId || playlist[0]?.url?.split("v=")[1];
+            playlist[0]?.youtubeVideoId || playlist[0]?.url?.split("v=")[1];
 
           if (firstVideoId) {
             setCurrentVideoId(firstVideoId);
           } else {
             alert("No valid video ID found.");
           }
-          
+
           // After playlist is loaded, get progress and set correct video
           await getCurrentCourseProgress(playlist);
         } else {
@@ -601,7 +639,7 @@ const CoursesInterface = () => {
         removeAuth();
       }
     };
-    
+
     const getCurrentCourseProgress = async (playlistData = coursePlaylist) => {
       try {
         const apiResponse = await GetCurrentCourseProgressApi(courseId);
@@ -609,22 +647,22 @@ const CoursesInterface = () => {
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert(
             "Error fetching course progress: " +
-            (apiResponse?.message || "Err in 201")
+              (apiResponse?.message || "Err in 201")
           );
           return;
         }
-        
+
         // Fix: Access data from the correct structure
         console.log("Current Progress:", apiResponse?.data?.progress);
         console.log("Current Index:", apiResponse?.data?.currentIndex);
         console.log("Total Videos:", apiResponse?.data?.totalVideos);
-        
+
         const progressValue = parseInt(apiResponse?.data?.progress) ?? 0;
         const currentIndex = apiResponse?.data?.currentIndex ?? 0;
-        
+
         setProgress(progressValue);
         setCompletedVideosIndex(currentIndex);
-        
+
         // Set the current video based on the progress index
         if (playlistData.length > 0 && currentIndex < playlistData.length) {
           const currentVideo = playlistData[currentIndex];
@@ -644,10 +682,10 @@ const CoursesInterface = () => {
         // removeAuth();
       }
     };
-    
+
     getPlaylist();
   }, []);
-  
+
   useEffect(() => {
     if (window.Prism) {
       // Small delay to ensure DOM is updated
@@ -656,7 +694,7 @@ const CoursesInterface = () => {
       }, 100);
     }
   }, [chatMessages]);
-  
+
   // Track completed videos index
   useEffect(() => {
     const trackPlaylistIndex = async () => {
@@ -914,10 +952,12 @@ const CoursesInterface = () => {
   };
 
   const sendMessage = async () => {
+
+    unsetChatLoader();
     if (!chatMessage.trim()) return;
 
     const currentMessage = chatMessage.trim();
-    
+
     const newMessage = {
       id: chatMessages.length + 1,
       type: "user",
@@ -931,27 +971,37 @@ const CoursesInterface = () => {
     setChatMessages([...chatMessages, newMessage]);
 
     try {
-      const apiResponse = await SendAiChatApi({ prompt: currentMessage, courseId });
-      
+      setChatLoader(); // Start loader
+      const apiResponse = await SendAiChatApi({
+        prompt: currentMessage,
+        courseId,
+      });
+
       console.log("Api Response for send Chat: ", apiResponse);
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        alert("Error sending message: " + (apiResponse?.message || "Error in sending message"));
-        return; 
+        alert(
+          "Error sending message: " +
+            (apiResponse?.message || "Error in sending message")
+        );
+        return;
       }
 
       const aiMessage = {
         id: Date.now(), // Use timestamp for unique ID
-        type: "ai", 
+        type: "ai",
         message: apiResponse?.data?.response || "No response received",
         timestamp: new Date(),
         avatar: "🤖",
       };
 
       setChatMessages((prev) => [...prev, aiMessage]);
+      unsetChatLoader();
     } catch (error) {
       console.error("Error sending chat message:", error);
       alert("Failed to send message. Please try again.");
+    } finally {
+      unsetChatLoader(); // Stop loader
     }
   };
 
@@ -1590,47 +1640,108 @@ const CoursesInterface = () => {
                     {/* Chat Messages */}
 
                     <div className="flex-1 space-y-3 mb-4 max-h-60 overflow-y-auto">
-                      {chatMessages.slice(-3).map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex items-start space-x-2 ${
-                            message.type === "user" ? "justify-end" : ""
-                          }`}
-                        >
-                          {message.type === "ai" && (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs">🤖</span>
+                      {chatPageLoader ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="flex flex-col items-center space-y-3">
+                            <div className="relative">
+                              <div className="w-8 h-8 rounded-full border-3 border-emerald-200 border-t-emerald-500 animate-spin"></div>
+                              <div
+                                className="absolute inset-0 w-8 h-8 rounded-full border-3 border-transparent border-r-teal-500 animate-spin"
+                                style={{ animationDelay: "0.15s" }}
+                              ></div>
                             </div>
-                          )}
+                            <p
+                              className={`text-xs ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              Loading chats...
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {chatMessages.slice(-3).map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex items-start space-x-2 ${
+                                message.type === "user" ? "justify-end" : ""
+                              }`}
+                            >
+                              {message.type === "ai" && (
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs">🤖</span>
+                                </div>
+                              )}
 
+                              <div
+                                className={`max-w-[85%] p-3 rounded-xl text-sm ${
+                                  message.type === "ai"
+                                    ? isDark
+                                      ? "bg-gray-700 text-white"
+                                      : "bg-gray-100 text-gray-900"
+                                    : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                                }`}
+                              >
+                                {message.type === "ai" ? (
+                                  <div
+                                    className="leading-relaxed prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{
+                                      __html: formatChatMessageHTML(
+                                        message.message,
+                                        isDark
+                                      ),
+                                    }}
+                                  />
+                                ) : (
+                                  <p className="leading-relaxed">
+                                    {message.message}
+                                  </p>
+                                )}
+                              </div>
+
+                              {message.type === "user" && (
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs">👤</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Mobile Chat Loading Indicator */}
+                      {chatLoader && (
+                        <div className="flex items-start space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs">🤖</span>
+                          </div>
                           <div
                             className={`max-w-[85%] p-3 rounded-xl text-sm ${
-                              message.type === "ai"
-                                ? isDark
-                                  ? "bg-gray-700 text-white"
-                                  : "bg-gray-100 text-gray-900"
-                                : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                              isDark
+                                ? "bg-gray-700 text-white"
+                                : "bg-gray-100 text-gray-900"
                             }`}
                           >
-                            {message.type === "ai" ? (
-                              <div 
-                                className="leading-relaxed prose prose-sm max-w-none"
-                                dangerouslySetInnerHTML={{
-                                  __html: formatChatMessageHTML(message.message, isDark)
-                                }}
-                              />
-                            ) : (
-                              <p className="leading-relaxed">{message.message}</p>
-                            )}
-                          </div>
-
-                          {message.type === "user" && (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs">👤</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex space-x-1">
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
+                                <div
+                                  className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                ></div>
+                                <div
+                                  className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                ></div>
+                              </div>
+                              <span className="text-xs text-emerald-500 font-medium">
+                                Thinking...
+                              </span>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
 
                     {/* Mobile Chat Input */}
@@ -1678,21 +1789,24 @@ const CoursesInterface = () => {
                         <span className="text-2xl">📝</span>
                         <h3 className="text-lg font-semibold">My Notes</h3>
                       </div>
-                      
+
                       {/* Live Preview Indicator */}
                       <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Live Preview</span>
+                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          Live Preview
+                        </span>
                       </div>
                     </div>
-
                     {/* Professional Notes Interface */}
                     <div className="space-y-4">
                       {/* Header with Toggle */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <span className="text-lg">📝</span>
-                          <span className="font-medium text-sm">Notes Editor</span>
+                          <span className="font-medium text-sm">
+                            Notes Editor
+                          </span>
                         </div>
                         <button
                           onClick={() => setShowPreview(!showPreview)}
@@ -1706,9 +1820,11 @@ const CoursesInterface = () => {
                               : "border-gray-200 bg-gray-50 text-gray-600"
                           }`}
                         >
-                          <span className="text-xs">{showPreview ? '👁️' : '📝'}</span>
+                          <span className="text-xs">
+                            {showPreview ? "👁️" : "📝"}
+                          </span>
                           <span className="text-xs font-medium">
-                            {showPreview ? 'Preview' : 'Editor'}
+                            {showPreview ? "Preview" : "Editor"}
                           </span>
                         </button>
                       </div>
@@ -1743,13 +1859,17 @@ const CoursesInterface = () => {
                           } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
                           value={notStoreNotes}
                           onChange={(e) => setNotStoreNotes(e.target.value)}
-                          style={{ height: showPreview ? '200px' : '300px' }}
+                          style={{ height: showPreview ? "200px" : "300px" }}
                         />
-                        
+
                         {/* Character count */}
-                        <div className={`absolute bottom-3 right-3 text-xs px-2 py-1 rounded-full ${
-                          isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
-                        }`}>
+                        <div
+                          className={`absolute bottom-3 right-3 text-xs px-2 py-1 rounded-full ${
+                            isDark
+                              ? "bg-gray-700 text-gray-400"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
                           {notStoreNotes.length} chars
                         </div>
                       </div>
@@ -1772,19 +1892,29 @@ const CoursesInterface = () => {
                               <div
                                 className="prose prose-sm max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300"
                                 dangerouslySetInnerHTML={{
-                                  __html: formatNotesToHTML(notStoreNotes, isDark),
+                                  __html: formatNotesToHTML(
+                                    notStoreNotes,
+                                    isDark
+                                  ),
                                 }}
                               />
                             ) : (
-                              <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <div
+                                className={`text-center py-8 ${
+                                  isDark ? "text-gray-400" : "text-gray-500"
+                                }`}
+                              >
                                 <span className="text-2xl mb-2 block">📝</span>
-                                <p className="text-sm">Start typing to see your formatted notes...</p>
+                                <p className="text-sm">
+                                  Start typing to see your formatted notes...
+                                </p>
                               </div>
                             )}
                           </div>
                         </div>
                       )}
-                    </div>                    {/* Status & Actions */}
+                    </div>{" "}
+                    {/* Status & Actions */}
                     <div className="flex justify-between items-center mt-3">
                       {/* Professional Mobile Auto-Save Loader */}
                       <div
@@ -2497,59 +2627,127 @@ const CoursesInterface = () => {
 
                 {/* Chat Messages - Scrollable Container */}
                 <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 max-h-[calc(100vh-20rem)]">
-                  {chatMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex items-start space-x-3 animate-slide-in ${
-                        message.type === "user" ? "justify-end" : ""
-                      }`}
-                    >
-                      {message.type === "ai" && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-sm">
-                            {message.avatar}
-                          </span>
+                  {chatPageLoader ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-500 animate-spin"></div>
+                          <div
+                            className="absolute inset-0 w-12 h-12 rounded-full border-4 border-transparent border-r-teal-500 animate-spin"
+                            style={{ animationDelay: "0.15s" }}
+                          ></div>
                         </div>
-                      )}
+                        <div className="text-center">
+                          <p
+                            className={`text-sm font-medium ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Loading chat history...
+                          </p>
+                          <p
+                            className={`text-xs ${
+                              isDark ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
+                            Please wait while we fetch your conversations
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {chatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex items-start space-x-3 animate-slide-in ${
+                            message.type === "user" ? "justify-end" : ""
+                          }`}
+                        >
+                          {message.type === "ai" && (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-sm">
+                                {message.avatar}
+                              </span>
+                            </div>
+                          )}
 
+                          <div
+                            className={`max-w-[80%] p-4 rounded-2xl transition-all duration-300 hover:shadow-lg ${
+                              message.type === "ai"
+                                ? isDark
+                                  ? "bg-gray-700 text-white"
+                                  : "bg-gray-100 text-gray-900"
+                                : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                            }`}
+                          >
+                            {message.type === "ai" ? (
+                              <div
+                                className="text-sm leading-relaxed prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{
+                                  __html: formatChatMessageHTML(
+                                    message.message,
+                                    isDark
+                                  ),
+                                }}
+                              />
+                            ) : (
+                              <p className="text-sm leading-relaxed">
+                                {message.message}
+                              </p>
+                            )}
+                            <p className={`text-xs mt-2 opacity-70`}>
+                              {message.timestamp.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+
+                          {message.type === "user" && (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                              <span className="text-white text-sm">
+                                {message.avatar}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Chat Loading Indicator */}
+                  {chatLoader && (
+                    <div className="flex items-start space-x-3 animate-slide-in">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-sm">🤖</span>
+                      </div>
                       <div
-                        className={`max-w-[80%] p-4 rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                          message.type === "ai"
-                            ? isDark
-                              ? "bg-gray-700 text-white"
-                              : "bg-gray-100 text-gray-900"
-                            : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                        className={`max-w-[80%] p-4 rounded-2xl ${
+                          isDark
+                            ? "bg-gray-700 text-white"
+                            : "bg-gray-100 text-gray-900"
                         }`}
                       >
-                        {message.type === "ai" ? (
-                          <div 
-                            className="text-sm leading-relaxed prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{
-                              __html: formatChatMessageHTML(message.message, isDark)
-                            }}
-                          />
-                        ) : (
-                          <p className="text-sm leading-relaxed">
-                            {message.message}
-                          </p>
-                        )}
-                        <p className={`text-xs mt-2 opacity-70`}>
-                          {message.timestamp.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-
-                      {message.type === "user" && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-sm">
-                            {message.avatar}
+                        <div className="flex items-center space-x-2">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+                            <div
+                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.1s" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-emerald-500 font-medium">
+                            AI is thinking...
                           </span>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 {/* Enhanced Chat Input - Fixed at bottom */}
@@ -2648,7 +2846,9 @@ const CoursesInterface = () => {
                   </div>
                   <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Real-time Preview</span>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      Real-time Preview
+                    </span>
                   </div>
                 </div>
 
@@ -2660,15 +2860,19 @@ const CoursesInterface = () => {
                       <span className="text-xl">📝</span>
                       <h3 className="font-semibold text-lg">Notes</h3>
                     </div>
-                    
+
                     {/* Tab Switcher */}
-                    <div className={`flex items-center space-x-1 p-1 rounded-xl border ${
-                      isDark ? "bg-gray-800 border-gray-600" : "bg-gray-50 border-gray-200"
-                    }`}>
+                    <div
+                      className={`flex items-center space-x-1 p-1 rounded-xl border ${
+                        isDark
+                          ? "bg-gray-800 border-gray-600"
+                          : "bg-gray-50 border-gray-200"
+                      }`}
+                    >
                       <button
-                        onClick={() => setActiveNotesTab('editor')}
+                        onClick={() => setActiveNotesTab("editor")}
                         className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                          activeNotesTab === 'editor'
+                          activeNotesTab === "editor"
                             ? isDark
                               ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
                               : "bg-emerald-100 text-emerald-700 shadow-md"
@@ -2681,9 +2885,9 @@ const CoursesInterface = () => {
                         <span className="font-medium">Editor</span>
                       </button>
                       <button
-                        onClick={() => setActiveNotesTab('preview')}
+                        onClick={() => setActiveNotesTab("preview")}
                         className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                          activeNotesTab === 'preview'
+                          activeNotesTab === "preview"
                             ? isDark
                               ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
                               : "bg-emerald-100 text-emerald-700 shadow-md"
@@ -2696,9 +2900,9 @@ const CoursesInterface = () => {
                         <span className="font-medium">Preview</span>
                       </button>
                       <button
-                        onClick={() => setActiveNotesTab('split')}
+                        onClick={() => setActiveNotesTab("split")}
                         className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                          activeNotesTab === 'split'
+                          activeNotesTab === "split"
                             ? isDark
                               ? "bg-emerald-900/30 text-emerald-400 shadow-lg"
                               : "bg-emerald-100 text-emerald-700 shadow-md"
@@ -2715,16 +2919,20 @@ const CoursesInterface = () => {
 
                   {/* Content Area */}
                   <div className="h-full">
-                    {activeNotesTab === 'editor' && (
+                    {activeNotesTab === "editor" && (
                       <div className="h-full space-y-3">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center space-x-2 text-gray-500">
                             <span>⚡</span>
                             <span>Markdown Editor</span>
                           </div>
-                          <div className={`px-2 py-1 rounded-full ${
-                            isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-500"
-                          }`}>
+                          <div
+                            className={`px-2 py-1 rounded-full ${
+                              isDark
+                                ? "bg-gray-700 text-gray-400"
+                                : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
                             {notStoreNotes.length} characters
                           </div>
                         </div>
@@ -2768,7 +2976,7 @@ Write your key takeaways and insights here. What did you learn? How will you app
                       </div>
                     )}
 
-                    {activeNotesTab === 'preview' && (
+                    {activeNotesTab === "preview" && (
                       <div className="h-full space-y-3">
                         <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400">
                           <span>✨</span>
@@ -2785,21 +2993,32 @@ Write your key takeaways and insights here. What did you learn? How will you app
                             <div
                               className="prose prose-base max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300 prose-code:bg-gray-100 dark:prose-code:bg-gray-800"
                               dangerouslySetInnerHTML={{
-                                __html: formatNotesToHTML(notStoreNotes, isDark),
+                                __html: formatNotesToHTML(
+                                  notStoreNotes,
+                                  isDark
+                                ),
                               }}
                             />
                           ) : (
-                            <div className={`text-center py-16 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <div
+                              className={`text-center py-16 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
                               <span className="text-4xl mb-4 block">📝</span>
-                              <h3 className="text-lg font-medium mb-2">No notes yet</h3>
-                              <p className="text-sm">Switch to Editor tab to start writing your notes</p>
+                              <h3 className="text-lg font-medium mb-2">
+                                No notes yet
+                              </h3>
+                              <p className="text-sm">
+                                Switch to Editor tab to start writing your notes
+                              </p>
                             </div>
                           )}
                         </div>
                       </div>
                     )}
 
-                    {activeNotesTab === 'split' && (
+                    {activeNotesTab === "split" && (
                       <div className="h-full grid grid-cols-2 gap-6">
                         {/* Editor Side */}
                         <div className="space-y-3">
@@ -2824,7 +3043,7 @@ Write your key takeaways and insights here. What did you learn? How will you app
                             } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
                           />
                         </div>
-                        
+
                         {/* Preview Side */}
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
@@ -2842,13 +3061,22 @@ Write your key takeaways and insights here. What did you learn? How will you app
                               <div
                                 className="prose prose-sm max-w-none prose-headings:text-emerald-600 dark:prose-headings:text-emerald-400 prose-strong:text-emerald-700 dark:prose-strong:text-emerald-300"
                                 dangerouslySetInnerHTML={{
-                                  __html: formatNotesToHTML(notStoreNotes, isDark),
+                                  __html: formatNotesToHTML(
+                                    notStoreNotes,
+                                    isDark
+                                  ),
                                 }}
                               />
                             ) : (
-                              <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <div
+                                className={`text-center py-8 ${
+                                  isDark ? "text-gray-400" : "text-gray-500"
+                                }`}
+                              >
                                 <span className="text-2xl mb-2 block">✨</span>
-                                <p className="text-sm">Live preview will appear here...</p>
+                                <p className="text-sm">
+                                  Live preview will appear here...
+                                </p>
                               </div>
                             )}
                           </div>

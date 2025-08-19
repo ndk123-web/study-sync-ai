@@ -22,12 +22,10 @@ const chatSchema = mongoose.Schema(
         pdfLink: {
             type: String,
             required: false,
-            index: true
         },
         videoLink: {
             type: String,
             required: false,
-            index: true
         },
         prompt: {
             type: String,
