@@ -175,25 +175,27 @@ const formatChatMessageHTML = (text, isDark = false) => {
   // Strictly preserve code block formatting and Prism compatibility
   const codeBlockPlaceholders = [];
   let tempText = text.replace(
-    /```(\w*)\n?([\s\S]*?)\n?```/g,
+    /```(\w*)\n([\s\S]*?)```/g,
     (match, language, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlockPlaceholders.length}__`;
       // Prism expects language class, default to 'python' if not specified
       const lang = language && language !== "" ? language : "python";
       // Strictly escape HTML but preserve ALL whitespace and newlines
-      // DO NOT trim or modify whitespace in code blocks
-      const formattedCode = code
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+      // DO NOT trim or modify whitespace in code blocks - keep exact formatting
+      // Keep the original code untouched for accurate whitespace/newlines
+      // Store a base64-encoded version on a data attribute so we can set
+      // the `textContent` of the code element later (avoids HTML entity/whitespace issues)
+      const rawCode = code;
+      const base64 = typeof window !== "undefined" && window.btoa
+        ? window.btoa(unescape(encodeURIComponent(rawCode)))
+        : Buffer.from(rawCode, "utf-8").toString("base64");
+
       codeBlockPlaceholders.push(
         `<pre class="line-numbers ${
           isDark
             ? "bg-gray-800 text-green-400 border border-gray-700"
             : "bg-gray-100 text-green-600 border border-gray-200"
-        } rounded-lg p-4 my-4 overflow-x-auto"><code class="language-${lang}" style="white-space: pre; font-family: 'Fira Mono', 'Menlo', 'Consolas', 'monospace'; font-size: 1em; display: block; line-height: 1.5;">${formattedCode}</code></pre>`
+        } rounded-lg p-4 my-4 overflow-x-auto"><code data-raw-code="${base64}" class="language-${lang}" style="white-space: pre; font-family: 'Fira Mono', 'Menlo', 'Consolas', 'monospace'; font-size: 1em; display: block; line-height: 1.5;"></code></pre>`
       );
       return placeholder;
     }
@@ -379,18 +381,10 @@ const CoursesInterface = () => {
   );
 
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("notes");
   const [chatMessage, setChatMessage] = useState("");
   const [videoSize, setVideoSize] = useState(55); // Default 50%
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      type: "ai",
-      message: `Hello! I'm your AI study assistant for course "${courseId}" , how can I assist you today ?`,
-      timestamp: new Date(),
-      avatar: "🤖",
-    },
-  ]);
+  const [chatMessages, setChatMessages] = useState([]); // Start with empty array
   const [transcriptText, setTranscriptText] = useState([]);
   const currentCourse = {
     title: "Complete React Hooks Guide",
@@ -512,39 +506,51 @@ const CoursesInterface = () => {
   }, [courseId]);
 
   // fetch the ai chat response
-useEffect(() => {
-  const fetchUserChats = async () => {
-    try {
-      setChatPageLoader();
-      const apiResponse = await FetchUserChatsApi({ courseId });
-      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-        alert("Error fetching user chats");
-        return;
+  useEffect(() => {
+    const fetchUserChats = async () => {
+      try {
+        setChatPageLoader();
+        const apiResponse = await FetchUserChatsApi({ courseId });
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          alert("Error fetching user chats");
+          return;
+        }
+
+        const messages = apiResponse?.data?.chats || [];
+
+        // Convert backend messages to frontend format
+        const formattedMessages = messages.map((message, idx) => ({
+          id: message.id || idx,
+          type: message.type,
+          message: message.message,
+          timestamp: new Date(message.timestamp), // Convert string back to Date
+          avatar: message.avatar,
+        }));
+
+        // If we have messages from backend, use them, otherwise keep the welcome message
+        if (formattedMessages.length > 0) {
+          setChatMessages(formattedMessages);
+        } else {
+          // Reset to initial welcome message for new course
+          setChatMessages([
+            {
+              id: 1,
+              type: "ai",
+              message: `Hello! I'm your AI study assistant for course "${courseId}", how can I assist you today?`,
+              timestamp: new Date(),
+              avatar: "🤖",
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error("💥 Error fetching user chats:", error);
+      } finally {
+        unsetChatPageLoader();
       }
-      
-      const messages = apiResponse?.data?.chats || [];
-      
-      // Convert backend messages to frontend format
-      const formattedMessages = messages.map((message, idx) => ({
-        id: message.id || idx,
-        type: message.type,
-        message: message.message,
-        timestamp: new Date(message.timestamp), // Convert string back to Date
-        avatar: message.avatar,
-      }));
+    };
 
-      // Set the formatted messages to state
-      setChatMessages(formattedMessages);
-      
-    } catch (error) {
-      console.error("💥 Error fetching user chats:", error);
-    } finally {
-      unsetChatPageLoader();
-    }
-  };
-
-  fetchUserChats();
-}, [courseId]);
+    fetchUserChats();
+  }, [courseId]);
 
   // Simple Prism highlighting on chat message updates
 
@@ -686,15 +692,6 @@ useEffect(() => {
     getPlaylist();
   }, []);
 
-  useEffect(() => {
-    if (window.Prism) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        window.Prism.highlightAll();
-      }, 100);
-    }
-  }, [chatMessages]);
-
   // Track completed videos index
   useEffect(() => {
     const trackPlaylistIndex = async () => {
@@ -775,57 +772,6 @@ useEffect(() => {
 
     return () => clearTimeout(autoSaveTimer);
   }, [notStoreNotes, courseId]);
-
-  // const handleSaveNotes = async () => {
-  //   try {
-
-  //     console.log("notStoreNotes:", notStoreNotes);
-  //     console.log("storedNotesFromZustand:", storedNotesFromZustand);
-  //     console.log("storedNotes:", storedNotes);
-  //     console.log("notStoreNotesFromZustand:", notStoreNotesFromZustand);
-
-  //     // if stored notes are equal to not stored notes then no need to call API
-  //     if (notStoreNotes.trim() === notStoreNotesFromZustand.trim()) {
-  //       alert("No changes detected in notes.");
-  //       return;
-  //     }
-
-  //     setNotesLoader();
-  //     // if notStoreNotes is not equal to storedNotes then call API to create a new Note
-  //     const apiResponse = await SaveCourseNotesApi({
-  //       courseId,
-  //       notes: notStoreNotes,
-  //     });
-  //     console.log("Api Response for Creating Note: ", apiResponse);
-  //     if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-  //       // Logic For Error Notification
-  //       console.log(
-  //         "Error in fetching notes: ",
-  //         apiResponse?.message || "Error in fetching notes"
-  //       );
-  //       return;
-  //     }
-
-  //     unsetNotesLoader();
-
-  //     // Update both local state and Zustand with the saved notes
-  //     const savedNotes = apiResponse?.data?.notes || "";
-  //     // setStoredNotes(savedNotes);
-
-  //     // Update Zustand store as well
-  //     // setStoredNotesFromZustand(savedNotes);
-  //     setNotStoreNotesFromZustand(savedNotes);
-
-  //     console.log("✅ Notes saved successfully and synced with Zustand");
-  //     alert("Notes Saved Successfully");
-
-  //   } catch (err) {
-  //     alert("Error fetching notes: " + err.message);
-  //     // unsetNotesLoader();
-  //   } finally {
-  //     unsetNotesLoader();
-  //   }
-  // };
 
   const fetchSummary = async () => {
     if (!courseId) {
@@ -952,7 +898,6 @@ useEffect(() => {
   };
 
   const sendMessage = async () => {
-
     unsetChatLoader();
     if (!chatMessage.trim()) return;
 
@@ -968,7 +913,7 @@ useEffect(() => {
 
     // Clear input immediately after getting the message
     setChatMessage("");
-    setChatMessages([...chatMessages, newMessage]);
+    setChatMessages((prev) => [...prev, newMessage]);
 
     try {
       setChatLoader(); // Start loader
@@ -1004,6 +949,62 @@ useEffect(() => {
       unsetChatLoader(); // Stop loader
     }
   };
+
+  // Apply Prism syntax highlighting when chat messages change
+  useEffect(() => {
+    if (window.Prism && activeTab === "chat") {
+      // Wait for DOM to render and then populate code elements from data-raw-code
+      const timeoutId = setTimeout(() => {
+        try {
+          const codeElems = Array.from(
+            document.querySelectorAll("code[data-raw-code]")
+          );
+
+          codeElems.forEach((el) => {
+            try {
+              const b64 = el.getAttribute("data-raw-code") || "";
+              let decoded = "";
+              if (b64) {
+                try {
+                  decoded = decodeURIComponent(escape(window.atob(b64)));
+                } catch (e) {
+                  // fallback for environments without atob/unescape
+                  try {
+                    decoded = Buffer.from(b64, "base64").toString("utf-8");
+                  } catch (err) {
+                    decoded = "";
+                  }
+                }
+              }
+              // Set the raw code as textContent to preserve whitespace/newlines
+              if (decoded) el.textContent = decoded;
+              // Now highlight the element individually
+              window.Prism.highlightElement(el);
+            } catch (err) {
+              console.error("Error processing code element:", err);
+            }
+          });
+
+          console.log("🎨 Prism highlighting applied to", codeElems.length, "code blocks");
+        } catch (error) {
+          console.error("Prism highlighting error:", error);
+        }
+      }, 200); // small delay to let React paint
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [chatMessages, activeTab, notStoreNotes , courseId,currentVideoId,completedVideosIndex]);
+  
+  // Also apply Prism when component mounts and Prism is available
+  useEffect(() => {
+    if (window.Prism) {
+      const timeoutId = setTimeout(() => {
+        window.Prism.highlightAll();
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
 
   return (
     <div
@@ -2653,6 +2654,32 @@ useEffect(() => {
                             Please wait while we fetch your conversations
                           </p>
                         </div>
+                      </div>
+                    </div>
+                  ) : chatMessages.length === 0 ? (
+                    // Empty state when no messages
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                      <div className="mb-4">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-2xl">🤖</span>
+                        </div>
+                      </div>
+                      <h3 className={`text-xl font-semibold mb-2 ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}>
+                        AI Study Assistant
+                      </h3>
+                      <p className={`text-sm mb-4 max-w-md ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}>
+                        Ask me anything related to this course. I can help you with explanations, code examples, concepts, and more!
+                      </p>
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        isDark 
+                          ? "bg-blue-900/30 text-blue-400 border border-blue-700" 
+                          : "bg-blue-100 text-blue-700 border border-blue-200"
+                      }`}>
+                        💡 Ready to help with your studies
                       </div>
                     </div>
                   ) : (
