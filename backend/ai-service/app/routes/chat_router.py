@@ -2,7 +2,7 @@ from app.middleware.verifyJWT import verifyJWT
 from pydantic import BaseModel
 from fastapi import Depends , Request , Query
 from fastapi.routing import APIRouter
-from ..controller.chat_controller import get_chat_response , ChatRequest
+from ..controller.chat_controller import get_chat_response , ChatRequest, FetchChatsRequest, fetch_user_chat
 
 chatRouter = APIRouter()
 
@@ -19,3 +19,9 @@ async def send_chat(payload: ChatPostReqData , userData = Depends(verifyJWT)):
 
     response = await get_chat_response(args)
     return response
+
+@chatRouter.get('/fetch-chats')
+async def fetch_chats(courseId=Query(...), userData = Depends(verifyJWT)):
+    args = FetchChatsRequest(courseId=courseId, userData=userData)
+    response = await fetch_user_chat(args)  
+    return response 
