@@ -25,6 +25,10 @@ const userSchema = mongoose.Schema(
             type: String,
             default: "light"
         },
+        availableYears: {
+            type: [Number],
+            default: []
+        },
         isPremium: {
             type: Boolean,
             default: false

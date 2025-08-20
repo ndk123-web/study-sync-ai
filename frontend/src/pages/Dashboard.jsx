@@ -14,6 +14,8 @@ import CryptoJs from 'crypto-js';
 import SuccessNotification from '../components/SuccessNotification';
 // Recharts for professional charts (aliased to avoid icon name collisions)
 import * as Recharts from 'recharts';
+import { GetTrendAnalysisYearApi } from '../api/GetTrendAnalysisYearApi.js';
+
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -30,6 +32,7 @@ const Dashboard = () => {
   const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
 
   const [signInNotification, setSignInNotification] = useState(false);
+  const [availableUserYears, setAvailableUserYears] = useState([]);
   const [welcomeMessage, setWelcomeMessage] = useState("");
 
   // Welcome notification functionality
@@ -89,6 +92,31 @@ const Dashboard = () => {
       delete window.dashboardSidebar;
     };
   }, []);
+
+  useEffect( () => {
+
+    const fetchTrendAnalysis = async () => {
+
+      const apiResponse = await GetTrendAnalysisYearApi();
+      if (apiResponse.status !== 200 && apiResponse.status !== 201){
+        console.log("Error fetching trend analysis data: ", apiResponse);
+        alert("Error fetching trend analysis data");
+        return;
+      }
+
+      console.log("Trend Analysis Data: ", apiResponse);
+      console.log("Available Years: ", apiResponse?.data?.availableYears);
+      setAvailableUserYears(apiResponse?.data?.availableYears);
+    }
+
+    fetchTrendAnalysis()
+
+  }, [])
+
+  // debug State change ko track karne ke liye separate useEffect
+  // useEffect(() => {
+  //   console.log("Available User Years State Updated: ", availableUserYears);
+  // }, [availableUserYears]);
 
   const handleLogout = () => {
     removeAuth();
