@@ -201,14 +201,14 @@ const Dashboard = () => {
 
   // Chart data
   const learningTrendData = [
-    { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 4 },
-    { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 3 },
-    { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 5 },
-    { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 6 },
-    { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 4 },
-    { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 7 },
-    { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 6 },
-    { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 8 },
+    { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 0 },
+    { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 0 },
+    { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
+    { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 0 },
+    { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 0 },
+    { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 0 },
+    { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 0 },
+    { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
   ];
 
   const categoryDistribution = [
