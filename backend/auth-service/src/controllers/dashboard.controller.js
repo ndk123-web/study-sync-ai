@@ -132,6 +132,20 @@ const GetTrendAnalysisController = wrapper(async (req, res) => {
 
   console.log("Learning trend data:", learningTrendData);
 
+  // output will be like this
+  /*
+  const learningTrendData = [
+    { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 0 },
+    { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 0 },
+    { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
+    { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 0 },
+    { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 0 },
+    { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 0 },
+    { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 0 },
+    { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
+  ];
+  */
+
   return res
     .status(200)
     .json(

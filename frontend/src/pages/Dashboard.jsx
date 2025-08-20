@@ -163,8 +163,8 @@ const Dashboard = () => {
     {
       title: "Study Streak",
       value: user?.streak || "7",
-      change: "+3 days",
-      changePercent: "+18%",
+      // change: "+3 days",
+      // changePercent: "+18%",
       color: "from-orange-500 to-red-500",
       bgColor: "bg-orange-50 dark:bg-orange-900/20",
       icon: <Flame className="w-5 h-5 md:w-6 md:h-6" />,
@@ -173,8 +173,8 @@ const Dashboard = () => {
     {
       title: "Topics Studied",
       value: user?.totalTopics || "24",
-      change: "+5 this week",
-      changePercent: "+26%",
+      // change: "+5 this week",
+      // changePercent: "+26%",
       color: "from-emerald-500 to-teal-500",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
       icon: <BookOpenCheck className="w-5 h-5 md:w-6 md:h-6" />,
@@ -183,18 +183,18 @@ const Dashboard = () => {
     {
       title: "Quizzes Completed",
       value: user?.completedQuizzes || "18",
-      change: "+12%",
-      changePercent: "+12%",
+      // change: "+12%",
+      // changePercent: "+12%",
       color: "from-blue-500 to-purple-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
       icon: <Trophy className="w-5 h-5 md:w-6 md:h-6" />,
       trend: "up"
     },
     {
-      title: "Study Hours",
-      value: `${user?.studyHours || "45.5"}h`,
-      change: "+8.2h",
-      changePercent: "+22%",
+      title: "Skill Points",
+      value: `${user?.skillPoints || "0"}`,
+      // change: "+8.2h",
+      // changePercent: "+22%",
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
       icon: <Timer className="w-5 h-5 md:w-6 md:h-6" />,
@@ -262,16 +262,16 @@ const Dashboard = () => {
   );
 
   // Chart data
-  const learningTrendData = [
-    { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 0 },
-    { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 0 },
-    { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
-    { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 0 },
-    { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 0 },
-    { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 0 },
-    { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 0 },
-    { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
-  ];
+  // const learningTrendData = [
+  //   { month: 'Jan', courses: 2, videos: 8, pdfs: 3, quizzes: 0 },
+  //   { month: 'Feb', courses: 1, videos: 10, pdfs: 4, quizzes: 0 },
+  //   { month: 'Mar', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
+  //   { month: 'Apr', courses: 3, videos: 9, pdfs: 4, quizzes: 0 },
+  //   { month: 'May', courses: 1, videos: 11, pdfs: 6, quizzes: 0 },
+  //   { month: 'Jun', courses: 2, videos: 13, pdfs: 5, quizzes: 0 },
+  //   { month: 'Jul', courses: 3, videos: 14, pdfs: 6, quizzes: 0 },
+  //   { month: 'Aug', courses: 2, videos: 12, pdfs: 5, quizzes: 0 },
+  // ];
 
   const categoryDistribution = [
     { name: 'Frontend', value: 32, color: '#10B981' },
