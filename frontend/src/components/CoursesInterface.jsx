@@ -522,6 +522,14 @@ const CoursesInterface = () => {
     },
   ];
 
+  useEffect( () => {
+    unsetChatLoader();
+    unsetChatPageLoader();
+    unsetNotesLoader();
+    unsetSummaryLoader();
+    unsetTranscriptLoader();
+  }, [] )
+
   // On CourseId change , change the courseId in Zustand state
   useEffect(() => {
     console.log("Course ID changed:", courseId);

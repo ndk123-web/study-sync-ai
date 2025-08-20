@@ -15,6 +15,7 @@ import SuccessNotification from '../components/SuccessNotification';
 // Recharts for professional charts (aliased to avoid icon name collisions)
 import * as Recharts from 'recharts';
 import { GetTrendAnalysisYearApi } from '../api/GetTrendAnalysisYearApi.js';
+import { GetTrendAnalysisApi } from '../api/GetTrendAnalysisApi.js';
 
 
 const Dashboard = () => {
@@ -36,6 +37,7 @@ const Dashboard = () => {
   const [dashboardYearLoader, setDashboardYearLoader] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [analyticsData, setAnalyticsData] = useState([]);
 
   // Welcome notification functionality
   useEffect(() => {
@@ -95,8 +97,8 @@ const Dashboard = () => {
     };
   }, []);
 
-  useEffect( () => {
-
+  // Fetch trend analysis Year data
+  useEffect(() => {
     const fetchTrendAnalysis = async () => {
       setDashboardYearLoader(true);
       try {
@@ -125,6 +127,25 @@ const Dashboard = () => {
     fetchTrendAnalysis()
 
   }, [])
+
+  // After Fetching available years , now default selected year will be currentYear
+  useEffect( () => {
+     const fetchTrendAnalysisData = async () => {
+
+      const defaultYear = new Date().getFullYear();
+      const apiResponse = await GetTrendAnalysisApi( { year: defaultYear }  )
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        console.log("Error fetching trend analysis data: ", apiResponse);
+        alert("Error fetching trend analysis data");
+        return;
+      }
+
+      setAnalyticsData(apiResponse?.data?.analyticsData);
+     }
+
+     fetchTrendAnalysisData();
+  } , [])
 
   // debug State change ko track karne ke liye separate useEffect
   // useEffect(() => {
@@ -325,10 +346,10 @@ const Dashboard = () => {
           {/* Chart Section - 3/4 width */}
           <div className="lg:col-span-3">
             <ResponsiveChartBox min={240} vh={38} max={420}>
-              <Recharts.LineChart data={learningTrendData} margin={{ top: 5, right: 24, left: 12, bottom: 5 }}>
+              <Recharts.LineChart data={analyticsData} margin={{ top: 5, right: 24, left: 12, bottom: 5 }}>
                 <Recharts.CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
                 <Recharts.XAxis dataKey="month" tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
-                <Recharts.YAxis tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
+                <Recharts.YAxis domain={[0, 'dataMax + 2']}  tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
                 <Recharts.Tooltip content={<ReTooltip />} />
                 <Recharts.Legend />
                 <Recharts.Line type="monotone" dataKey="courses" stroke="#10B981" strokeWidth={3} dot={{ r: 3, fill: '#10B981' }} activeDot={{ r: 6 }} name="Courses" />
@@ -792,7 +813,7 @@ const Dashboard = () => {
   );
 
   // Desktop Sidebar
-  const DesktopSidebar = () => (
+    const DesktopSidebar = () => (
     <aside className={`hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 lg:top-[73px] ${
       isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
     } border-r transition-all duration-300 custom-scrollbar`}>
