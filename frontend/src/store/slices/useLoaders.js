@@ -14,6 +14,7 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
     enrollLoader: false,
     notesLoader: false,
     transcriptLoader: false,
+    dashboardYearLoader: false,
 
     setLoader: () => set(() => ({ loader: true })),
     unsetLoader: () => set(() => ({ loader: false })),
@@ -38,6 +39,9 @@ const useLoaders = createPersistedStore('loaders', (set) => ({
 
     setAssessmentLoader: () => set(() => ({ assessmentLoader: true })),
     unsetAssessmentLoader: () => set(() => ({ assessmentLoader: false })),
+
+    setDashboardYearLoader: () => set(() => ({ dashboardYearLoader: true })),
+    unsetDashboardYearLoader: () => set(() => ({ dashboardYearLoader: false })),
 
     setPlaylistLoader: () => set(() => ({ playlistLoader: true })),
     unsetPlaylistLoader: () => set(() => ({ playlistLoader: false })),

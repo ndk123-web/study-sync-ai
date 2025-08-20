@@ -27,12 +27,13 @@ const GetTrendAnalysisYearController = wrapper(async (req, res) => {
   console.log("Available years for trend analysis:", availableYears);
 
   // if length is 0 or current array and availableYears are different means new year came 
-  if (userInstance.availableYears.length === 0 || userInstance.availableYears.toString() !== availableYears.toString()) {
-      userInstance.availableYears = availableYears;
-      await userInstance.save();
+  if (userInstance.availableYears.length === 0 || userInstance.availableYears.toString().length < availableYears.toString().length) {
+    //   userInstance.availableYears = availableYears;
+    // //   availableYears = userInstance.availableYears;
+    //   await userInstance.save();
   }
 
-  return res.status(200).json(new ApiResponse(200,{ availableYears } , "Successfully retrieved available years for trend analysis"))
+  return res.status(200).json(new ApiResponse(200,{ availableYears: userInstance.availableYears } , "Successfully retrieved available years for trend analysis"))
 
 });
 

@@ -33,6 +33,8 @@ const Dashboard = () => {
 
   const [signInNotification, setSignInNotification] = useState(false);
   const [availableUserYears, setAvailableUserYears] = useState([]);
+  const [dashboardYearLoader, setDashboardYearLoader] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(null);
   const [welcomeMessage, setWelcomeMessage] = useState("");
 
   // Welcome notification functionality
@@ -96,17 +98,28 @@ const Dashboard = () => {
   useEffect( () => {
 
     const fetchTrendAnalysis = async () => {
+      setDashboardYearLoader(true);
+      try {
+        const apiResponse = await GetTrendAnalysisYearApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201){
+          console.log("Error fetching trend analysis data: ", apiResponse);
+          alert("Error fetching trend analysis data");
+          return;
+        }
 
-      const apiResponse = await GetTrendAnalysisYearApi();
-      if (apiResponse.status !== 200 && apiResponse.status !== 201){
-        console.log("Error fetching trend analysis data: ", apiResponse);
-        alert("Error fetching trend analysis data");
-        return;
+        console.log("Trend Analysis Data: ", apiResponse);
+        console.log("Available Years: ", apiResponse?.data?.availableYears);
+        setAvailableUserYears(apiResponse?.data?.availableYears);
+        
+        // Set current year as default selected
+        if (apiResponse?.data?.availableYears?.length > 0) {
+          setSelectedYear(apiResponse.data.availableYears[apiResponse.data.availableYears.length - 1]);
+        }
+      } catch (error) {
+        console.error("Error in fetchTrendAnalysis:", error);
+      } finally {
+        setDashboardYearLoader(false);
       }
-
-      console.log("Trend Analysis Data: ", apiResponse);
-      console.log("Available Years: ", apiResponse?.data?.availableYears);
-      setAvailableUserYears(apiResponse?.data?.availableYears);
     }
 
     fetchTrendAnalysis()
@@ -286,35 +299,111 @@ const Dashboard = () => {
     { id: 3, thumbnail: '🚀', title: 'Next.js 15 Server Actions', views: '18k', duration: '32m', rating: 4.8, isNew: true },
   ];
 
-  // 1) Learning Trend Analysis
-  const TrendAnalysisCard = () => (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center space-x-2`}>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-            <span>Learning Trend Analysis</span>
-          </h3>
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Comprehensive view of your learning journey
-          </p>
+  // 1) Learning Trend Analysis with Year Selection
+  const TrendAnalysisCard = () => {
+    const handleYearClick = (year) => {
+      setSelectedYear(year);
+      // TODO: Add API call for specific year data
+      console.log("Selected year:", year);
+    };
+
+    return (
+      <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center space-x-2`}>
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              <span>Learning Trend Analysis</span>
+            </h3>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Comprehensive view of your learning journey {selectedYear && `for ${selectedYear}`}
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Chart Section - 3/4 width */}
+          <div className="lg:col-span-3">
+            <ResponsiveChartBox min={240} vh={38} max={420}>
+              <Recharts.LineChart data={learningTrendData} margin={{ top: 5, right: 24, left: 12, bottom: 5 }}>
+                <Recharts.CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
+                <Recharts.XAxis dataKey="month" tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
+                <Recharts.YAxis tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
+                <Recharts.Tooltip content={<ReTooltip />} />
+                <Recharts.Legend />
+                <Recharts.Line type="monotone" dataKey="courses" stroke="#10B981" strokeWidth={3} dot={{ r: 3, fill: '#10B981' }} activeDot={{ r: 6 }} name="Courses" />
+                <Recharts.Line type="monotone" dataKey="videos" stroke="#3B82F6" strokeWidth={3} dot={{ r: 3, fill: '#3B82F6' }} activeDot={{ r: 6 }} name="Videos" />
+                <Recharts.Line type="monotone" dataKey="pdfs" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 3, fill: '#8B5CF6' }} activeDot={{ r: 6 }} name="PDFs" />
+                <Recharts.Line type="monotone" dataKey="quizzes" stroke="#F59E0B" strokeWidth={3} dot={{ r: 3, fill: '#F59E0B' }} activeDot={{ r: 6 }} name="Quizzes" />
+              </Recharts.LineChart>
+            </ResponsiveChartBox>
+          </div>
+          
+          {/* Year Selection Section - 1/4 width */}
+          <div className="lg:col-span-1">
+            <div className={`${isDark ? 'bg-gray-700/50' : 'bg-gray-50'} rounded-xl p-4 h-full`}>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Select Year
+                </h4>
+                <Calendar className={`w-4 h-4 ${isDark ? 'text-emerald-400' : 'text-emerald-500'}`} />
+              </div>
+              
+              {/* Loader */}
+              {dashboardYearLoader ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className={`h-10 rounded-lg animate-pulse ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}></div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-80">
+                  {availableUserYears.length > 0 ? (
+                    availableUserYears.map((year) => (
+                      <button
+                        key={year}
+                        onClick={() => handleYearClick(year)}
+                        className={`w-full p-3 rounded-lg text-left transition-all duration-100 transform hover:scale-101 flex items-center justify-between group ${
+                          selectedYear === year
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                            : `${isDark ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' : 'bg-white hover:bg-gray-100 text-gray-700'} border ${isDark ? 'border-gray-500' : 'border-gray-200'}`
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">📅</span>
+                          <span className="font-medium">{year}</span>
+                        </div>
+                        {selectedYear === year && (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No years available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Selected Year Info */}
+              {selectedYear && !dashboardYearLoader && (
+                <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                    Currently viewing
+                  </div>
+                  <div className={`text-sm font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                    Year {selectedYear}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-      <ResponsiveChartBox min={240} vh={38} max={420}>
-        <Recharts.LineChart data={learningTrendData} margin={{ top: 5, right: 24, left: 12, bottom: 5 }}>
-          <Recharts.CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
-          <Recharts.XAxis dataKey="month" tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
-          <Recharts.YAxis tick={{ fontSize: 12, fill: isDark ? '#9CA3AF' : '#6B7280' }} axisLine={{ stroke: isDark ? '#374151' : '#E5E7EB' }} />
-          <Recharts.Tooltip content={<ReTooltip />} />
-          <Recharts.Legend />
-          <Recharts.Line type="monotone" dataKey="courses" stroke="#10B981" strokeWidth={3} dot={{ r: 3, fill: '#10B981' }} activeDot={{ r: 6 }} name="Courses" />
-          <Recharts.Line type="monotone" dataKey="videos" stroke="#3B82F6" strokeWidth={3} dot={{ r: 3, fill: '#3B82F6' }} activeDot={{ r: 6 }} name="Videos" />
-          <Recharts.Line type="monotone" dataKey="pdfs" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 3, fill: '#8B5CF6' }} activeDot={{ r: 6 }} name="PDFs" />
-          <Recharts.Line type="monotone" dataKey="quizzes" stroke="#F59E0B" strokeWidth={3} dot={{ r: 3, fill: '#F59E0B' }} activeDot={{ r: 6 }} name="Quizzes" />
-        </Recharts.LineChart>
-      </ResponsiveChartBox>
-    </div>
-  );
+    );
+  };
 
   // 2) Learning Categories pie chart
   const LearningCategoriesCard = () => (
