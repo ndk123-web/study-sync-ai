@@ -287,6 +287,7 @@ const VideoInteraction = () => {
 
   const [videoUrl, setVideoUrl] = useState("");
   const [loadedVideo, setLoadedVideo] = useState(null);
+  const [isLoadingNewVideo, setIsLoadingNewVideo] = useState(false); // Track if loading new video
   const [activeTab, setActiveTab] = useState("chat");
   const [chatMessages, setChatMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
@@ -303,7 +304,7 @@ const VideoInteraction = () => {
 
   // Decrypt and load video from URL params
   useEffect(() => {
-    if (encryptedVideoUrl) {
+    if (encryptedVideoUrl && !isLoadingNewVideo) {
       try {
         const decryptedUrl = CryptoJS.AES.decrypt(
           decodeURIComponent(encryptedVideoUrl),
@@ -352,6 +353,7 @@ const VideoInteraction = () => {
   const handleLoadVideo = async (e) => {
     e.preventDefault();
     setLoader(true);
+    setIsLoadingNewVideo(true);
 
     try {
       const encryptedVideoUrl = CryptoJS.AES.encrypt(
@@ -359,9 +361,13 @@ const VideoInteraction = () => {
         import.meta.env.VITE_ENCRYPTION_SECRET
       ).toString();
 
+      console.log("Enrolling video with encrypted URL:", encryptedVideoUrl);
       const apiResponse = await EnrollmentVideoApi(encryptedVideoUrl);
+      console.log("API Response:", apiResponse);
+      
       if (apiResponse.status !== 200 && apiResponse.status !== 201){
-        alert(apiResponse.message || "Failed to enroll video. Please try again.");
+        alert(apiResponse.message || "Failed to enroll video. Please check your authentication and try again.");
+        setIsLoadingNewVideo(false);
         return;
       }
 
@@ -389,16 +395,18 @@ const VideoInteraction = () => {
           },
         ]);
 
-        // Navigate to the video learning URL with encrypted parameter
-        navigate(`/learn/video?v=${encodeURIComponent(encryptedVideoUrl)}`);
+        // Update URL without causing a page reload
+        const newUrl = `/learn/video?v=${encodeURIComponent(encryptedVideoUrl)}`;
+        window.history.replaceState(null, '', newUrl);
       } else {
         alert("Please enter a valid YouTube URL");
       }
     } catch (err) {
       console.error("Error loading video:", err);
-      alert("Failed to load video. Please try again.");
+      alert(`Failed to load video: ${err.message || 'Please try again.'}`);
     } finally {
       setLoader(false);
+      setIsLoadingNewVideo(false);
     }
   };
 
