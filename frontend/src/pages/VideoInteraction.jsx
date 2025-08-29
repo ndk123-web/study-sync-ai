@@ -21,8 +21,9 @@ import {
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { EnrollmentVideoApi } from '../api/EnrollVideoApi.js'
+// import { useParams } from "react-router-dom";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -279,6 +280,11 @@ const VideoInteraction = () => {
   );
   const isDark = theme === "dark";
 
+  const { v } = useParams();
+  const [searchParams] = useSearchParams();
+  const encryptedVideoUrl = searchParams.get('v') || v;
+  console.log("Encrypted video param v:", encryptedVideoUrl);
+
   const [videoUrl, setVideoUrl] = useState("");
   const [loadedVideo, setLoadedVideo] = useState(null);
   const [activeTab, setActiveTab] = useState("chat");
@@ -288,11 +294,53 @@ const VideoInteraction = () => {
   const [transcript, setTranscript] = useState("");
   const [notes, setNotes] = useState("");
   const [notesPreviewMode, setNotesPreviewMode] = useState(false);
+  const [showPreview, setShowPreview] = useState(false); // Mobile preview toggle
   const [notesLoader, setNotesLoader] = useState(false);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [loader, setLoader] = useState(false);
+
+  // Decrypt and load video from URL params
+  useEffect(() => {
+    if (encryptedVideoUrl) {
+      try {
+        const decryptedUrl = CryptoJS.AES.decrypt(
+          decodeURIComponent(encryptedVideoUrl),
+          import.meta.env.VITE_ENCRYPTION_SECRET
+        ).toString(CryptoJS.enc.Utf8);
+        
+        if (decryptedUrl) {
+          setVideoUrl(decryptedUrl);
+          const videoId = extractVideoId(decryptedUrl);
+          if (videoId) {
+            const videoData = {
+              id: videoId,
+              url: decryptedUrl,
+              embedUrl: `https://www.youtube.com/embed/${videoId}`,
+              thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+              title: "Video Learning Session",
+              duration: "N/A",
+              views: "Learning Mode",
+            };
+            setLoadedVideo(videoData);
+            
+            // Initialize with welcome message
+            setChatMessages([
+              {
+                id: 1,
+                type: "bot",
+                message: `Welcome to your learning session! I'm here to help you understand this video content. Ask me questions, request summaries, or get assessments based on what you're watching.`,
+                timestamp: new Date().toLocaleTimeString(),
+              },
+            ]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to decrypt video URL:", err);
+      }
+    }
+  }, [encryptedVideoUrl]);
 
   const extractVideoId = (url) => {
     const regex =
@@ -306,7 +354,6 @@ const VideoInteraction = () => {
     setLoader(true);
 
     try {
-
       const encryptedVideoUrl = CryptoJS.AES.encrypt(
         videoUrl,
         import.meta.env.VITE_ENCRYPTION_SECRET
@@ -325,9 +372,9 @@ const VideoInteraction = () => {
           url: videoUrl,
           embedUrl: `https://www.youtube.com/embed/${videoId}`,
           thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          title: "Video Title", // This would come from YouTube API
-          duration: "15:30", // This would come from YouTube API
-          views: "1.2M views", // This would come from YouTube API
+          title: "Video Learning Session",
+          duration: "N/A",
+          views: "Learning Mode",
         };
 
         setLoadedVideo(videoData);
@@ -342,12 +389,14 @@ const VideoInteraction = () => {
           },
         ]);
 
-
-        navigate(`/learn/video?v=${encryptedVideoUrl}`);
+        // Navigate to the video learning URL with encrypted parameter
+        navigate(`/learn/video?v=${encodeURIComponent(encryptedVideoUrl)}`);
       } else {
         alert("Please enter a valid YouTube URL");
       }
     } catch (err) {
+      console.error("Error loading video:", err);
+      alert("Failed to load video. Please try again.");
     } finally {
       setLoader(false);
     }
@@ -1088,9 +1137,9 @@ const VideoInteraction = () => {
                               </span>
                             </div>
                             <button
-                              onClick={() => setNotesPreviewMode(!notesPreviewMode)}
+                              onClick={() => setShowPreview(!showPreview)}
                               className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition-all duration-300 ${
-                                notesPreviewMode
+                                showPreview
                                   ? isDark
                                     ? "border-emerald-600 bg-emerald-900/20 text-emerald-400"
                                     : "border-emerald-200 bg-emerald-50 text-emerald-600"
@@ -1100,10 +1149,10 @@ const VideoInteraction = () => {
                               }`}
                             >
                               <span className="text-xs">
-                                {notesPreviewMode ? "👁️" : "📝"}
+                                {showPreview ? "👁️" : "📝"}
                               </span>
                               <span className="text-xs font-medium">
-                                {notesPreviewMode ? "Preview" : "Editor"}
+                                {showPreview ? "Preview" : "Editor"}
                               </span>
                             </button>
                           </div>
@@ -1119,7 +1168,7 @@ const VideoInteraction = () => {
                               value={notes}
                               onChange={(e) => setNotes(e.target.value)}
                               placeholder="Take notes while watching the video...\n\n✨ Tip: Use markdown formatting:\n• **bold text**\n• *italic text*\n• # Headers\n• - Bullet points\n• ```code blocks```\n• [12:34] timestamps"
-                              style={{ minHeight: notesPreviewMode ? "200px" : "300px" }}
+                              style={{ minHeight: showPreview ? "200px" : "300px" }}
                             />
 
                             {/* Character count */}
@@ -1135,7 +1184,7 @@ const VideoInteraction = () => {
                           </div>
 
                           {/* Preview Panel */}
-                          {notesPreviewMode && (
+                          {showPreview && (
                             <div className="border-t pt-4 space-y-2 flex-1">
                               <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400">
                                 <span>✨</span>

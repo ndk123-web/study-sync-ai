@@ -35,6 +35,18 @@ const enrollmentSchema = mongoose.Schema({
     videoLink: {
         type: String,
         required: false
+    },
+    videoTitle: {
+        type: String,
+        required: false
+    },
+    videoCreator: {
+        type: String,
+        required: false
+    },
+    videoDuration: {
+        type: String,
+        required: false
     }
 },
 {

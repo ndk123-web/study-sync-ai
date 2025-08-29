@@ -113,24 +113,72 @@ const EnrolledCoursesSample = () => {
       // Normalize to UI shape used below
       const normalized = enrollments.map((enr) => {
         const c = enr?.courseId || {};
-        return {
-          id: c.courseId || c._id || enr._id,
-          title: c.title || "Untitled Course",
-          instructor: c.instructor || "Unknown Instructor",
-          category: c.category || "General",
-          rating: typeof c.rating === "number" ? c.rating : 0,
-          // thumbnail removed as requested
-          progress: Number(enr?.progress ?? 0),
-          totalLessons: Number(c?.lessons ?? 0),
-          completedLessons: Math.round((Number(enr?.progress ?? 0) / 100) * Number(c?.lessons ?? 0)),
-          duration: c.duration ? `${c.duration} min` : "",
-          students: c.likes || 0,
-          difficulty: c.featured ? "Advanced" : "Beginner",
-          nextLesson: c.title ? `Continue: ${c.title}` : "Continue where you left",
-          certificate: Boolean(enr?.completed),
-          lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
-          completed: Boolean(enr?.completed),
-        };
+        
+        // Handle different data structures for different types
+        if (enr.type === 'video') {
+          return {
+            id: enr._id || enr.id,
+            title: enr.videoTitle || enr.title || "Video Learning Session",
+            creator: enr.videoCreator || enr.creator || "Video Content",
+            category: "Video Learning",
+            rating: 0,
+            progress: Number(enr?.progress ?? 0),
+            totalLessons: 1,
+            completedLessons: enr.completed ? 1 : 0,
+            duration: enr.videoDuration || "",
+            students: 0,
+            difficulty: "Beginner",
+            nextLesson: "Watch Video",
+            certificate: Boolean(enr?.completed),
+            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            completed: Boolean(enr?.completed),
+            encryptedUrl: enr.videoLink, // Backend sends videoLink (encrypted)
+            type: 'video',
+            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+          };
+        } else if (enr.type === 'pdf') {
+          return {
+            id: enr._id || enr.id,
+            title: enr.title || "PDF Study Material",
+            creator: enr.creator || "PDF Content",
+            category: "PDF Learning",
+            rating: 0,
+            progress: Number(enr?.progress ?? 0),
+            totalLessons: 1,
+            completedLessons: enr.completed ? 1 : 0,
+            duration: "",
+            students: 0,
+            difficulty: "Beginner",
+            nextLesson: "Read PDF",
+            certificate: Boolean(enr?.completed),
+            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            completed: Boolean(enr?.completed),
+            encryptedUrl: enr.pdfLink, // Backend sends pdfLink (encrypted)
+            type: 'pdf',
+            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+          };
+        } else {
+          // Course type (existing logic)
+          return {
+            id: c.courseId || c._id || enr._id,
+            title: c.title || "Untitled Course",
+            instructor: c.instructor || "Unknown Instructor",
+            category: c.category || "General",
+            rating: typeof c.rating === "number" ? c.rating : 0,
+            progress: Number(enr?.progress ?? 0),
+            totalLessons: Number(c?.lessons ?? 0),
+            completedLessons: Math.round((Number(enr?.progress ?? 0) / 100) * Number(c?.lessons ?? 0)),
+            duration: c.duration ? `${c.duration} min` : "",
+            students: c.likes || 0,
+            difficulty: c.featured ? "Advanced" : "Beginner",
+            nextLesson: c.title ? `Continue: ${c.title}` : "Continue where you left",
+            certificate: Boolean(enr?.completed),
+            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            completed: Boolean(enr?.completed),
+            type: 'course',
+            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+          };
+        }
       });
 
       setEnrolledCourses(normalized);
@@ -147,6 +195,28 @@ const EnrolledCoursesSample = () => {
     removeAuth();
     logoutUser();
     setIsSidebarOpen(false);
+  };
+
+  // Handle click based on content type
+  const handleCourseClick = (course) => {
+    if (course.type === 'video') {
+      // Navigate to video learning with encrypted URL
+      if (course.encryptedUrl) {
+        window.location.href = `/learn/video?v=${encodeURIComponent(course.encryptedUrl)}`;
+      } else {
+        window.location.href = `/learn/video`;
+      }
+    } else if (course.type === 'pdf') {
+      // Navigate to PDF learning with encrypted URL
+      if (course.encryptedUrl) {
+        window.location.href = `/learn/pdf?p=${encodeURIComponent(course.encryptedUrl)}`;
+      } else {
+        window.location.href = `/learn/pdf`;
+      }
+    } else {
+      // Default course navigation
+      window.location.href = `/learn/${course.id}`;
+    }
   };
 
   // Dummy enrolled courses data (replace with API call later)
@@ -887,28 +957,41 @@ const EnrolledCoursesSample = () => {
                     : "bg-white border-gray-200 hover:bg-gray-50"
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
-                
-                // on click this div navigate to the /learn/courseId 
-                onClick={() =>  (window.location.href = `/learn/${course.id}`)} 
+                onClick={() => handleCourseClick(course)}
               >
-                {/* Course Header */}
-                <div className="flex items-center justify-end mb-4">
+                {/* Content Type Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+                    course.type === 'course' 
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                      : course.type === 'pdf'
+                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                      : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                  }`}>
+                    <span>
+                      {course.type === 'course' ? '📚' : course.type === 'pdf' ? '📄' : '🎥'}
+                    </span>
+                    <span className="capitalize">{course.type} Learning</span>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
-                    {course.certificate && (
+                    {course.type === 'course' && course.certificate && (
                       <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-1 rounded-full">
                         <Award className="w-4 h-4" />
                       </div>
                     )}
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium">
-                        {course.rating}
-                      </span>
-                    </div>
+                    {course.type === 'course' && (
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        <span className="text-sm font-medium">
+                          {course.rating}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Course Info */}
+                {/* Content Info */}
                 <h3
                   className={`font-bold text-lg mb-2 line-clamp-2 ${
                     isDark ? "text-white" : "text-gray-900"
@@ -916,139 +999,188 @@ const EnrolledCoursesSample = () => {
                 >
                   {course.title}
                 </h3>
-                <p
-                  className={`text-sm mb-1 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  by {course.instructor}
-                </p>
-                <p
-                  className={`text-xs mb-4 ${
-                    isDark ? "text-gray-500" : "text-gray-500"
-                  }`}
-                >
-                  {course.category}
-                </p>
+                
+                {/* Different metadata based on type */}
+                {course.type === 'course' ? (
+                  <>
+                    <p
+                      className={`text-sm mb-1 ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      by {course.instructor}
+                    </p>
+                    <p
+                      className={`text-xs mb-4 ${
+                        isDark ? "text-gray-500" : "text-gray-500"
+                      }`}
+                    >
+                      {course.category}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    {/* Simplified metadata for video/pdf */}
+                    <p
+                      className={`text-sm mb-1 ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {course.type === 'video' ? 'Video Learning Session' : 'PDF Study Material'}
+                    </p>
+                    <p
+                      className={`text-xs mb-4 ${
+                        isDark ? "text-gray-500" : "text-gray-500"
+                      }`}
+                    >
+                      {course.creator || 'Learning Content'}
+                    </p>
+                  </>
+                )}
 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className={`text-sm font-medium ${
-                        isDark ? "text-gray-300" : "text-gray-700"
-                      }`}
-                    >
-                      Progress
-                    </span>
-                    <span
-                      className={`text-sm font-bold ${
-                        course.progress === 100
-                          ? "text-green-500"
-                          : "text-blue-500"
-                      }`}
-                    >
-                      {course.progress}%
-                    </span>
-                  </div>
-                  <div
-                    className={`w-full h-3 rounded-full ${
-                      isDark ? "bg-gray-700" : "bg-gray-200"
-                    }`}
-                  >
+                {/* Progress Bar for courses only */}
+                {course.type === 'course' && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className={`text-sm font-medium ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        Progress
+                      </span>
+                      <span
+                        className={`text-sm font-bold ${
+                          course.progress === 100
+                            ? "text-green-500"
+                            : "text-blue-500"
+                        }`}
+                      >
+                        {course.progress}%
+                      </span>
+                    </div>
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        course.progress === 100
-                          ? "bg-gradient-to-r from-green-500 to-green-600"
-                          : "bg-gradient-to-r from-blue-500 to-blue-600"
-                      }`}
-                      style={{ width: `${course.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span
-                      className={`text-xs ${
-                        isDark ? "text-gray-500" : "text-gray-500"
+                      className={`w-full h-3 rounded-full ${
+                        isDark ? "bg-gray-700" : "bg-gray-200"
                       }`}
                     >
-                      {course.completedLessons} of {course.totalLessons} lessons
-                    </span>
-                    <span
-                      className={`text-xs ${
-                        isDark ? "text-gray-500" : "text-gray-500"
-                      }`}
-                    >
-                      {course.duration}
-                    </span>
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          course.progress === 100
+                            ? "bg-gradient-to-r from-green-500 to-green-600"
+                            : "bg-gradient-to-r from-blue-500 to-blue-600"
+                        }`}
+                        style={{ width: `${course.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span
+                        className={`text-xs ${
+                          isDark ? "text-gray-500" : "text-gray-500"
+                        }`}
+                      >
+                        {course.completedLessons} of {course.totalLessons} lessons
+                      </span>
+                      <span
+                        className={`text-xs ${
+                          isDark ? "text-gray-500" : "text-gray-500"
+                        }`}
+                      >
+                        {course.duration}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Course Stats */}
-                <div className="flex items-center justify-between text-xs mb-4">
-                  <span
-                    className={`flex items-center space-x-1 ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    <Users className="w-3 h-3" />
-                    <span>{course.students}</span>
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      course.difficulty === "Beginner"
-                        ? "bg-green-100 text-green-800"
-                        : course.difficulty === "Intermediate"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {course.difficulty}
-                  </span>
-                </div>
-
-                {/* Next Lesson */}
-                <div
-                  className={`p-3 rounded-lg mb-4 ${
+                {/* Simple info card for non-course content */}
+                {course.type !== 'course' && (
+                  <div className={`p-3 rounded-lg mb-4 ${
                     isDark ? "bg-gray-700" : "bg-gray-50"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-medium mb-1 ${
+                  }`}>
+                    <p className={`text-xs font-medium mb-1 ${
                       isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    {course.progress === 100 ? "🎉 Completed!" : "Next Lesson:"}
-                  </p>
-                  <p
-                    className={`text-sm font-medium ${
+                    }`}>
+                      🕰️ Created:
+                    </p>
+                    <p className={`text-sm font-medium ${
                       isDark ? "text-white" : "text-gray-900"
+                    }`}>
+                      {course.enrolledDate || 'Recently'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Course Stats for courses only */}
+                {course.type === 'course' && (
+                  <div className="flex items-center justify-between text-xs mb-4">
+                    <span
+                      className={`flex items-center space-x-1 ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      <Users className="w-3 h-3" />
+                      <span>{course.students}</span>
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        course.difficulty === "Beginner"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : course.difficulty === "Intermediate"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                      }`}
+                    >
+                      {course.difficulty}
+                    </span>
+                  </div>
+                )}
+
+                {/* Next Lesson for courses */}
+                {course.type === 'course' && (
+                  <div
+                    className={`p-3 rounded-lg mb-4 ${
+                      isDark ? "bg-gray-700" : "bg-gray-50"
                     }`}
                   >
-                    {course.nextLesson}
-                  </p>
-                </div>
+                    <p
+                      className={`text-xs font-medium mb-1 ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {course.progress === 100 ? "🎉 Completed!" : "Next Lesson:"}
+                    </p>
+                    <p
+                      className={`text-sm font-medium ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {course.nextLesson}
+                    </p>
+                  </div>
+                )}
 
                 {/* Action Button */}
                 <button
                   className={`w-full py-3 rounded-lg font-medium transition-all transform hover:scale-105 ${
-                    course.progress === 100
-                      ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
-                      : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                    course.type === 'course'
+                      ? course.progress === 100
+                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                        : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                      : course.type === 'pdf'
+                      ? "bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                      : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
                   } hover:shadow-lg`}
                 >
-                  {course.progress === 100
-                    ? "✅ Review Course"
-                    : "▶️ Continue Learning"}
+                  {course.type === 'course'
+                    ? course.progress === 100
+                      ? "✅ Review Course"
+                      : "▶️ Continue Learning"
+                    : course.type === 'pdf'
+                    ? "📄 Open PDF"
+                    : "🎥 Watch Video"}
                 </button>
 
                 {/* Last Accessed */}
-                <p
-                  className={`text-xs mt-3 text-center ${
-                    isDark ? "text-gray-500" : "text-gray-500"
-                  }`}
-                >
-                  Last accessed: {course.lastAccessed}
-                </p>
               </div>
             ))}
           </div>
