@@ -296,6 +296,7 @@ const GetEnrollCoursesController = wrapper(async (req, res) => {
 
   const getEnrollUserCourses = await Enrollment.find({
     uid: currentUser.uid,
+    type: "course"  
   }).populate({
     path: "courseId",
   select: "courseId title description instructor price thumbnail duration category rating featured lessons createdAt availableLanguages likes"

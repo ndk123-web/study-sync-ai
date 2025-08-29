@@ -889,7 +889,7 @@ const EnrolledCoursesSample = () => {
                 style={{ animationDelay: `${index * 0.1}s` }}
                 
                 // on click this div navigate to the /learn/courseId 
-                onClick={() => (window.location.href = `/learn/${course.id}`)} 
+                onClick={() =>  (window.location.href = `/learn/${course.id}`)} 
               >
                 {/* Course Header */}
                 <div className="flex items-center justify-end mb-4">

@@ -14,7 +14,7 @@ const enrollmentSchema = mongoose.Schema({
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
-        required: true
+        required: false  
     },
     progress: {
         type: String,
@@ -31,6 +31,10 @@ const enrollmentSchema = mongoose.Schema({
     uid: {
         type: String,
         required: true
+    },
+    videoLink: {
+        type: String,
+        required: false
     }
 },
 {

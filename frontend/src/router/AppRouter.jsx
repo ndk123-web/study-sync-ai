@@ -10,8 +10,8 @@ import VideoInteraction from "../pages/VideoInteraction.jsx";
 import Features from "../components/Features.jsx";
 import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
-import CoursesInterface from '../components/CoursesInterface'
-import EnrolledCourses from '../components/EnrolledCourses'
+import CoursesInterface from "../components/CoursesInterface";
+import EnrolledCourses from "../components/EnrolledCourses";
 
 const AppRouter = createBrowserRouter([
   {
@@ -65,12 +65,12 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path:"/learn/:courseId",
+    path: "/learn/:courseId",
     element: (
       <ProtectedLayout>
         <CoursesInterface />
       </ProtectedLayout>
-    )
+    ),
   },
   {
     path: "/pdf-learning",
@@ -78,7 +78,7 @@ const AppRouter = createBrowserRouter([
       <ProtectedLayout>
         <PdfInteraction />
       </ProtectedLayout>
-    )
+    ),
   },
   {
     path: "/video-learning",
@@ -86,12 +86,20 @@ const AppRouter = createBrowserRouter([
       <ProtectedLayout>
         <VideoInteraction />
       </ProtectedLayout>
-    )
+    ),
   },
   {
-    path:"/demo-courses",
-    element: <CoursesInterface />
-  }
+    path: "/demo-courses",
+    element: <CoursesInterface />,
+  },
+  {
+    path: "/learn/video",
+    element: (
+      <ProtectedLayout>
+        <VideoInteraction />
+      </ProtectedLayout>
+    ),
+  },
 ]);
 
 export default AppRouter;
