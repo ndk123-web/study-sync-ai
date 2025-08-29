@@ -89,16 +89,24 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/demo-courses",
-    element: <CoursesInterface />,
-  },
-  {
     path: "/learn/video",
     element: (
       <ProtectedLayout>
         <VideoInteraction />
       </ProtectedLayout>
     ),
+  },
+  {
+    path: "/learn/pdf",
+    element: (
+      <ProtectedLayout>
+        <PdfInteraction />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: "/demo-courses",
+    element: <CoursesInterface />,
   },
 ]);
 
