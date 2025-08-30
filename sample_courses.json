@@ -1,0 +1,841 @@
+[
+  {
+    "_id": {
+      "$oid": "68889dee3eae1f6d283f6534"
+    },
+    "courseId": "GIT2025HINDI",
+    "description": "Complete Git tutorial series covering version control fundamentals, Git commands, GitHub integration, and collaborative development workflows. Perfect for beginners starting their development journey.",
+    "videoLinks": [
+      {
+        "title": "Easy Guide: How to Install Git on Windows, Linux, and Mac [2024 Update]",
+        "duration": "2:17",
+        "description": "Learn the quickest ways to install Git on Windows, Linux, and Mac with this step-by-step tutorial! Whether you're a beginner or an experienced user, we've got you covered.",
+        "youtubeVideoId": "-3SMW-3Z4OM",
+        "publishedAt": "2024-03-26T06:22:34Z"
+      },
+      {
+        "title": "Demystifying Git: What It Is and Why You Need It | Beginner's Guide",
+        "duration": "5:59",
+        "description": "Curious about Git but not sure where to start? In this comprehensive guide, we break down what Git is and why it's essential for developers and non-developers alike.",
+        "youtubeVideoId": "BHATRdSj7TA",
+        "publishedAt": "2024-03-26T06:31:53Z"
+      },
+      {
+        "title": "Understanding Git Repositories: A Beginner's Guide | What is Git Repository",
+        "duration": "2:51",
+        "description": "Curious about Git repositories? Dive into this beginner-friendly guide to grasp the essence of Git repositories and how they function in version control systems.",
+        "youtubeVideoId": "HMz2X4stnwM",
+        "publishedAt": "2024-03-26T06:36:12Z"
+      },
+      {
+        "title": "Mastering Git: Easy Guide to Configure Git for Beginners!",
+        "duration": "2:23",
+        "description": "Struggling to configure Git? This comprehensive tutorial will walk you through the process step-by-step! From setting up your Git environment to configuring user settings.",
+        "youtubeVideoId": "SaY56A-sa6o",
+        "publishedAt": "2024-03-26T06:39:04Z"
+      },
+      {
+        "title": "Mastering Git: Essential Commands - Status, Add, and Commit Explained!",
+        "duration": "14:59",
+        "description": "Want to level up your Git skills? Learn the ins and outs of three fundamental commands: Git Status, Git Add, and Git Commit!",
+        "youtubeVideoId": "VLROY9AX1ag",
+        "publishedAt": "2024-03-31T08:35:40Z"
+      },
+      {
+        "title": "Mastering Git Checkout Command: A Step-by-Step Guide for Beginners!",
+        "duration": "13:41",
+        "description": "Dive into the world of Git with our comprehensive tutorial on mastering the Git checkout command! Step-by-step guide for beginners.",
+        "youtubeVideoId": "bT_pACeKdc0",
+        "publishedAt": "2024-03-28T12:01:12Z"
+      },
+      {
+        "title": "Mastering Git: The Ultimate Guide to Understanding 'git amend'",
+        "duration": "4:11",
+        "description": "Learn everything you need to know about 'git amend' - a powerful command in Git that allows you to modify your last commit.",
+        "youtubeVideoId": "jMXggIJtCXI",
+        "publishedAt": "2024-03-27T05:39:31Z"
+      },
+      {
+        "title": "Mastering .gitignore: Your Ultimate Guide to Ignoring Files in Git!",
+        "duration": "4:43",
+        "description": "Unlock the secrets to mastering .gitignore and streamline your Git workflow! Learn how to effectively ignore files and directories.",
+        "youtubeVideoId": "sjHiFm0ZZ4s",
+        "publishedAt": "2024-03-27T05:47:01Z"
+      },
+      {
+        "title": "Mastering Git Branches: Switch, Delete, Rename, and Merge like a Pro!",
+        "duration": "33:14",
+        "description": "Dive deep into the world of Git branches as we explore how to effortlessly switch between branches, delete them when they're no longer needed.",
+        "youtubeVideoId": "b8B5JgiN4Dw",
+        "publishedAt": "2024-04-03T07:06:42Z"
+      },
+      {
+        "title": "Mastering Git Stash Command: Your Ultimate Guide for Efficient Code Management!",
+        "duration": "11:52",
+        "description": "Learn the ins and outs of the Git stash command with our comprehensive tutorial! Whether you're a beginner or seasoned developer.",
+        "youtubeVideoId": "1nUm8lUpPNA",
+        "publishedAt": "2024-03-28T11:58:32Z"
+      },
+      {
+        "title": "Mastering Git Restore: Easy Steps to Recover Lost Changes!",
+        "duration": "7:55",
+        "description": "Learn how to effectively use 'git restore' to retrieve lost changes in your Git repository. Step-by-step guide to undo changes.",
+        "youtubeVideoId": "1GvLkKe32-w",
+        "publishedAt": "2024-03-28T12:03:01Z"
+      },
+      {
+        "title": "Mastering Git Reset: Your Ultimate Guide to Unleashing Git's Power!",
+        "duration": "16:31",
+        "description": "Unlock the full potential of Git with our comprehensive guide to mastering 'git reset'! Learn how to undo changes and manage Git history.",
+        "youtubeVideoId": "DRlvtr8D7yA",
+        "publishedAt": "2024-03-29T03:20:57Z"
+      },
+      {
+        "title": "Mastering Git Revert: Undoing Changes Made Easy!",
+        "duration": "4:05",
+        "description": "Learn how to effectively use Git revert to undo changes in your projects with ease. Comprehensive guide for beginners and experienced developers.",
+        "youtubeVideoId": "hKZOeABhlio",
+        "publishedAt": "2024-03-29T03:25:54Z"
+      },
+      {
+        "title": "Mastering Git: Understanding Alias Commands for Beginners!",
+        "duration": "6:56",
+        "description": "Master Git alias commands and improve your workflow efficiency with custom shortcuts and command aliases.",
+        "youtubeVideoId": "rQXwcbO636U",
+        "publishedAt": "2024-03-29T14:35:29Z"
+      },
+      {
+        "title": "Mastering Git Rebase in Linux: Step-by-Step Tutorial for Beginners!",
+        "duration": "12:46",
+        "description": "Unlock the power of Git Rebase in Linux with our comprehensive tutorial! Step-by-step guide for beginners and seasoned developers.",
+        "youtubeVideoId": "xgkXgBKIPpA",
+        "publishedAt": "2024-03-29T14:39:34Z"
+      },
+      {
+        "title": "Demystifying GitHub in 5 Minutes: Your Quick Guide to Mastering Version Control",
+        "duration": "5:39",
+        "description": "Curious about GitHub but intimidated by tech jargon? In just 5 minutes, unlock the secrets of GitHub and revolutionize your coding journey!",
+        "youtubeVideoId": "ZoFEubSBzDc",
+        "publishedAt": "2024-03-30T01:08:34Z"
+      },
+      {
+        "title": "Mastering Git Clone: Understanding Origins, Repositories, and Collaboration",
+        "duration": "8:24",
+        "description": "Unlock the secrets of Git Clone and Origin! Comprehensive tutorial on cloning repositories and understanding collaboration workflows.",
+        "youtubeVideoId": "zT4j1BsdhPs",
+        "publishedAt": "2024-03-30T01:15:54Z"
+      },
+      {
+        "title": "Mastering Git: Learn What Git Fetch & Git Pull Commands Actually Do!",
+        "duration": "11:13",
+        "description": "Confused about Git Fetch and Git Pull? Discover how Git Fetch and Git Pull differ, and uncover the secrets behind their functionality.",
+        "youtubeVideoId": "e2wy-j1CVJ8",
+        "publishedAt": "2024-03-30T01:12:32Z"
+      }
+    ],
+    "availableLanguages": [
+      "Hindi"
+    ],
+    "createdAt": {
+      "$date": "2025-08-30T10:50:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-30T12:54:00.000Z"
+    },
+    "instructor": "Engineering Digest",
+    "price": "0",
+    "category": "Development",
+    "title": "Complete Git and GitHub Tutorial Series",
+    "duration": 169,
+    "rating": 4.5,
+    "featured": false,
+    "lastUpdated": "2025-08-30",
+    "lessons": 18,
+    "thumbnail": "https://i.ytimg.com/vi/-3SMW-3Z4OM/hqdefault.jpg"
+  },
+  {
+    "_id": {
+      "$oid": "68889dee3eae1f6d283f6535"
+    },
+    "courseId": "REACT2025HINDI",
+    "description": "Complete React.js course from basics to advanced. Learn React fundamentals, hooks, context API, Redux toolkit, routing, and build production-ready applications with real-world projects.",
+    "videoLinks": [
+      {
+        "title": "React JS roadmap | chai aur react series",
+        "duration": "30:18",
+        "description": "Complete roadmap for learning React.js from scratch to advanced level with practical projects and industry best practices.",
+        "youtubeVideoId": "vz1RlUyrc3w",
+        "publishedAt": "2023-08-17T09:04:46Z"
+      },
+      {
+        "title": "Create react projects | chai aur react",
+        "duration": "35:16",
+        "description": "Learn how to create React projects from scratch using modern tools and best practices for project setup.",
+        "youtubeVideoId": "k3KqQvywToE",
+        "publishedAt": "2023-08-17T18:18:20Z"
+      },
+      {
+        "title": "Understand the react flow and structure",
+        "duration": "35:59",
+        "description": "Deep dive into React's component structure, data flow, and understanding how React applications work internally.",
+        "youtubeVideoId": "yNbnA5pryMg",
+        "publishedAt": "2023-08-17T19:46:46Z"
+      },
+      {
+        "title": "Create your own react library and JSX",
+        "duration": "45:50",
+        "description": "Learn to build your own React library and understand JSX transformation process and React's rendering mechanism.",
+        "youtubeVideoId": "kAOuj6o7Kxs",
+        "publishedAt": "2023-08-20T11:25:10Z"
+      },
+      {
+        "title": "Why you need hooks and project",
+        "duration": "28:18",
+        "description": "Understanding React hooks, their importance, and building a practical project to demonstrate hook usage.",
+        "youtubeVideoId": "lI7IIOWM0Mo",
+        "publishedAt": "2023-08-21T13:26:47Z"
+      },
+      {
+        "title": "Virtual DOM, Fibre and reconciliation",
+        "duration": "21:21",
+        "description": "Deep dive into React's Virtual DOM, Fiber architecture, and reconciliation algorithm for optimal performance.",
+        "youtubeVideoId": "MPCVGFvgVEQ",
+        "publishedAt": "2023-08-23T14:51:39Z"
+      },
+      {
+        "title": "Tailwind and Props in reactjs",
+        "duration": "31:34",
+        "description": "Learn to integrate Tailwind CSS with React and master the concept of props for component communication.",
+        "youtubeVideoId": "bB6707XzCNc",
+        "publishedAt": "2023-08-24T13:20:04Z"
+      },
+      {
+        "title": "A react interview question on counter",
+        "duration": "8:26",
+        "description": "Common React interview question about state management and counter implementation with best practices.",
+        "youtubeVideoId": "tOYkV6Yhrhs",
+        "publishedAt": "2023-08-26T13:21:40Z"
+      },
+      {
+        "title": "Building a react project | bgChanger",
+        "duration": "18:16",
+        "description": "Build a background color changer project to understand state management and event handling in React.",
+        "youtubeVideoId": "_lJ3KNMue3w",
+        "publishedAt": "2023-08-28T12:42:36Z"
+      },
+      {
+        "title": "useEffect, useRef and useCallback with 1 project",
+        "duration": "57:15",
+        "description": "Master advanced React hooks - useEffect, useRef, and useCallback through a comprehensive practical project.",
+        "youtubeVideoId": "Lt4vy8hfc-s",
+        "publishedAt": "2023-08-31T11:47:19Z"
+      },
+      {
+        "title": "Custom hooks in react | currency Project",
+        "duration": "61:38",
+        "description": "Learn to create custom hooks with a currency converter project, understanding reusable logic and API integration.",
+        "youtubeVideoId": "AFDYnd-XPa8",
+        "publishedAt": "2023-09-05T11:08:13Z"
+      },
+      {
+        "title": "React router crash course",
+        "duration": "64:35",
+        "description": "Complete guide to React Router for building single-page applications with multiple routes and navigation.",
+        "youtubeVideoId": "VJov5QWEKE4",
+        "publishedAt": "2023-09-07T13:02:37Z"
+      },
+      {
+        "title": "Context API crash course with 2 projects",
+        "duration": "73:27",
+        "description": "Master React Context API for state management across components with two practical project implementations.",
+        "youtubeVideoId": "JQVBGtZMqgU",
+        "publishedAt": "2023-09-11T14:13:32Z"
+      },
+      {
+        "title": "Context api with local storage | project",
+        "duration": "75:33",
+        "description": "Advanced Context API usage with local storage integration for persistent state management in React applications.",
+        "youtubeVideoId": "6KQeopPE36I",
+        "publishedAt": "2023-09-15T12:44:43Z"
+      },
+      {
+        "title": "Redux toolkit crash course | Chai aur React Series",
+        "duration": "70:18",
+        "description": "Complete Redux Toolkit tutorial for advanced state management in large-scale React applications.",
+        "youtubeVideoId": "1i04-A7kfFI",
+        "publishedAt": "2023-09-19T00:48:54Z"
+      },
+      {
+        "title": "What is your choice for Mega Project in React?",
+        "duration": "8:23",
+        "description": "Discussing project choices and approaches for building mega projects in React with production-ready features.",
+        "youtubeVideoId": "CqNSTD9ENb0",
+        "publishedAt": "2023-09-20T14:29:08Z"
+      },
+      {
+        "title": "Our mega project in React | The hard way",
+        "duration": "10:23",
+        "description": "Introduction to building a production-ready mega project with advanced React concepts and best practices.",
+        "youtubeVideoId": "P-WHzz2M5aU",
+        "publishedAt": "2023-09-21T08:28:05Z"
+      },
+      {
+        "title": "Appwrite backend for react project",
+        "duration": "14:59",
+        "description": "Setting up Appwrite as backend service for React applications with authentication and database integration.",
+        "youtubeVideoId": "zLWif1pFYJg",
+        "publishedAt": "2023-09-22T12:15:27Z"
+      },
+      {
+        "title": "ENV and Appwrite in React project",
+        "duration": "34:28",
+        "description": "Managing environment variables and configuring Appwrite services in React production applications.",
+        "youtubeVideoId": "4_JlIr8yry0",
+        "publishedAt": "2023-09-23T11:46:16Z"
+      },
+      {
+        "title": "Build authentication service with appwrite",
+        "duration": "26:48",
+        "description": "Implementing complete authentication system using Appwrite services with React frontend integration.",
+        "youtubeVideoId": "0Py5cGGW2lE",
+        "publishedAt": "2023-09-24T13:10:01Z"
+      },
+      {
+        "title": "Appwrite database, file upload and custom queries",
+        "duration": "33:12",
+        "description": "Advanced Appwrite features including database operations, file uploading, and custom query implementations.",
+        "youtubeVideoId": "lzx52HnWh4Y",
+        "publishedAt": "2023-09-24T13:15:43Z"
+      },
+      {
+        "title": "How to configure redux toolkit in big projects",
+        "duration": "28:20",
+        "description": "Best practices for configuring Redux Toolkit in large-scale React applications with proper project structure.",
+        "youtubeVideoId": "8QGKg_W5sDQ",
+        "publishedAt": "2023-09-24T13:20:23Z"
+      },
+      {
+        "title": "Production grade react components",
+        "duration": "43:46",
+        "description": "Building production-ready React components with proper error handling, optimization, and reusability.",
+        "youtubeVideoId": "BSaYsHVpaK0",
+        "publishedAt": "2023-09-24T13:24:47Z"
+      },
+      {
+        "title": "How to use React hook form in production",
+        "duration": "62:13",
+        "description": "Advanced React Hook Form implementation for handling complex forms in production React applications.",
+        "youtubeVideoId": "lfMyCuB6xfc",
+        "publishedAt": "2023-09-24T13:37:48Z"
+      },
+      {
+        "title": "Adding form and slug values",
+        "duration": "43:36",
+        "description": "Implementing dynamic form handling and slug generation for content management in React applications.",
+        "youtubeVideoId": "-6LvNku2nJE",
+        "publishedAt": "2023-09-24T13:54:39Z"
+      },
+      {
+        "title": "Building pages | chai aur react",
+        "duration": "29:36",
+        "description": "Creating dynamic pages and routing structure for a complete React application with proper navigation.",
+        "youtubeVideoId": "rC644qOZUro",
+        "publishedAt": "2023-09-24T14:52:34Z"
+      },
+      {
+        "title": "CORS and debugging in React Project",
+        "duration": "25:39",
+        "description": "Handling CORS issues and debugging techniques for React applications in development and production.",
+        "youtubeVideoId": "Od4rQCU41s4",
+        "publishedAt": "2023-09-25T05:41:26Z"
+      },
+      {
+        "title": "How to deploy react app to production",
+        "duration": "14:51",
+        "description": "Complete guide to deploying React applications to production with optimization and best practices.",
+        "youtubeVideoId": "dg2Gw1HSlpQ",
+        "publishedAt": "2023-09-29T11:07:12Z"
+      },
+      {
+        "title": "Assignments for your react course",
+        "duration": "17:01",
+        "description": "Practice assignments and projects to reinforce React concepts and improve your development skills.",
+        "youtubeVideoId": "KqGze7HCTIA",
+        "publishedAt": "2023-10-04T14:53:11Z"
+      },
+      {
+        "title": "React series ends here",
+        "duration": "10:26",
+        "description": "Course conclusion with next steps, advanced topics, and career guidance for React developers.",
+        "youtubeVideoId": "3o4qc9WRtWE",
+        "publishedAt": "2023-10-02T08:18:28Z"
+      },
+      {
+        "title": "How to connect frontend and backend in javascript | Fullstack Proxy and CORS",
+        "duration": "50:45",
+        "description": "Connecting React frontend with backend services, handling CORS, proxies, and full-stack development.",
+        "youtubeVideoId": "fFHyqhmnVfs",
+        "publishedAt": "2023-10-04T09:21:51Z"
+      },
+      {
+        "title": "you don't need state for this | react interview question",
+        "duration": "13:47",
+        "description": "Advanced React interview question about state management and when to avoid unnecessary state usage.",
+        "youtubeVideoId": "P4X0vPTQX4A",
+        "publishedAt": "2023-10-04T12:24:47Z"
+      },
+      {
+        "title": "Testing your datatype skills in react interviews",
+        "duration": "11:58",
+        "description": "React interview questions focusing on JavaScript data types and their usage in React applications.",
+        "youtubeVideoId": "M3AxZX3g00w",
+        "publishedAt": "2023-10-04T12:50:16Z"
+      },
+      {
+        "title": "Handle APIs like a pro in Reactjs | Custom react query | Axios | Race condition",
+        "duration": "52:41",
+        "description": "Advanced API handling techniques in React including custom hooks, Axios integration, and race condition solutions.",
+        "youtubeVideoId": "NxAwOjb_NlA",
+        "publishedAt": "2023-10-04T20:36:48Z"
+      },
+      {
+        "title": "A common Production mistake in react",
+        "duration": "16:30",
+        "description": "Common production mistakes in React applications and how to avoid them for better performance and stability.",
+        "youtubeVideoId": "UsNdgJY6tCY",
+        "publishedAt": "2025-06-02T11:54:42Z"
+      }
+    ],
+    "availableLanguages": [
+      "Hindi"
+    ],
+    "createdAt": {
+      "$date": "2025-08-30T10:50:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-30T12:54:00.000Z"
+    },
+    "instructor": "Chai aur Code",
+    "price": "0",
+    "category": "Development",
+    "title": "Complete React.js Course - Chai aur React Series",
+    "duration": 1207,
+    "rating": 4.5,
+    "featured": true,
+    "lastUpdated": "2025-08-30",
+    "lessons": 35,
+    "thumbnail": "https://i.ytimg.com/vi/vz1RlUyrc3w/hqdefault.jpg"
+  },
+  {
+    "_id": {
+      "$oid": "68889dee3eae1f6d283f6536"
+    },
+    "courseId": "NODEJS2025HINDI",
+    "description": "Complete Node.js course covering backend development, Express.js, databases, authentication, APIs, and deployment. Perfect for full-stack development.",
+    "videoLinks": [],
+    "availableLanguages": [
+      "Hindi"
+    ],
+    "createdAt": {
+      "$date": "2025-08-30T10:50:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-30T12:54:00.000Z"
+    },
+    "instructor": "TBD",
+    "price": "0",
+    "category": "Development",
+    "title": "Complete Node.js Backend Development Course",
+    "duration": 0,
+    "rating": 4.5,
+    "featured": false,
+    "lastUpdated": "2025-08-30",
+    "lessons": 0,
+    "thumbnail": ""
+  },
+  {
+    "_id": {
+      "$oid": "68889dee3eae1f6d283f6537"
+    },
+    "courseId": "PYTHONDATASCIENCE2025ENGLISH",
+    "description": "Comprehensive Python for Data Science course covering Python fundamentals, NumPy, Pandas, data visualization, machine learning, and real-world case studies for classification and regression.",
+    "videoLinks": [
+      {
+        "title": "Introduction to Python for Data Science | Python for Data Science",
+        "duration": "16:01",
+        "description": "Introduction to Python for Data Science course, highlighting the importance of deriving insights from raw data and Python's advantages for data science.",
+        "youtubeVideoId": "tA42nHmmEKw",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Introduction to Python | Python for Data Science",
+        "duration": "13:27",
+        "description": "Overview of Python's history, development, dynamic programming environment, and IDE options like PyCharm, Jupyter, and Spyder.",
+        "youtubeVideoId": "c235EsGFcZs",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Introduction to Spyder | Part 1 | Python for Data Science",
+        "duration": "10:09",
+        "description": "Detailed tutorial on using the Spyder interface for Python programming, including setup, navigation, and basic coding concepts.",
+        "youtubeVideoId": "MuYlV9C1BHg",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Introduction to Spyder | Part 2 | Python for Data Science",
+        "duration": "15:00",
+        "description": "Comprehensive tutorial on executing Python scripts, debugging techniques, and environment management in Spyder.",
+        "youtubeVideoId": "LtvkYFRGqME",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Variables and Datatypes | Python for Data Science",
+        "duration": "12:25",
+        "description": "Understanding Python variables, data types, naming conventions, and data type identification and coercion.",
+        "youtubeVideoId": "9mRNPlbmjx8",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Operators | Python for Data Science",
+        "duration": "21:27",
+        "description": "Comprehensive coverage of Python operators including arithmetic, assignment, relational, logical, and bitwise operators.",
+        "youtubeVideoId": "N8RADjBmIws",
+        "publishedAt": "2019-08-23T09:18:30Z"
+      },
+      {
+        "title": "Jupyter setup | Python for Data Science",
+        "duration": "7:08",
+        "description": "Step-by-step instruction for installing and using Jupyter Notebook, commonly used by Data Science practitioners.",
+        "youtubeVideoId": "eG7T6HzL4LY",
+        "publishedAt": "2020-01-20T08:08:32Z"
+      },
+      {
+        "title": "Sequence data | Part 1 | Python for Data Science",
+        "duration": "12:53",
+        "description": "Introduction to sequence data types in Python including strings, lists, tuples, arrays, and ranges.",
+        "youtubeVideoId": "yLf-soNRNII",
+        "publishedAt": "2020-01-20T08:12:16Z"
+      },
+      {
+        "title": "Sequence data | Part 2 | Python for Data Science",
+        "duration": "14:03",
+        "description": "Operations on sequence data types focusing on indexing, slicing, concatenation, and membership testing.",
+        "youtubeVideoId": "ApMSoHn1cM4",
+        "publishedAt": "2020-01-20T08:11:32Z"
+      },
+      {
+        "title": "Sequence data | Part 3 | Python for Data Science",
+        "duration": "33:43",
+        "description": "Advanced sequence operations including slicing techniques, concatenation, and multiplication for various data types.",
+        "youtubeVideoId": "6RbEtdjurM0",
+        "publishedAt": "2020-01-20T08:13:10Z"
+      },
+      {
+        "title": "Sequence data | Part 4 | Python for Data Science",
+        "duration": "35:31",
+        "description": "Built-in methods for sequence data types including len, index, count, append, remove, insert, and sorting methods.",
+        "youtubeVideoId": "RziNWUlBPPM",
+        "publishedAt": "2020-01-20T08:15:13Z"
+      },
+      {
+        "title": "Numpy | Python for Data Science",
+        "duration": "20:03",
+        "description": "Introduction to NumPy library for numerical operations, array creation, attributes, reshaping, and mathematical operations.",
+        "youtubeVideoId": "rjY59WLMK2o",
+        "publishedAt": "2020-01-20T08:12:36Z"
+      },
+      {
+        "title": "Reading Data | Python for Data Science",
+        "duration": "20:27",
+        "description": "Importing data from CSV and Excel file formats into Python using pandas DataFrames for data analysis.",
+        "youtubeVideoId": "On6rLc1l_MU",
+        "publishedAt": "2019-09-09T04:50:30Z"
+      },
+      {
+        "title": "Pandas Dataframes | Part I | Python for Data Science",
+        "duration": "22:27",
+        "description": "Introduction to Pandas DataFrames, their creation, manipulation, and data access methods for data analysis.",
+        "youtubeVideoId": "6DTFIKF8QIg",
+        "publishedAt": "2019-09-09T04:50:50Z"
+      },
+      {
+        "title": "Pandas Dataframes | Part II | Python for Data Science",
+        "duration": "24:14",
+        "description": "Practical techniques for inspecting DataFrames, understanding data types, and addressing data quality issues.",
+        "youtubeVideoId": "9RfDQgae_cs",
+        "publishedAt": "2019-09-09T04:50:45Z"
+      },
+      {
+        "title": "Pandas Dataframes | Part III | Python for Data Science",
+        "duration": "18:17",
+        "description": "Data preprocessing techniques focusing on handling missing values and ensuring data consistency in DataFrames.",
+        "youtubeVideoId": "Oku_RUmWGj4",
+        "publishedAt": "2019-09-09T04:50:37Z"
+      },
+      {
+        "title": "Control Structures and Functions | Python for Data Science",
+        "duration": "28:23",
+        "description": "Programming concepts including control structures (if-elif-else, loops) and functions for automation and reusable code.",
+        "youtubeVideoId": "1AErcVrLpyQ",
+        "publishedAt": "2019-09-09T04:51:13Z"
+      },
+      {
+        "title": "Exploratory data analysis | Python for Data Science",
+        "duration": "29:35",
+        "description": "Uncovering patterns and relationships in data using frequency tables, cross-tabulation, and correlation analysis.",
+        "youtubeVideoId": "q4pyaVZjqk0",
+        "publishedAt": "2019-09-09T04:50:54Z"
+      },
+      {
+        "title": "Data Visualization | Part I | Python for Data Science",
+        "duration": "18:03",
+        "description": "Introduction to data visualization using Matplotlib library with scatter plots, histograms, and bar plots.",
+        "youtubeVideoId": "eFByJkA3ti4",
+        "publishedAt": "2019-09-09T04:51:09Z"
+      },
+      {
+        "title": "Data Visualization | Part II | Python for Data Science",
+        "duration": "34:51",
+        "description": "Advanced visualizations using Seaborn library including box plots, pairwise plots, and enhanced aesthetics.",
+        "youtubeVideoId": "JhK2qVi5dC4",
+        "publishedAt": "2019-09-09T04:51:05Z"
+      },
+      {
+        "title": "Dealing with missing data | Python for Data Science",
+        "duration": "32:20",
+        "description": "Strategies for handling missing values using mean, median, and mode imputation techniques with practical examples.",
+        "youtubeVideoId": "wHuIuO__7wk",
+        "publishedAt": "2019-09-09T04:51:00Z"
+      },
+      {
+        "title": "Case Study on Classification | Part I | Python for Data Science",
+        "duration": "34:48",
+        "description": "Practical implementation of income classification case study with data preprocessing and exploratory analysis.",
+        "youtubeVideoId": "V3iMVyNSK7c",
+        "publishedAt": "2024-09-28T11:06:22Z"
+      },
+      {
+        "title": "Case Study on Classification | Part II | Python for Data Science",
+        "duration": "26:37",
+        "description": "Building logistic regression model for income prediction with model evaluation and performance metrics.",
+        "youtubeVideoId": "DoZ5OMhVVE0",
+        "publishedAt": "2019-09-13T13:15:44Z"
+      },
+      {
+        "title": "Introduction to Regression Case Study | Python for Data Science",
+        "duration": "17:56",
+        "description": "Introduction to regression case study for predicting used car prices with feature engineering concepts.",
+        "youtubeVideoId": "_S16sSmjV6w",
+        "publishedAt": "2019-09-13T13:15:44Z"
+      },
+      {
+        "title": "Case Study on Regression | Part I | Python for Data Science",
+        "duration": "22:50",
+        "description": "Data preparation for regression analysis including data cleaning, transformation, and outlier handling.",
+        "youtubeVideoId": "g4NKNvUUPiE",
+        "publishedAt": "2019-09-13T13:15:43Z"
+      },
+      {
+        "title": "Case Study on Regression | Part II | Python for Data Science",
+        "duration": "25:10",
+        "description": "Advanced data preparation with feature engineering, dummy encoding, and train-test split for regression modeling.",
+        "youtubeVideoId": "cUy_MmCcQr8",
+        "publishedAt": "2024-09-28T11:07:33Z"
+      },
+      {
+        "title": "Case Study on Regression | Part III | Python for Data Science",
+        "duration": "29:42",
+        "description": "Building and comparing regression models including linear regression and random forest with performance evaluation.",
+        "youtubeVideoId": "Bsm2zKgAZvI",
+        "publishedAt": "2019-09-13T13:15:44Z"
+      }
+    ],
+    "availableLanguages": [
+      "English"
+    ],
+    "createdAt": {
+      "$date": "2025-08-30T10:50:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-30T12:54:00.000Z"
+    },
+    "instructor": "NPTEL-NOC IITM",
+    "price": "0",
+    "category": "Data Science",
+    "title": "Python for Data Science - Complete NPTEL Course",
+    "duration": 597,
+    "rating": 4.5,
+    "featured": true,
+    "lastUpdated": "2025-08-30",
+    "lessons": 27,
+    "thumbnail": "https://i.ytimg.com/vi/tA42nHmmEKw/hqdefault.jpg"
+  },
+  {
+    "_id": {
+      "$oid": "68889dee3eae1f6d283f6538"
+    },
+    "courseId": "DEVOPS2025HINDI",
+    "description": "Complete DevOps course covering Linux, Git, Docker, Kubernetes, Jenkins, Ansible, Terraform, and CI/CD pipelines. Hands-on projects and real-world scenarios included.",
+    "videoLinks": [
+      {
+        "title": "What is Virtualization? | Hypervisor Types | Virtual Machines [HINDI]",
+        "duration": "8:41",
+        "description": "Understanding virtualization technology, hypervisor types, and virtual machines with practical use cases and architecture.",
+        "youtubeVideoId": "BNTFJJMh2eU",
+        "publishedAt": "2024-07-20T08:49:16Z"
+      },
+      {
+        "title": "Git and GitHUB For Beginners In One Video 2025 🔥 [HINDI]",
+        "duration": "117:06",
+        "description": "Complete Git and GitHub tutorial covering version control, commands, branching, merging, and collaboration workflows.",
+        "youtubeVideoId": "uwyP5SNlQAU",
+        "publishedAt": "2024-04-23T20:39:31Z"
+      },
+      {
+        "title": "What Is YAML for Beginners - Easy Explanation with Examples! [HINDI]",
+        "duration": "14:58",
+        "description": "Introduction to YAML syntax, structure, and usage in configuration files with practical examples and best practices.",
+        "youtubeVideoId": "Wl3N0Y6ZnBU",
+        "publishedAt": "2024-05-20T21:45:48Z"
+      },
+      {
+        "title": "Docker Course For Beginners 2025: Basic to Advance Tutorial 🔥 [HINDI]",
+        "duration": "188:16",
+        "description": "Comprehensive Docker course covering containerization, images, volumes, networks, Docker Compose, and production deployment.",
+        "youtubeVideoId": "OhnTMWmfTBE",
+        "publishedAt": "2023-11-13T23:53:34Z"
+      },
+      {
+        "title": "Kubernetes for Beginners in One Video 🔥 [HINDI]",
+        "duration": "183:29",
+        "description": "Complete Kubernetes tutorial from basics to advanced covering pods, deployments, services, scaling, and production scenarios.",
+        "youtubeVideoId": "rBeyHDKLVqM",
+        "publishedAt": "2023-12-24T18:28:12Z"
+      },
+      {
+        "title": "Linux for Beginners in One Video 🔥 100 Commands Explanation [HINDI]",
+        "duration": "168:25",
+        "description": "Comprehensive Linux tutorial covering 100+ essential commands, file management, system administration, and automation.",
+        "youtubeVideoId": "Byx4sgLR88E",
+        "publishedAt": "2024-07-12T10:13:29Z"
+      },
+      {
+        "title": "Master SHELL SCRIPTING in ONE VIDEO 🔥 for Beginners [HINDI]",
+        "duration": "310:16",
+        "description": "Complete shell scripting course covering variables, loops, functions, automation projects, and real-world scenarios.",
+        "youtubeVideoId": "TtGM9GfBuok",
+        "publishedAt": "2024-06-16T13:47:37Z"
+      },
+      {
+        "title": "ANSIBLE Course For Beginners 🔥 in One Video 2025 [HINDI]",
+        "duration": "208:48",
+        "description": "Complete Ansible automation course covering playbooks, roles, variables, handlers, and infrastructure automation projects.",
+        "youtubeVideoId": "y2TSR7p3N0M",
+        "publishedAt": "2024-02-14T10:43:08Z"
+      },
+      {
+        "title": "JENKINS For Beginners In One Video 2025 🔥 [HINDI]",
+        "duration": "213:24",
+        "description": "Comprehensive Jenkins tutorial covering CI/CD pipelines, job automation, GitHub integration, and production deployments.",
+        "youtubeVideoId": "NVaP8qtLm6Q",
+        "publishedAt": "2024-04-15T07:55:20Z"
+      },
+      {
+        "title": "GitLab Masterclass: Create Pipelines in 1 Hour! 🔥 [HINDI]",
+        "duration": "74:34",
+        "description": "Complete GitLab tutorial covering CI/CD pipelines, runners, artifacts, and automated deployment workflows.",
+        "youtubeVideoId": "Ip2TA2ijDmA",
+        "publishedAt": "2024-05-19T21:51:52Z"
+      },
+      {
+        "title": "TERRAFORM 🔥 in ONE VIDEO with AWS 2025 | DevOps For Beginners [HINDI]",
+        "duration": "578:57",
+        "description": "Complete Terraform course with AWS covering infrastructure as code, modules, state management, and production projects.",
+        "youtubeVideoId": "4JYtAf4M88Y",
+        "publishedAt": "2024-07-09T08:00:52Z"
+      },
+      {
+        "title": "PYTHON For Beginners In One Video 🔥 Very Simple Examples",
+        "duration": "309:02",
+        "description": "Complete Python programming course from basics to advanced with practical projects and real-world applications.",
+        "youtubeVideoId": "-hh6raHUUvk",
+        "publishedAt": "2024-06-16T13:48:02Z"
+      },
+      {
+        "title": "Docker Explained: What, Why, and How? | Containers, Architecture & How Docker Works [HINDI]",
+        "duration": "20:41",
+        "description": "Understanding Docker fundamentals, containerization concepts, architecture, and comparison with virtual machines.",
+        "youtubeVideoId": "xvm9E6C8I4A",
+        "publishedAt": "2023-04-18T18:27:33Z"
+      },
+      {
+        "title": "Docker Deployment on AWS EC2 Instance [HINDI]",
+        "duration": "29:54",
+        "description": "Practical guide to deploying Docker containers on AWS EC2 with project setup and production considerations.",
+        "youtubeVideoId": "wHy0JNwrB9k",
+        "publishedAt": "2024-02-08T16:06:47Z"
+      },
+      {
+        "title": "What is Kubernetes in Simple Words? [HINDI]",
+        "duration": "18:26",
+        "description": "Introduction to Kubernetes concepts, architecture, orchestration, and container management in simple terms.",
+        "youtubeVideoId": "YkJDFy6F5oM",
+        "publishedAt": "2023-04-26T21:11:04Z"
+      },
+      {
+        "title": "What is ANSIBLE? [HINDI] | DevOps for Beginners",
+        "duration": "15:28",
+        "description": "Introduction to Ansible automation tool, playbooks, modules, and infrastructure management concepts.",
+        "youtubeVideoId": "JTLXAGZMoiY",
+        "publishedAt": "2023-04-19T21:23:05Z"
+      },
+      {
+        "title": "AWS ECS Fargate: Run Your First Docker Container [HINDI]",
+        "duration": "17:28",
+        "description": "Getting started with AWS ECS Fargate for running Docker containers in the cloud with hands-on examples.",
+        "youtubeVideoId": "kE9crVneLUk",
+        "publishedAt": "2024-05-13T12:16:53Z"
+      },
+      {
+        "title": "AWS VPC Explained: A Beginner's Guide to Virtual Private Cloud in [HINDI]",
+        "duration": "33:14",
+        "description": "Complete guide to AWS VPC including subnets, routing, security groups, NAT gateways, and networking concepts.",
+        "youtubeVideoId": "ZMJV5AIfVBE",
+        "publishedAt": "2024-07-22T14:03:27Z"
+      },
+      {
+        "title": "Linux PODMAN Tutorial for Beginner's in Hindi",
+        "duration": "33:17",
+        "description": "Introduction to Podman as Docker alternative, container management, and rootless container operations.",
+        "youtubeVideoId": "AB04TJvmTO0",
+        "publishedAt": "2023-04-18T18:22:36Z"
+      },
+      {
+        "title": "DOCKER- 40-Min Crash Course 🔥 in [HINDI]",
+        "duration": "40:01",
+        "description": "Quick Docker crash course covering essential concepts, commands, and practical examples for rapid learning.",
+        "youtubeVideoId": "zoQgXoQMCHc",
+        "publishedAt": "2024-05-06T11:09:20Z"
+      }
+    ],
+    "availableLanguages": [
+      "Hindi"
+    ],
+    "createdAt": {
+      "$date": "2025-08-30T10:50:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-08-30T12:54:00.000Z"
+    },
+    "instructor": "M Prashant",
+    "price": "0",
+    "category": "DevOps",
+    "title": "Complete DevOps Course - Zero to Hero",
+    "duration": 1144,
+    "rating": 4.5,
+    "featured": true,
+    "lastUpdated": "2025-08-30",
+    "lessons": 20,
+    "thumbnail": "https://i.ytimg.com/vi/BNTFJJMh2eU/hqdefault.jpg"
+  }
+]
