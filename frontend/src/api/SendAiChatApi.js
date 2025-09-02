@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const SendAiChatApi = async ({ courseId , prompt }) => {
+const SendAiChatApi = async ({ type , courseId , prompt }) => {
   try {
     const backendResponse = await axios.post(
       "http://localhost:8000/api/v1/chat/send-chat",
       {
+        role: type,
         courseId: courseId,
         prompt: prompt
       },
