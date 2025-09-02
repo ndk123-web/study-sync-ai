@@ -553,7 +553,7 @@ const CoursesInterface = () => {
     const fetchUserChats = async () => {
       try {
         setChatPageLoader();
-        const apiResponse = await FetchUserChatsApi({ courseId });
+        const apiResponse = await FetchUserChatsApi({ courseId , role: "course" });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert("Error fetching user chats");
           return;
@@ -961,6 +961,7 @@ const CoursesInterface = () => {
     try {
       setChatLoader(); // Start loader
       const apiResponse = await SendAiChatApi({
+        type: "course",
         prompt: currentMessage,
         courseId,
       });

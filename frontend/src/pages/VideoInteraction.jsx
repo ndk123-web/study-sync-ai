@@ -19,10 +19,14 @@ import {
   Eye,
 } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
+import { useLoaders } from "../store/slices/useLoaders.js";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { EnrollmentVideoApi } from '../api/EnrollVideoApi.js'
+import { EnrollmentVideoApi } from "../api/EnrollVideoApi.js";
+import { SendAiChatApi } from "../api/SendAiChatApi.js";
+import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
+
 // import { useParams } from "react-router-dom";
 
 // Notion-style formatting function
@@ -39,11 +43,13 @@ const formatNotesToHTML = (text, isDark = false) => {
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
-      
+
       codeBlockPlaceholders.push(
         `<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 border ${
           isDark ? "border-gray-700" : "border-gray-300"
-        }"><code class="language-${language || "text"}">${escapedCode}</code></pre>`
+        }"><code class="language-${
+          language || "text"
+        }">${escapedCode}</code></pre>`
       );
       return placeholder;
     }
@@ -135,11 +141,13 @@ const formatNotesToHTML = (text, isDark = false) => {
     // Convert paragraphs
     .split("\n\n")
     .map((paragraph) => {
-      if (paragraph.trim() && 
-          !paragraph.includes('<h') && 
-          !paragraph.includes('<div') && 
-          !paragraph.includes('<hr') &&
-          !paragraph.includes('__CODE_BLOCK_')) {
+      if (
+        paragraph.trim() &&
+        !paragraph.includes("<h") &&
+        !paragraph.includes("<div") &&
+        !paragraph.includes("<hr") &&
+        !paragraph.includes("__CODE_BLOCK_")
+      ) {
         return `<p class="mb-3 leading-relaxed">${paragraph}</p>`;
       }
       return paragraph;
@@ -170,11 +178,13 @@ const formatChatMessageHTML = (text, isDark = false) => {
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
-      
+
       codeBlockPlaceholders.push(
         `<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 border ${
           isDark ? "border-gray-700" : "border-gray-300"
-        }"><code class="language-${language || "text"}">${escapedCode}</code></pre>`
+        }"><code class="language-${
+          language || "text"
+        }">${escapedCode}</code></pre>`
       );
       return placeholder;
     }
@@ -188,7 +198,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-    
+
     inlineCodePlaceholders.push(
       `<code class="px-2 py-1 rounded text-sm font-mono bg-gray-800 text-green-400 border border-gray-700">${escapedCode}</code>`
     );
@@ -238,19 +248,21 @@ const formatChatMessageHTML = (text, isDark = false) => {
   const sections = html.split("\n\n").filter((s) => s.trim());
 
   const formattedSections = sections.map((section) => {
-    if (section.includes('<h') || 
-        section.includes('<pre') || 
-        section.includes('<code') ||
-        section.includes('<div')) {
+    if (
+      section.includes("<h") ||
+      section.includes("<pre") ||
+      section.includes("<code") ||
+      section.includes("<div")
+    ) {
       return section;
     }
-    
+
     if (section.trim()) {
-      const lines = section.split('\n').filter(line => line.trim());
+      const lines = section.split("\n").filter((line) => line.trim());
       if (lines.length === 1) {
         return `<p class="mb-3 leading-relaxed">${lines[0]}</p>`;
       } else {
-        return `<p class="mb-3 leading-relaxed">${lines.join('<br>')}</p>`;
+        return `<p class="mb-3 leading-relaxed">${lines.join("<br>")}</p>`;
       }
     }
     return section;
@@ -282,7 +294,7 @@ const VideoInteraction = () => {
 
   const { v } = useParams();
   const [searchParams] = useSearchParams();
-  const encryptedVideoUrl = searchParams.get('v') || v;
+  const encryptedVideoUrl = searchParams.get("v") || v;
   console.log("Encrypted video param v:", encryptedVideoUrl);
 
   const [videoUrl, setVideoUrl] = useState("");
@@ -296,11 +308,29 @@ const VideoInteraction = () => {
   const [notes, setNotes] = useState("");
   const [notesPreviewMode, setNotesPreviewMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false); // Mobile preview toggle
-  const [notesLoader, setNotesLoader] = useState(false);
+  // const [notesLoader, setNotesLoader] = useState(false);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [loader, setLoader] = useState(false);
+
+  const chatLoader = useLoaders((state) => state.chatLoader);
+  const setChatLoader = useLoaders((state) => state.setChatLoader);
+  const unsetChatLoader = useLoaders((state) => state.unsetChatLoader);
+
+  const notesLoader = useLoaders((state) => state.notesLoader);
+  const setNotesLoader = useLoaders((state) => state.setNotesLoader);
+  const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
+
+  const summaryLoader = useLoaders((state) => state.summarizeLoader);
+  const setSummaryLoader = useLoaders((state) => state.setSummarizeLoader);
+  const unsetSummaryLoader = useLoaders((state) => state.unsetSummarizeLoader);
+
+  const transcriptLoader = useLoaders((state) => state.transcriptLoader);
+  const setTranscriptLoader = useLoaders((state) => state.setTranscriptLoader);
+  const unsetTranscriptLoader = useLoaders(
+    (state) => state.unsetTranscriptLoader
+  );
 
   // Decrypt and load video from URL params
   useEffect(() => {
@@ -310,7 +340,7 @@ const VideoInteraction = () => {
           decodeURIComponent(encryptedVideoUrl),
           import.meta.env.VITE_ENCRYPTION_SECRET
         ).toString(CryptoJS.enc.Utf8);
-        
+
         if (decryptedUrl) {
           setVideoUrl(decryptedUrl);
           const videoId = extractVideoId(decryptedUrl);
@@ -325,7 +355,7 @@ const VideoInteraction = () => {
               views: "Learning Mode",
             };
             setLoadedVideo(videoData);
-            
+
             // Initialize with welcome message
             setChatMessages([
               {
@@ -342,6 +372,27 @@ const VideoInteraction = () => {
       }
     }
   }, [encryptedVideoUrl]);
+
+  // Fetch User Chats Api
+  useEffect(() => {
+    const fetchVideoChats = async () => {
+      if (!encryptedVideoUrl) return;
+      const apiResponse = await FetchUserChatsApi({
+        courseId: encryptedVideoUrl,
+        role: "video",
+      });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert("Error fetching user chats");
+        return;
+      }
+
+      // Process the fetched video chats
+      const videoChats = apiResponse?.data?.chats || [];
+      setChatMessages(videoChats);
+    };
+
+    fetchVideoChats();
+  }, []);
 
   const extractVideoId = (url) => {
     const regex =
@@ -364,9 +415,12 @@ const VideoInteraction = () => {
       console.log("Enrolling video with encrypted URL:", encryptedVideoUrl);
       const apiResponse = await EnrollmentVideoApi(encryptedVideoUrl);
       console.log("API Response:", apiResponse);
-      
-      if (apiResponse.status !== 200 && apiResponse.status !== 201){
-        alert(apiResponse.message || "Failed to enroll video. Please check your authentication and try again.");
+
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          apiResponse.message ||
+            "Failed to enroll video. Please check your authentication and try again."
+        );
         setIsLoadingNewVideo(false);
         return;
       }
@@ -396,44 +450,65 @@ const VideoInteraction = () => {
         ]);
 
         // Update URL without causing a page reload
-        const newUrl = `/learn/video?v=${encodeURIComponent(encryptedVideoUrl)}`;
-        window.history.replaceState(null, '', newUrl);
+        const newUrl = `/learn/video?v=${encodeURIComponent(
+          encryptedVideoUrl
+        )}`;
+        window.history.replaceState(null, "", newUrl);
       } else {
         alert("Please enter a valid YouTube URL");
       }
     } catch (err) {
       console.error("Error loading video:", err);
-      alert(`Failed to load video: ${err.message || 'Please try again.'}`);
+      alert(`Failed to load video: ${err.message || "Please try again."}`);
     } finally {
       setLoader(false);
       setIsLoadingNewVideo(false);
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
+    unsetChatLoader();
+    console.log("Message input to send:", messageInput);
+    console.log("Using encrypted video URL as courseId:", encryptedVideoUrl);
 
-    const newMessage = {
-      id: Date.now(),
-      type: "user",
-      message: messageInput,
-      timestamp: new Date().toLocaleTimeString(),
-    };
-
-    setChatMessages((prev) => [...prev, newMessage]);
-
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const botResponse = {
-        id: Date.now() + 1,
-        type: "bot",
-        message: `Based on the video content, here's what I can tell you about "${messageInput}": This topic is discussed around the 5:30 mark where the speaker explains... (This would be the actual AI response with timestamp references)`,
+    try {
+      const newMessage = {
+        id: Date.now(),
+        type: "user",
+        message: messageInput,
         timestamp: new Date().toLocaleTimeString(),
       };
-      setChatMessages((prev) => [...prev, botResponse]);
-    }, 1000);
+      setChatMessages((prev) => [...prev, newMessage]);
 
-    setMessageInput("");
+      const apiResponse = await SendAiChatApi({
+        type: "video",
+        courseId: encryptedVideoUrl,
+        prompt: messageInput,
+      });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          apiResponse.message ||
+            "Failed to get response from AI. Please try again."
+        );
+      }
+
+      const aiMessage = {
+        id: Date.now(), // Use timestamp for unique ID
+        type: "ai",
+        message: apiResponse?.data?.response || "No response received",
+        timestamp: new Date().getDate().toLocaleString(),
+        avatar: "🤖",
+      };
+
+      setChatMessages((prev) => [...prev, aiMessage]);
+      setMessageInput("");
+    } catch (err) {
+      alert("Error in sending message to AI. Please try again.");
+      return;
+    } finally {
+      unsetChatLoader();
+    }
   };
 
   const generateSummary = () => {
@@ -532,7 +607,7 @@ const VideoInteraction = () => {
   // Auto-save notes with debounce
   useEffect(() => {
     if (!notes.trim()) return;
-    
+
     setNotesLoader(true);
     const saveTimeout = setTimeout(() => {
       // Simulate auto-save API call
@@ -548,13 +623,13 @@ const VideoInteraction = () => {
 
   // Apply Prism syntax highlighting when component mounts and content changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Prism) {
+    if (typeof window !== "undefined" && window.Prism) {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
         try {
           window.Prism.highlightAll();
         } catch (err) {
-          console.log('Prism highlighting error:', err);
+          console.log("Prism highlighting error:", err);
         }
       }, 100);
     }
@@ -571,14 +646,14 @@ const VideoInteraction = () => {
   // Professional Loader Component
   const LoaderOverlay = ({ message = "Loading...", show }) => {
     if (!show) return null;
-    
+
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className={`p-8 rounded-2xl border max-w-md mx-4 ${
-          isDark
-            ? "bg-gray-800 border-gray-700"
-            : "bg-white border-gray-200"
-        }`}>
+        <div
+          className={`p-8 rounded-2xl border max-w-md mx-4 ${
+            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          }`}
+        >
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
               <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -586,9 +661,11 @@ const VideoInteraction = () => {
             <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
               {message}
             </h3>
-            <p className={`text-sm ${
-              isDark ? "text-gray-400" : "text-gray-600"
-            }`}>
+            <p
+              className={`text-sm ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               Please wait while we process your request...
             </p>
           </div>
@@ -603,7 +680,10 @@ const VideoInteraction = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
-      <LoaderOverlay show={loader || isLoading} message={loader ? "Loading Video..." : "Processing..."} />
+      <LoaderOverlay
+        show={loader || isLoading}
+        message={loader ? "Loading Video..." : "Processing..."}
+      />
       <Header />
 
       <div className="pt-20">
@@ -751,9 +831,13 @@ const VideoInteraction = () => {
                 }`}
               >
                 {/* Enhanced Header */}
-                <div className={`p-4 border-b ${
-                  isDark ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-gray-50/50"
-                }`}>
+                <div
+                  className={`p-4 border-b ${
+                    isDark
+                      ? "border-gray-700 bg-gray-800/50"
+                      : "border-gray-200 bg-gray-50/50"
+                  }`}
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
                       <span className="text-white text-lg">🤖</span>
@@ -762,9 +846,11 @@ const VideoInteraction = () => {
                       <h3 className="font-bold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
                         AI Learning Assistant
                       </h3>
-                      <p className={`text-sm ${
-                        isDark ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Interactive video analysis
                       </p>
                     </div>
@@ -772,9 +858,11 @@ const VideoInteraction = () => {
                 </div>
 
                 {/* Enhanced Tabs */}
-                <div className={`border-b ${
-                  isDark ? "border-gray-700" : "border-gray-200"
-                }`}>
+                <div
+                  className={`border-b ${
+                    isDark ? "border-gray-700" : "border-gray-200"
+                  }`}
+                >
                   <div className="flex overflow-x-auto">
                     {tabs.map((tab) => {
                       const Icon = tab.icon;
@@ -790,9 +878,13 @@ const VideoInteraction = () => {
                               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                           }`}
                         >
-                          <Icon className={`w-5 h-5 transition-transform duration-300 ${
-                            activeTab === tab.id ? "scale-110" : "group-hover:scale-105"
-                          }`} />
+                          <Icon
+                            className={`w-5 h-5 transition-transform duration-300 ${
+                              activeTab === tab.id
+                                ? "scale-110"
+                                : "group-hover:scale-105"
+                            }`}
+                          />
                           <span className="font-medium text-sm">
                             {tab.label}
                           </span>
@@ -820,10 +912,13 @@ const VideoInteraction = () => {
                               <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
                                 Start a Conversation
                               </h3>
-                              <p className={`text-sm mb-4 ${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}>
-                                Ask questions about the video content, timestamps, or concepts
+                              <p
+                                className={`text-sm mb-4 ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}
+                              >
+                                Ask questions about the video content,
+                                timestamps, or concepts
                               </p>
                             </div>
                           )}
@@ -848,14 +943,18 @@ const VideoInteraction = () => {
                                 <div className="flex items-start space-x-3">
                                   {msg.type === "bot" && (
                                     <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                                      <span className="text-white text-xs">🤖</span>
+                                      <span className="text-white text-xs">
+                                        🤖
+                                      </span>
                                     </div>
                                   )}
                                   {msg.type === "user" && (
                                     <User className="w-5 h-5 mt-0.5 flex-shrink-0" />
                                   )}
                                   <div className="flex-1">
-                                    <p className="text-sm leading-relaxed">{msg.message}</p>
+                                    <p className="text-sm leading-relaxed">
+                                      {msg.message}
+                                    </p>
                                     <p className={`text-xs mt-2 opacity-70`}>
                                       {msg.timestamp}
                                     </p>
@@ -864,27 +963,39 @@ const VideoInteraction = () => {
                               </div>
                             </div>
                           ))}
-                          
+
                           {/* Professional Loading Indicator */}
                           {isLoading && (
                             <div className="flex justify-start">
-                              <div className={`max-w-[85%] rounded-xl p-4 shadow-sm ${
-                                isDark
-                                  ? "bg-gray-700 border border-gray-600"
-                                  : "bg-gray-50 border border-gray-200"
-                              }`}>
+                              <div
+                                className={`max-w-[85%] rounded-xl p-4 shadow-sm ${
+                                  isDark
+                                    ? "bg-gray-700 border border-gray-600"
+                                    : "bg-gray-50 border border-gray-200"
+                                }`}
+                              >
                                 <div className="flex items-start space-x-3">
                                   <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white text-xs">🤖</span>
+                                    <span className="text-white text-xs">
+                                      🤖
+                                    </span>
                                   </div>
                                   <div className="flex-1">
                                     <div className="flex items-center space-x-2">
                                       <div className="flex space-x-1">
                                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
-                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                                        <div
+                                          className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                                          style={{ animationDelay: "0.1s" }}
+                                        ></div>
+                                        <div
+                                          className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                                          style={{ animationDelay: "0.2s" }}
+                                        ></div>
                                       </div>
-                                      <span className="text-sm text-emerald-500 font-medium">Thinking...</span>
+                                      <span className="text-sm text-emerald-500 font-medium">
+                                        Thinking...
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -894,9 +1005,13 @@ const VideoInteraction = () => {
                         </div>
 
                         {/* Enhanced Message Input */}
-                        <div className={`border rounded-xl p-3 ${
-                          isDark ? "border-gray-600 bg-gray-700/50" : "border-gray-200 bg-gray-50"
-                        }`}>
+                        <div
+                          className={`border rounded-xl p-3 ${
+                            isDark
+                              ? "border-gray-600 bg-gray-700/50"
+                              : "border-gray-200 bg-gray-50"
+                          }`}
+                        >
                           <div className="flex items-center space-x-3">
                             <input
                               type="text"
@@ -939,7 +1054,9 @@ const VideoInteraction = () => {
                             {isLoading && (
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                             )}
-                            <span>{isLoading ? "Generating..." : "Generate Summary"}</span>
+                            <span>
+                              {isLoading ? "Generating..." : "Generate Summary"}
+                            </span>
                           </button>
                         </div>
 
@@ -964,10 +1081,13 @@ const VideoInteraction = () => {
                               <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
                                 Generate AI Summary
                               </h3>
-                              <p className={`text-sm mb-4 max-w-sm mx-auto ${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}>
-                                Get an intelligent summary with key points, timestamps, and insights from the video content
+                              <p
+                                className={`text-sm mb-4 max-w-sm mx-auto ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}
+                              >
+                                Get an intelligent summary with key points,
+                                timestamps, and insights from the video content
                               </p>
                             </div>
                           )}
@@ -980,7 +1100,9 @@ const VideoInteraction = () => {
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                           <div className="flex items-center space-x-3">
                             <FileText className="w-6 h-6 text-emerald-500" />
-                            <h3 className="text-lg font-bold">Video Transcript</h3>
+                            <h3 className="text-lg font-bold">
+                              Video Transcript
+                            </h3>
                           </div>
                           <div className="flex space-x-2">
                             <button
@@ -991,7 +1113,11 @@ const VideoInteraction = () => {
                               {isLoading && (
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                               )}
-                              <span>{isLoading ? "Generating..." : "Generate Transcript"}</span>
+                              <span>
+                                {isLoading
+                                  ? "Generating..."
+                                  : "Generate Transcript"}
+                              </span>
                             </button>
                             {transcript && (
                               <button className="p-2 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all duration-300">
@@ -1022,10 +1148,13 @@ const VideoInteraction = () => {
                               <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
                                 Extract Transcript
                               </h3>
-                              <p className={`text-sm mb-4 max-w-sm mx-auto ${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}>
-                                Generate a complete transcript with precise timestamps for easy reference and study
+                              <p
+                                className={`text-sm mb-4 max-w-sm mx-auto ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}
+                              >
+                                Generate a complete transcript with precise
+                                timestamps for easy reference and study
                               </p>
                             </div>
                           )}
@@ -1038,7 +1167,9 @@ const VideoInteraction = () => {
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                           <div className="flex items-center space-x-3">
                             <FileCheck className="w-6 h-6 text-emerald-500" />
-                            <h3 className="text-lg font-bold">Video Assessment</h3>
+                            <h3 className="text-lg font-bold">
+                              Video Assessment
+                            </h3>
                           </div>
                           <button
                             onClick={generateAssessment}
@@ -1048,7 +1179,11 @@ const VideoInteraction = () => {
                             {isLoading && (
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                             )}
-                            <span>{isLoading ? "Generating..." : "Generate Questions"}</span>
+                            <span>
+                              {isLoading
+                                ? "Generating..."
+                                : "Generate Questions"}
+                            </span>
                           </button>
                         </div>
 
@@ -1066,7 +1201,9 @@ const VideoInteraction = () => {
                                 >
                                   <div className="flex items-start justify-between mb-4">
                                     <h4 className="font-semibold flex-1 text-base">
-                                      <span className="text-emerald-500 mr-2">Q{index + 1}.</span>
+                                      <span className="text-emerald-500 mr-2">
+                                        Q{index + 1}.
+                                      </span>
                                       {q.question}
                                     </h4>
                                     <span className="text-xs bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1 rounded-full ml-3 flex-shrink-0">
@@ -1088,7 +1225,9 @@ const VideoInteraction = () => {
                                           name={`q${q.id}`}
                                           className="w-4 h-4 text-emerald-500 focus:ring-emerald-500"
                                         />
-                                        <span className="text-sm font-medium">{option}</span>
+                                        <span className="text-sm font-medium">
+                                          {option}
+                                        </span>
                                       </label>
                                     ))}
                                   </div>
@@ -1106,10 +1245,13 @@ const VideoInteraction = () => {
                               <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
                                 Create Assessment
                               </h3>
-                              <p className={`text-sm mb-4 max-w-sm mx-auto ${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}>
-                                Generate intelligent questions to test understanding of key concepts from the video
+                              <p
+                                className={`text-sm mb-4 max-w-sm mx-auto ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}
+                              >
+                                Generate intelligent questions to test
+                                understanding of key concepts from the video
                               </p>
                             </div>
                           )}
@@ -1176,7 +1318,9 @@ const VideoInteraction = () => {
                               value={notes}
                               onChange={(e) => setNotes(e.target.value)}
                               placeholder="Take notes while watching the video...\n\n✨ Tip: Use markdown formatting:\n• **bold text**\n• *italic text*\n• # Headers\n• - Bullet points\n• ```code blocks```\n• [12:34] timestamps"
-                              style={{ minHeight: showPreview ? "200px" : "300px" }}
+                              style={{
+                                minHeight: showPreview ? "200px" : "300px",
+                              }}
                             />
 
                             {/* Character count */}
@@ -1218,9 +1362,12 @@ const VideoInteraction = () => {
                                       isDark ? "text-gray-400" : "text-gray-500"
                                     }`}
                                   >
-                                    <span className="text-2xl mb-2 block">📝</span>
+                                    <span className="text-2xl mb-2 block">
+                                      📝
+                                    </span>
                                     <p className="text-sm">
-                                      Start typing to see your formatted notes...
+                                      Start typing to see your formatted
+                                      notes...
                                     </p>
                                   </div>
                                 )}

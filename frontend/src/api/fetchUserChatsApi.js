@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const FetchUserChatsApi = async ({ courseId  }) => {
+const FetchUserChatsApi = async ({ courseId , role  }) => {
   try {
     const backendResponse = await axios.get(
       "http://localhost:8000/api/v1/chat/fetch-chats",
       {
-        params: { courseId },
+        params: { courseId , role },
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
