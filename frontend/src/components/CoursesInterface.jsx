@@ -65,10 +65,11 @@ const formatNotesToHTML = (text, isDark = false) => {
       const placeholder = `__NOTES_CODE_BLOCK_${codeBlockPlaceholders.length}__`;
       const lang = language && language !== "" ? language : "javascript";
       const rawCode = code;
-      const base64 = typeof window !== "undefined" && window.btoa
-        ? window.btoa(unescape(encodeURIComponent(rawCode)))
-        : Buffer.from(rawCode, "utf-8").toString("base64");
-      
+      const base64 =
+        typeof window !== "undefined" && window.btoa
+          ? window.btoa(unescape(encodeURIComponent(rawCode)))
+          : Buffer.from(rawCode, "utf-8").toString("base64");
+
       const escapedForHTML = rawCode
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -221,9 +222,10 @@ const formatChatMessageHTML = (text, isDark = false) => {
       // Store a base64-encoded version on a data attribute so we can set
       // the `textContent` of the code element later (avoids HTML entity/whitespace issues)
       const rawCode = code;
-      const base64 = typeof window !== "undefined" && window.btoa
-        ? window.btoa(unescape(encodeURIComponent(rawCode)))
-        : Buffer.from(rawCode, "utf-8").toString("base64");
+      const base64 =
+        typeof window !== "undefined" && window.btoa
+          ? window.btoa(unescape(encodeURIComponent(rawCode)))
+          : Buffer.from(rawCode, "utf-8").toString("base64");
 
       codeBlockPlaceholders.push(
         `<pre class="line-numbers ${
@@ -522,13 +524,138 @@ const CoursesInterface = () => {
     },
   ];
 
-  useEffect( () => {
+  useEffect(() => {
     unsetChatLoader();
     unsetChatPageLoader();
     unsetNotesLoader();
     unsetSummaryLoader();
     unsetTranscriptLoader();
-  }, [] )
+  }, []);
+
+  useEffect(() => {
+    if (window.Prism) {
+      const timeoutId = setTimeout(() => {
+        try {
+          window.Prism.highlightAll();
+        } catch (err) {
+          console.error("Prism highlight error:", err);
+        }
+      }, 0); // <- zero delay better than 200/800
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [chatMessages, activeTab, notesPreviewMode]);
+
+  // Apply Prism syntax highlighting when chat messages change
+  useEffect(() => {
+    if (window.Prism && activeTab === "chat") {
+      // Wait for DOM to render and then populate code elements from data-raw-code
+      const timeoutId = setTimeout(() => {
+        try {
+          const codeElems = Array.from(
+            document.querySelectorAll("code[data-raw-code]")
+          );
+
+          codeElems.forEach((el) => {
+            try {
+              const b64 = el.getAttribute("data-raw-code") || "";
+              let decoded = "";
+              if (b64) {
+                try {
+                  decoded = decodeURIComponent(escape(window.atob(b64)));
+                } catch (e) {
+                  // fallback for environments without atob/unescape
+                  try {
+                    decoded = Buffer.from(b64, "base64").toString("utf-8");
+                  } catch (err) {
+                    decoded = "";
+                  }
+                }
+              }
+              // Set the raw code as textContent to preserve whitespace/newlines
+              if (decoded) el.textContent = decoded;
+              // Now highlight the element individually
+              window.Prism.highlightElement(el);
+            } catch (err) {
+              console.error("Error processing code element:", err);
+            }
+          });
+
+          console.log(
+            "🎨 Prism highlighting applied to",
+            codeElems.length,
+            "code blocks"
+          );
+        } catch (error) {
+          console.error("Prism highlighting error:", error);
+        }
+      }, 200); // small delay to let React paint
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [chatMessages, activeTab, notesPreviewMode]);
+
+  // Apply Prism syntax highlighting for notes area - only when content finishes changing
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      activeTab !== "notes" ||
+      !notesPreviewMode
+    )
+      return;
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const notesCodeElems = Array.from(
+          document.querySelectorAll(
+            '[data-notes-area="true"] code[data-raw-code]'
+          )
+        ).filter((el) => !el.hasAttribute("data-prism-processed"));
+
+        notesCodeElems.forEach((el) => {
+          try {
+            const b64 = el.getAttribute("data-raw-code") || "";
+            let decoded = "";
+            if (b64) {
+              try {
+                decoded = decodeURIComponent(escape(window.atob(b64)));
+              } catch (e) {
+                try {
+                  decoded = Buffer.from(b64, "base64").toString("utf-8");
+                } catch (err) {
+                  decoded = "";
+                }
+              }
+            }
+            if (decoded) {
+              el.textContent = decoded;
+              if (
+                window.Prism &&
+                typeof window.Prism.highlightElement === "function"
+              ) {
+                window.Prism.highlightElement(el);
+              }
+              el.setAttribute("data-prism-processed", "1");
+            }
+          } catch (err) {
+            console.error("Error processing notes code element:", err);
+          }
+        });
+
+        if (notesCodeElems.length > 0) {
+          console.log(
+            "🎨 Prism notes highlighting applied to",
+            notesCodeElems.length,
+            "code blocks"
+          );
+        }
+      } catch (error) {
+        console.error("Prism notes highlighting error:", error);
+      }
+    }, 800); // Longer delay to avoid constant re-processing
+
+    return () => clearTimeout(timeoutId);
+  }, [notesPreviewMode, activeTab]); // Only when switching to preview mode
 
   // On CourseId change , change the courseId in Zustand state
   useEffect(() => {
@@ -553,7 +680,10 @@ const CoursesInterface = () => {
     const fetchUserChats = async () => {
       try {
         setChatPageLoader();
-        const apiResponse = await FetchUserChatsApi({ courseId , role: "course" });
+        const apiResponse = await FetchUserChatsApi({
+          courseId,
+          role: "course",
+        });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert("Error fetching user chats");
           return;
@@ -994,110 +1124,6 @@ const CoursesInterface = () => {
       unsetChatLoader(); // Stop loader
     }
   };
-
-  // Apply Prism syntax highlighting when chat messages change
-  useEffect(() => {
-    if (window.Prism && activeTab === "chat") {
-      // Wait for DOM to render and then populate code elements from data-raw-code
-      const timeoutId = setTimeout(() => {
-        try {
-          const codeElems = Array.from(
-            document.querySelectorAll("code[data-raw-code]")
-          );
-
-          codeElems.forEach((el) => {
-            try {
-              const b64 = el.getAttribute("data-raw-code") || "";
-              let decoded = "";
-              if (b64) {
-                try {
-                  decoded = decodeURIComponent(escape(window.atob(b64)));
-                } catch (e) {
-                  // fallback for environments without atob/unescape
-                  try {
-                    decoded = Buffer.from(b64, "base64").toString("utf-8");
-                  } catch (err) {
-                    decoded = "";
-                  }
-                }
-              }
-              // Set the raw code as textContent to preserve whitespace/newlines
-              if (decoded) el.textContent = decoded;
-              // Now highlight the element individually
-              window.Prism.highlightElement(el);
-            } catch (err) {
-              console.error("Error processing code element:", err);
-            }
-          });
-
-          console.log("🎨 Prism highlighting applied to", codeElems.length, "code blocks");
-        } catch (error) {
-          console.error("Prism highlighting error:", error);
-        }
-      }, 200); // small delay to let React paint
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [chatMessages, activeTab, notStoreNotes , courseId,currentVideoId,completedVideosIndex]);
-  
-  // Also apply Prism when component mounts and Prism is available
-  useEffect(() => {
-    if (window.Prism) {
-      const timeoutId = setTimeout(() => {
-        window.Prism.highlightAll();
-      }, 300);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, []);
-  
-  // Apply Prism syntax highlighting for notes area - only when content finishes changing
-  useEffect(() => {
-    if (typeof window === "undefined" || activeTab !== "notes" || !notesPreviewMode) return;
-    
-    const timeoutId = setTimeout(() => {
-      try {
-        const notesCodeElems = Array.from(
-          document.querySelectorAll('[data-notes-area="true"] code[data-raw-code]')
-        ).filter(el => !el.hasAttribute('data-prism-processed'));
-
-        notesCodeElems.forEach((el) => {
-          try {
-            const b64 = el.getAttribute("data-raw-code") || "";
-            let decoded = "";
-            if (b64) {
-              try {
-                decoded = decodeURIComponent(escape(window.atob(b64)));
-              } catch (e) {
-                try {
-                  decoded = Buffer.from(b64, "base64").toString("utf-8");
-                } catch (err) {
-                  decoded = "";
-                }
-              }
-            }
-            if (decoded) {
-              el.textContent = decoded;
-              if (window.Prism && typeof window.Prism.highlightElement === "function") {
-                window.Prism.highlightElement(el);
-              }
-              el.setAttribute('data-prism-processed', '1');
-            }
-          } catch (err) {
-            console.error("Error processing notes code element:", err);
-          }
-        });
-
-        if (notesCodeElems.length > 0) {
-          console.log("🎨 Prism notes highlighting applied to", notesCodeElems.length, "code blocks");
-        }
-      } catch (error) {
-        console.error("Prism notes highlighting error:", error);
-      }
-    }, 800); // Longer delay to avoid constant re-processing
-
-    return () => clearTimeout(timeoutId);
-  }, [notesPreviewMode, activeTab]); // Only when switching to preview mode
 
   return (
     <div
@@ -2737,21 +2763,28 @@ const CoursesInterface = () => {
                           <span className="text-2xl">🤖</span>
                         </div>
                       </div>
-                      <h3 className={`text-xl font-semibold mb-2 ${
-                        isDark ? "text-white" : "text-gray-900"
-                      }`}>
+                      <h3
+                        className={`text-xl font-semibold mb-2 ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         AI Study Assistant
                       </h3>
-                      <p className={`text-sm mb-4 max-w-md ${
-                        isDark ? "text-gray-300" : "text-gray-600"
-                      }`}>
-                        Ask me anything related to this course. I can help you with explanations, code examples, concepts, and more!
+                      <p
+                        className={`text-sm mb-4 max-w-md ${
+                          isDark ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        Ask me anything related to this course. I can help you
+                        with explanations, code examples, concepts, and more!
                       </p>
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        isDark 
-                          ? "bg-blue-900/30 text-blue-400 border border-blue-700" 
-                          : "bg-blue-100 text-blue-700 border border-blue-200"
-                      }`}>
+                      <div
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          isDark
+                            ? "bg-blue-900/30 text-blue-400 border border-blue-700"
+                            : "bg-blue-100 text-blue-700 border border-blue-200"
+                        }`}
+                      >
                         💡 Ready to help with your studies
                       </div>
                     </div>
@@ -2976,7 +3009,11 @@ const CoursesInterface = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400">
                         <span>📝</span>
-                        <span>{notesPreviewMode ? 'Formatted Preview' : 'Markdown Editor'}</span>
+                        <span>
+                          {notesPreviewMode
+                            ? "Formatted Preview"
+                            : "Markdown Editor"}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-3">
                         {/* Auto-saving indicator */}
@@ -3015,7 +3052,7 @@ const CoursesInterface = () => {
                             </>
                           )}
                         </div>
-                        
+
                         <button
                           onClick={() => setNotesPreviewMode(!notesPreviewMode)}
                           className={`px-3 py-1 text-xs rounded-lg transition-all duration-200 ${
@@ -3024,11 +3061,11 @@ const CoursesInterface = () => {
                               : "bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800"
                           }`}
                         >
-                          {notesPreviewMode ? '✏️ Edit' : '👁️ Preview'}
+                          {notesPreviewMode ? "✏️ Edit" : "👁️ Preview"}
                         </button>
                       </div>
                     </div>
-                    
+
                     {notesPreviewMode ? (
                       /* Preview Mode */
                       <div

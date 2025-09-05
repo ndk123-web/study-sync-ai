@@ -27,7 +27,7 @@ import { EnrollmentVideoApi } from "../api/EnrollVideoApi.js";
 import { SendAiChatApi } from "../api/SendAiChatApi.js";
 import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
 import { GetVideoSummaryApi } from "../api/GetVideoSummaryApi.js";
-import { GetCurrentVideoTranscriptApi } from '../api/GetCurrentVideoTranscript.js';
+import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 
@@ -41,9 +41,10 @@ const formatNotesToHTML = (text, isDark = false) => {
     /```(\w*)\n([\s\S]*?)```/g,
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
-      const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const b64Code = window.btoa(unescape(encodeURIComponent(code)));
+      const langClass = language ? `language-${language}` : 'language-javascript';
       codeBlockPlaceholders.push(
-        `<pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto border border-gray-700 my-4"><code class="language-${language} text-sm">${escapedCode}</code></pre>`
+        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -128,14 +129,14 @@ const formatNotesToHTML = (text, isDark = false) => {
       /`([^`]+)`/g,
       `<code class="px-2 py-1 rounded text-sm font-mono ${
         isDark
-          ? "bg-gray-800 text-green-400 border border-gray-700"
-          : "bg-gray-100 text-green-600 border border-gray-200"
+          ? "bg-gray-800 text-emerald-400 border border-gray-700"
+          : "bg-gray-100 text-emerald-600 border border-gray-200"
       }">$1</code>`
     )
     // Paragraphs
     .split("\n\n")
     .map((paragraph) => {
-      if (paragraph.trim() && !paragraph.includes('<')) {
+      if (paragraph.trim() && !paragraph.includes("<")) {
         return `<p class="mb-3 leading-relaxed">${paragraph}</p>`;
       }
       return paragraph;
@@ -162,9 +163,10 @@ const formatChatMessageHTML = (text, isDark = false) => {
     /```(\w*)\n([\s\S]*?)```/g,
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
-      const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const b64Code = window.btoa(unescape(encodeURIComponent(code)));
+      const langClass = language ? `language-${language}` : 'language-javascript';
       codeBlockPlaceholders.push(
-        `<pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto border border-gray-700 my-4"><code class="language-${language} text-sm">${escapedCode}</code></pre>`
+        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -177,8 +179,8 @@ const formatChatMessageHTML = (text, isDark = false) => {
     inlineCodePlaceholders.push(
       `<code class="px-2 py-1 rounded text-sm font-mono ${
         isDark
-          ? "bg-gray-800 text-green-400 border border-gray-700"
-          : "bg-gray-100 text-green-600 border border-gray-200"
+          ? "bg-gray-800 text-emerald-400 border border-gray-700"
+          : "bg-gray-100 text-emerald-600 border border-gray-200"
       }">${code}</code>`
     );
     return placeholder;
@@ -227,7 +229,11 @@ const formatChatMessageHTML = (text, isDark = false) => {
   const sections = html.split("\n\n").filter((s) => s.trim());
 
   const formattedSections = sections.map((section) => {
-    if (section.includes('<h') || section.includes('<pre') || section.includes('<code')) {
+    if (
+      section.includes("<h") ||
+      section.includes("<pre") ||
+      section.includes("<code")
+    ) {
       return section;
     }
     if (section.trim()) {
@@ -253,7 +259,7 @@ const VideoInteraction = () => {
   const { v } = useParams();
   const [searchParams] = useSearchParams();
   const encryptedVideoUrl = searchParams.get("v") || v;
-  
+
   // Debug logging for encryptedVideoUrl
   console.log("🔍 Debug - encryptedVideoUrl:", encryptedVideoUrl);
   console.log("🔍 Debug - searchParams.get('v'):", searchParams.get("v"));
@@ -292,6 +298,130 @@ const VideoInteraction = () => {
     (state) => state.unsetTranscriptLoader
   );
 
+  // Apply Prism syntax highlighting when chat messages change
+  useEffect(() => {
+    if (window.Prism && activeTab === "chat") {
+      // Wait for DOM to render and then populate code elements from data-raw-code
+      const timeoutId = setTimeout(() => {
+        try {
+          const codeElems = Array.from(
+            document.querySelectorAll("code[data-raw-code]")
+          );
+
+          codeElems.forEach((el) => {
+            try {
+              const b64 = el.getAttribute("data-raw-code") || "";
+              let decoded = "";
+              if (b64) {
+                try {
+                  decoded = decodeURIComponent(escape(window.atob(b64)));
+                } catch (e) {
+                  // fallback for environments without atob/unescape
+                  try {
+                    decoded = Buffer.from(b64, "base64").toString("utf-8");
+                  } catch (err) {
+                    decoded = "";
+                  }
+                }
+              }
+              // Set the raw code as textContent to preserve whitespace/newlines
+              if (decoded) el.textContent = decoded;
+              // Now highlight the element individually
+              window.Prism.highlightElement(el);
+            } catch (err) {
+              console.error("Error processing code element:", err);
+            }
+          });
+
+          console.log(
+            "🎨 Prism highlighting applied to",
+            codeElems.length,
+            "code blocks"
+          );
+        } catch (error) {
+          console.error("Prism highlighting error:", error);
+        }
+      }, 200); // small delay to let React paint
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    chatMessages
+  ]);
+
+  // Also apply Prism when component mounts and Prism is available
+  useEffect(() => {
+    if (window.Prism) {
+      const timeoutId = setTimeout(() => {
+        window.Prism.highlightAll();
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
+
+  // Apply Prism syntax highlighting for notes area - only when content finishes changing
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      activeTab !== "notes" ||
+      !notesPreviewMode
+    )
+      return;
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const notesCodeElems = Array.from(
+          document.querySelectorAll(
+            '[data-notes-area="true"] code[data-raw-code]'
+          )
+        ).filter((el) => !el.hasAttribute("data-prism-processed"));
+
+        notesCodeElems.forEach((el) => {
+          try {
+            const b64 = el.getAttribute("data-raw-code") || "";
+            let decoded = "";
+            if (b64) {
+              try {
+                decoded = decodeURIComponent(escape(window.atob(b64)));
+              } catch (e) {
+                try {
+                  decoded = Buffer.from(b64, "base64").toString("utf-8");
+                } catch (err) {
+                  decoded = "";
+                }
+              }
+            }
+            if (decoded) {
+              el.textContent = decoded;
+              if (
+                window.Prism &&
+                typeof window.Prism.highlightElement === "function"
+              ) {
+                window.Prism.highlightElement(el);
+              }
+              el.setAttribute("data-prism-processed", "1");
+            }
+          } catch (err) {
+            console.error("Error processing notes code element:", err);
+          }
+        });
+
+        if (notesCodeElems.length > 0) {
+          console.log(
+            "🎨 Prism notes highlighting applied to",
+            notesCodeElems.length,
+            "code blocks"
+          );
+        }
+      } catch (error) {
+        console.error("Prism notes highlighting error:", error);
+      }
+    }, 800); // Longer delay to avoid constant re-processing
+
+    return () => clearTimeout(timeoutId);
+  }, [notesPreviewMode, activeTab]); // Only when switching to preview mode
+
   // Decrypt and load video from URL params
   useEffect(() => {
     if (encryptedVideoUrl) {
@@ -300,10 +430,10 @@ const VideoInteraction = () => {
           encryptedVideoUrl,
           import.meta.env.VITE_ENCRYPTION_SECRET
         ).toString(CryptoJS.enc.Utf8);
-        
+
         setVideoUrl(decryptedUrl);
         console.log("Decrypted URL:", decryptedUrl);
-        
+
         // Auto-load the video
         const videoId = extractVideoId(decryptedUrl);
         if (videoId) {
@@ -327,13 +457,13 @@ const VideoInteraction = () => {
   useEffect(() => {
     const fetchUserChats = async () => {
       if (!encryptedVideoUrl) return;
-      
+
       try {
         const apiResponse = await FetchUserChatsApi({
           courseId: encryptedVideoUrl,
           role: "video",
         });
-        
+
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           const videoChats = apiResponse?.data?.chats || [];
           setChatMessages(videoChats);
@@ -342,7 +472,7 @@ const VideoInteraction = () => {
         console.error("Error fetching video chats:", err);
       }
     };
-    
+
     fetchUserChats();
   }, [encryptedVideoUrl]);
 
@@ -352,7 +482,7 @@ const VideoInteraction = () => {
 
     const autoSaveTimer = setTimeout(async () => {
       console.log("💾 Auto-saving video notes...");
-      
+
       try {
         setNotesLoader();
 
@@ -366,7 +496,7 @@ const VideoInteraction = () => {
           console.log("❌ Error auto-saving notes:", apiResponse?.message);
           return;
         }
-        
+
         console.log("✅ Video notes auto-saved successfully");
       } catch (err) {
         console.error("💥 Error in auto-save:", err);
@@ -385,18 +515,18 @@ const VideoInteraction = () => {
         console.log("🚫 No encryptedVideoUrl found, skipping notes fetch");
         return;
       }
-      
+
       try {
         console.log("📝 Fetching notes for video:", encryptedVideoUrl);
-        
+
         // Create a special API call for video notes
-        const apiResponse = await GetCurrentNotesApi({ 
+        const apiResponse = await GetCurrentNotesApi({
           courseId: encryptedVideoUrl,
-          type: "video" // Add type parameter
+          type: "video", // Add type parameter
         });
 
         console.log("🚀 API Response for GetCurrentNotesApi:", apiResponse);
-        
+
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           const fetchedNotes = apiResponse.data?.notes || "";
           setNotes(fetchedNotes);
@@ -415,7 +545,9 @@ const VideoInteraction = () => {
   }, [encryptedVideoUrl]); // Add encryptedVideoUrl as dependency
 
   const extractVideoId = (url) => {
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    const match = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+    );
     return match ? match[1] : null;
   };
 
@@ -432,7 +564,7 @@ const VideoInteraction = () => {
       }
 
       const response = await EnrollmentVideoApi({ videoUrl });
-      
+
       if (response.status === 200 || response.status === 201) {
         const videoData = {
           videoId,
@@ -464,7 +596,7 @@ const VideoInteraction = () => {
       timestamp: new Date().toLocaleTimeString(),
     };
 
-    setChatMessages(prev => [...prev, userMessage]);
+    setChatMessages((prev) => [...prev, userMessage]);
     const currentInput = messageInput;
     setMessageInput("");
     setChatLoader();
@@ -480,10 +612,11 @@ const VideoInteraction = () => {
         const botMessage = {
           id: Date.now() + 1,
           type: "bot",
-          message: response.data?.response || "I couldn't process that request.",
+          message:
+            response.data?.response || "I couldn't process that request.",
           timestamp: new Date().toLocaleTimeString(),
         };
-        setChatMessages(prev => [...prev, botMessage]);
+        setChatMessages((prev) => [...prev, botMessage]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -519,7 +652,10 @@ const VideoInteraction = () => {
     setTranscriptLoader();
     try {
       const apiResponse = await GetCurrentVideoTranscriptApi({
-        currentVideoId: CryptoJS.AES.decrypt(encryptedVideoUrl, import.meta.env.VITE_ENCRYPTION_SECRET).toString(CryptoJS.enc.Utf8),
+        currentVideoId: CryptoJS.AES.decrypt(
+          encryptedVideoUrl,
+          import.meta.env.VITE_ENCRYPTION_SECRET
+        ).toString(CryptoJS.enc.Utf8),
       });
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         alert(
@@ -583,7 +719,8 @@ const VideoInteraction = () => {
                 isDark ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              Enter a YouTube URL to get instant summaries, transcripts, chat assistance, and assessments
+              Enter a YouTube URL to get instant summaries, transcripts, chat
+              assistance, and assessments
             </p>
           </div>
 
@@ -705,8 +842,8 @@ const VideoInteraction = () => {
                     >
                       <p className="text-sm text-center">
                         <span className="font-medium">💡 Pro Tip:</span> Use the
-                        chat to ask specific questions about timestamps, concepts,
-                        or details from the video!
+                        chat to ask specific questions about timestamps,
+                        concepts, or details from the video!
                       </p>
                     </div>
                   </div>
@@ -730,7 +867,10 @@ const VideoInteraction = () => {
                     );
                     const rect = container.getBoundingClientRect();
                     const newSize = Math.min(
-                      Math.max(((e.clientX - rect.left) / rect.width) * 100, 30),
+                      Math.max(
+                        ((e.clientX - rect.left) / rect.width) * 100,
+                        30
+                      ),
                       80
                     );
                     setVideoSize(newSize);
@@ -781,7 +921,9 @@ const VideoInteraction = () => {
                         >
                           <Icon
                             className={`w-4 h-4 transition-transform duration-300 ${
-                              activeTab === tab.id ? "scale-110" : "group-hover:scale-105"
+                              activeTab === tab.id
+                                ? "scale-110"
+                                : "group-hover:scale-105"
                             }`}
                           />
                           <span>{tab.label}</span>
@@ -813,7 +955,8 @@ const VideoInteraction = () => {
                                 isDark ? "text-gray-400" : "text-gray-600"
                               }`}
                             >
-                              Ask questions about the video content, timestamps, or concepts
+                              Ask questions about the video content, timestamps,
+                              or concepts
                             </p>
                           </div>
                         )}
@@ -821,7 +964,9 @@ const VideoInteraction = () => {
                           <div
                             key={msg.id}
                             className={`flex w-full ${
-                              msg.type === "user" ? "justify-end" : "justify-start"
+                              msg.type === "user"
+                                ? "justify-end"
+                                : "justify-start"
                             }`}
                           >
                             <div
@@ -836,7 +981,9 @@ const VideoInteraction = () => {
                               <div className="flex items-start space-x-3">
                                 {msg.type === "bot" && (
                                   <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white text-xs">🤖</span>
+                                    <span className="text-white text-xs">
+                                      🤖
+                                    </span>
                                   </div>
                                 )}
                                 {msg.type === "user" && (
@@ -846,10 +993,15 @@ const VideoInteraction = () => {
                                   <div
                                     className="text-sm leading-relaxed break-words"
                                     dangerouslySetInnerHTML={{
-                                      __html: formatChatMessageHTML(msg.message, isDark),
+                                      __html: formatChatMessageHTML(
+                                        msg.message,
+                                        isDark
+                                      ),
                                     }}
                                   />
-                                  <p className="text-xs mt-2 opacity-70">{msg.timestamp}</p>
+                                  <p className="text-xs mt-2 opacity-70">
+                                    {msg.timestamp}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -905,7 +1057,9 @@ const VideoInteraction = () => {
                             type="text"
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && handleSendMessage()
+                            }
                             placeholder="Ask about the video content, timestamps, concepts..."
                             className={`flex-1 px-4 py-3 rounded-lg border-0 text-sm ${
                               isDark
@@ -946,10 +1100,14 @@ const VideoInteraction = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <span className="text-lg">📝</span>
-                            <span className="font-medium text-sm">Notes Editor</span>
+                            <span className="font-medium text-sm">
+                              Notes Editor
+                            </span>
                           </div>
                           <button
-                            onClick={() => setNotesPreviewMode(!notesPreviewMode)}
+                            onClick={() =>
+                              setNotesPreviewMode(!notesPreviewMode)
+                            }
                             className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition-all duration-300 ${
                               notesPreviewMode
                                 ? isDark
@@ -1027,7 +1185,9 @@ const VideoInteraction = () => {
                                     isDark ? "text-gray-400" : "text-gray-500"
                                   }`}
                                 >
-                                  <span className="text-2xl mb-2 block">📝</span>
+                                  <span className="text-2xl mb-2 block">
+                                    📝
+                                  </span>
                                   <p className="text-sm">
                                     Start typing to see your formatted notes...
                                   </p>
@@ -1064,7 +1224,9 @@ const VideoInteraction = () => {
 
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => navigator.clipboard.writeText(notes)}
+                              onClick={() =>
+                                navigator.clipboard.writeText(notes)
+                              }
                               className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
                                 isDark
                                   ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
@@ -1134,7 +1296,10 @@ const VideoInteraction = () => {
                               <div
                                 className="prose prose-sm max-w-none"
                                 dangerouslySetInnerHTML={{
-                                  __html: formatNotesToHTML(videoSummary, isDark),
+                                  __html: formatNotesToHTML(
+                                    videoSummary,
+                                    isDark
+                                  ),
                                 }}
                               />
                             </div>
@@ -1150,7 +1315,8 @@ const VideoInteraction = () => {
                               No summary available
                             </p>
                             <p className="text-sm">
-                              Click "Generate Summary" to get AI insights from the video
+                              Click "Generate Summary" to get AI insights from
+                              the video
                             </p>
                           </div>
                         )}
@@ -1164,7 +1330,9 @@ const VideoInteraction = () => {
                       <div className="flex items-center justify-between mb-6 flex-shrink-0">
                         <div className="flex items-center space-x-3">
                           <FileText className="w-6 h-6 text-purple-500" />
-                          <h3 className="text-lg font-bold">Video Transcript</h3>
+                          <h3 className="text-lg font-bold">
+                            Video Transcript
+                          </h3>
                         </div>
                         <button
                           onClick={generateTranscript}
@@ -1219,7 +1387,8 @@ const VideoInteraction = () => {
                                         : "bg-purple-100 text-purple-700 border border-purple-200"
                                     }`}
                                   >
-                                    {Math.floor(item.startTime || 0)}s - {Math.floor(item.endTime || 0)}s
+                                    {Math.floor(item.startTime || 0)}s -{" "}
+                                    {Math.floor(item.endTime || 0)}s
                                   </div>
                                 </div>
                                 <div
@@ -1243,7 +1412,8 @@ const VideoInteraction = () => {
                               No transcript available
                             </p>
                             <p className="text-sm">
-                              Click "Fetch Transcript" to load the video transcript
+                              Click "Fetch Transcript" to load the video
+                              transcript
                             </p>
                           </div>
                         )}
@@ -1257,7 +1427,9 @@ const VideoInteraction = () => {
                       <div className="flex items-center justify-between mb-6 flex-shrink-0">
                         <div className="flex items-center space-x-3">
                           <FileCheck className="w-6 h-6 text-emerald-500" />
-                          <h3 className="text-lg font-bold">Video Assessment</h3>
+                          <h3 className="text-lg font-bold">
+                            Video Assessment
+                          </h3>
                         </div>
                         <button
                           onClick={generateAssessment}
@@ -1345,7 +1517,8 @@ const VideoInteraction = () => {
                                 isDark ? "text-gray-400" : "text-gray-600"
                               }`}
                             >
-                              Generate intelligent questions to test understanding of key concepts from the video
+                              Generate intelligent questions to test
+                              understanding of key concepts from the video
                             </p>
                           </div>
                         )}
@@ -1354,7 +1527,6 @@ const VideoInteraction = () => {
                   )}
 
                   {/* Other tabs remain the same... */}
-                  
                 </div>
               </div>
             </div>
