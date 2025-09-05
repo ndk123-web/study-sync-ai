@@ -794,6 +794,7 @@ const CoursesInterface = () => {
         setNotesLoader();
 
         const apiResponse = await SaveCourseNotesApi({
+          type: "course",
           courseId,
           notes: notStoreNotes,
         });

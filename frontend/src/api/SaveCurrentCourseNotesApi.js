@@ -1,10 +1,11 @@
 import axios from "axios";
 
-const SaveCourseNotesApi = async ({ courseId , notes  }) => {
+const SaveCourseNotesApi = async ({ courseId , notes , type  }) => {
   try {
     const backendResponse = await axios.post(
       "http://localhost:5000/api/v1/notes/save-notes",
       {
+        type: type,
         courseId: courseId,
         notes: notes
       },
