@@ -1,11 +1,15 @@
 import axios from "axios";
 
-const GetCurrentNotesApi = async ({ courseId }) => {
+const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
   try {
-    console.log("🚀 Calling notes API with courseId:", courseId);
+    console.log("🚀 Calling notes API with courseId:", courseId, "type:", type);
+    
+    // URL encode the courseId to handle special characters in encrypted URLs
+    const encodedCourseId = encodeURIComponent(courseId);
+    console.log("📝 Encoded courseId:", encodedCourseId);
     
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/notes/get-notes/${courseId}`,
+      `http://localhost:5000/api/v1/notes/get-notes/${encodedCourseId}?type=${type}`,
       {
         withCredentials: true,
         headers: {
@@ -15,7 +19,7 @@ const GetCurrentNotesApi = async ({ courseId }) => {
     );
 
     console.log(
-      "backendApiResponse for GetCurrentCourseNotesApi: ",
+      "backendApiResponse for GetCurrentNotesApi: ",
       backendResponse
     );
 
