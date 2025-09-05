@@ -26,6 +26,10 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { EnrollmentVideoApi } from "../api/EnrollVideoApi.js";
 import { SendAiChatApi } from "../api/SendAiChatApi.js";
 import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
+import { GetVideoSummaryApi } from "../api/GetVideoSummaryApi.js";
+import { GetCurrentVideoTranscriptApi } from '../api/GetCurrentVideoTranscript.js';
+import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
+import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 
 // import { useParams } from "react-router-dom";
 
@@ -304,10 +308,12 @@ const VideoInteraction = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
   const [videoSummary, setVideoSummary] = useState("");
-  const [transcript, setTranscript] = useState("");
+  const [transcript, setTranscript] = useState([]);
   const [notes, setNotes] = useState("");
   const [notesPreviewMode, setNotesPreviewMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false); // Mobile preview toggle
+  const [showAllTranscript, setShowAllTranscript] = useState(false); // For transcript show more
+  const [videoSize, setVideoSize] = useState(55); // Default 55% for resizable panels
   // const [notesLoader, setNotesLoader] = useState(false);
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -511,61 +517,74 @@ const VideoInteraction = () => {
     }
   };
 
-  const generateSummary = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setVideoSummary(`This video provides a comprehensive overview of the topic with the following key points:
+  const generateSummary = async () => {
+    //     setIsLoading(true);
+    //     // Simulate API call
+    //     setTimeout(() => {
+    //       setVideoSummary(`This video provides a comprehensive overview of the topic with the following key points:
 
-🎯 Main Topics Covered:
-• Introduction to the subject (0:00 - 2:30)
-• Key concepts and definitions (2:30 - 7:15)
-• Practical examples and applications (7:15 - 12:00)
-• Conclusion and next steps (12:00 - 15:30)
+    // 🎯 Main Topics Covered:
+    // • Introduction to the subject (0:00 - 2:30)
+    // • Key concepts and definitions (2:30 - 7:15)
+    // • Practical examples and applications (7:15 - 12:00)
+    // • Conclusion and next steps (12:00 - 15:30)
 
-💡 Key Takeaways:
-• Important insight 1 from the discussion
-• Critical point 2 mentioned by the speaker
-• Practical tip 3 for implementation
+    // 💡 Key Takeaways:
+    // • Important insight 1 from the discussion
+    // • Critical point 2 mentioned by the speaker
+    // • Practical tip 3 for implementation
 
-📊 Statistics/Data Mentioned:
-• Key statistic 1
-• Important figure 2
-• Research finding 3
+    // 📊 Statistics/Data Mentioned:
+    // • Key statistic 1
+    // • Important figure 2
+    // • Research finding 3
 
-🔗 Resources Referenced:
-• Book/article mentioned
-• Website or tool recommended
-• Additional learning material suggested`);
+    // 🔗 Resources Referenced:
+    // • Book/article mentioned
+    // • Website or tool recommended
+    // • Additional learning material suggested`);
+    //       setIsLoading(false);
+    //     }, 2000);
+    setIsLoading(false); 
+
+    try {
+      setIsLoading(true);
+      console.log("Summary Clicked");
+      const apiResponse = await GetVideoSummaryApi({
+        videoId: encryptedVideoUrl,
+      });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          apiResponse.message ||
+            "Failed to get video summary. Please try again."
+        );
+      }
+      setVideoSummary(apiResponse.summary || "No summary available.");
+    } catch (err) {
+      alert("Error in generating summary. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
-  const generateTranscript = () => {
+  const generateTranscript = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTranscript(`[00:00] Welcome everyone to today's session. In this video, we'll be covering...
-
-[00:15] Let me start by explaining the fundamental concepts that we need to understand...
-
-[01:30] Now, moving on to the practical applications, you'll notice that...
-
-[03:45] This is particularly important because it helps us understand...
-
-[05:20] Let me show you an example to illustrate this point...
-
-[07:10] As we can see from this demonstration, the key principle is...
-
-[09:30] Now let's discuss some common challenges and how to overcome them...
-
-[12:15] To summarize what we've learned today...
-
-[14:45] For next steps, I recommend that you...
-
-[15:20] Thank you for watching, and don't forget to subscribe for more content like this!`);
+    try {
+      const apiResponse = await GetCurrentVideoTranscriptApi({
+        currentVideoId: CryptoJS.AES.decrypt(encryptedVideoUrl, import.meta.env.VITE_ENCRYPTION_SECRET).toString(CryptoJS.enc.Utf8),
+      });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          apiResponse.message ||
+            "Failed to get video transcript. Please try again."
+        );
+      }
+      setTranscript(apiResponse?.data?.data?.transcript || "No transcript available.");
+    } catch (err) {
+      alert("Error in generating transcript. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const generateAssessment = () => {
@@ -604,6 +623,67 @@ const VideoInteraction = () => {
     }, 2000);
   };
 
+  // Auto-save notes with debounce (2 seconds like CourseInterface)
+  useEffect(() => {
+    if (!loadedVideo?.videoId || !notes) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      console.log("💾 Auto-saving notes...");
+      
+      try {
+        setNotesLoader();
+
+        const apiResponse = await SaveCourseNotesApi({
+          courseId: loadedVideo.videoId, // Using videoId as courseId
+          notes: notes,
+        });
+
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("❌ Error auto-saving notes:", apiResponse?.message);
+          // Don't show alert as it's auto-save
+          return;
+        }
+        
+        console.log("✅ Notes auto-saved successfully");
+      } catch (err) {
+        console.error("💥 Error in auto-save:", err);
+      } finally {
+        unsetNotesLoader();
+      }
+    }, 2000); // Save after 2 seconds of no typing
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [notes, loadedVideo?.videoId]);
+
+  // Auto-fetch notes when video loads
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!loadedVideo?.videoId) return;
+      
+      try {
+        console.log("📝 Fetching notes for video:", loadedVideo.videoId);
+        
+        const apiResponse = await GetCurrentNotesApi({ 
+          courseId: loadedVideo.videoId 
+        });
+        
+        if (apiResponse.status === 200 || apiResponse.status === 201) {
+          const fetchedNotes = apiResponse.data?.notes || "";
+          setNotes(fetchedNotes);
+          console.log("✅ Notes fetched successfully:", fetchedNotes);
+        } else {
+          console.log("📝 No existing notes found");
+          setNotes(""); // Reset notes if none found
+        }
+      } catch (err) {
+        console.error("💥 Error fetching notes:", err);
+        setNotes(""); // Reset on error
+      }
+    };
+
+    fetchNotes();
+  }, [loadedVideo?.videoId]);
+
   // Auto-save notes with debounce
   useEffect(() => {
     if (!notes.trim()) return;
@@ -637,10 +717,10 @@ const VideoInteraction = () => {
 
   const tabs = [
     { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "summary", label: "Summary", icon: BookOpen },
-    { id: "transcript", label: "Transcript", icon: FileText },
-    { id: "assessment", label: "Assessment", icon: FileCheck },
     { id: "notes", label: "Notes", icon: StickyNote },
+    { id: "transcript", label: "Transcript", icon: FileText },
+    { id: "summary", label: "Summary", icon: BookOpen },
+    { id: "assessment", label: "Assessment", icon: FileCheck },
   ];
 
   // Professional Loader Component
@@ -759,137 +839,150 @@ const VideoInteraction = () => {
               </div>
             </div>
           ) : (
-            // Main Interface
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-              {/* Left Section - Video Player */}
+            // Main Interface - CourseInterface Style Layout
+            <div className="flex min-h-[calc(100vh-180px)]">
+              {/* 🎬 Left Section: Video Player */}
               <div
-                className={`rounded-2xl border overflow-hidden ${
-                  isDark
-                    ? "bg-gray-800 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
+                className="flex-shrink-0 min-w-0 flex flex-col"
+                style={{
+                  width: window.innerWidth >= 1024 ? `${videoSize}%` : "100%",
+                }}
               >
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Video className="w-6 h-6 text-emerald-500" />
-                    <div className="flex-1">
-                      <h3 className="font-bold line-clamp-2">
-                        {loadedVideo.title}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{loadedVideo.duration}</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{loadedVideo.views}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setLoadedVideo(null)}
-                    className="text-sm text-emerald-500 hover:text-emerald-600 transition-colors"
-                  >
-                    Change Video
-                  </button>
-                </div>
-
-                <div className="relative aspect-video">
-                  <iframe
-                    src={loadedVideo.embedUrl}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
-                </div>
-
-                <div className="p-4">
-                  <div
-                    className={`p-3 rounded-lg ${
-                      isDark ? "bg-gray-700" : "bg-gray-100"
-                    }`}
-                  >
-                    <p className="text-sm text-center">
-                      <span className="font-medium">💡 Pro Tip:</span> Use the
-                      chat to ask specific questions about timestamps, concepts,
-                      or details from the video!
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Section - Interactive Features */}
-              <div
-                className={`rounded-2xl border overflow-hidden flex flex-col h-full shadow-lg ${
-                  isDark
-                    ? "bg-gray-800 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
-              >
-                {/* Enhanced Header */}
                 <div
-                  className={`p-4 border-b ${
+                  className={`rounded-2xl border overflow-hidden h-full ${
                     isDark
-                      ? "border-gray-700 bg-gray-800/50"
-                      : "border-gray-200 bg-gray-50/50"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                      <span className="text-white text-lg">🤖</span>
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Video className="w-6 h-6 text-emerald-500" />
+                      <div className="flex-1">
+                        <h3 className="font-bold line-clamp-2">
+                          {loadedVideo.title}
+                        </h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <span className="flex items-center space-x-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{loadedVideo.duration}</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <Eye className="w-4 h-4" />
+                            <span>{loadedVideo.views}</span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                        AI Learning Assistant
-                      </h3>
-                      <p
-                        className={`text-sm ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
-                      >
-                        Interactive video analysis
+                    <button
+                      onClick={() => setLoadedVideo(null)}
+                      className="text-sm text-emerald-500 hover:text-emerald-600 transition-colors"
+                    >
+                      Change Video
+                    </button>
+                  </div>
+
+                  <div className="relative aspect-video">
+                    <iframe
+                      src={loadedVideo.embedUrl}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    ></iframe>
+                  </div>
+
+                  <div className="p-4">
+                    <div
+                      className={`p-3 rounded-lg ${
+                        isDark ? "bg-gray-700" : "bg-gray-100"
+                      }`}
+                    >
+                      <p className="text-sm text-center">
+                        <span className="font-medium">💡 Pro Tip:</span> Use the
+                        chat to ask specific questions about timestamps, concepts,
+                        or details from the video!
                       </p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Enhanced Tabs */}
+              {/* Enhanced Resize Handle */}
+              <div
+                className={`hidden lg:block w-2 cursor-col-resize ${
+                  isDark
+                    ? "bg-gray-700 hover:bg-emerald-500"
+                    : "bg-gray-200 hover:bg-emerald-500"
+                } transition-all duration-300 relative group`}
+                onMouseDown={(e) => {
+                  const startX = e.clientX;
+                  const startWidth = videoSize;
+
+                  const handleMouseMove = (e) => {
+                    const container = document.querySelector(
+                      ".flex.min-h-\\[calc\\(100vh-180px\\)\\]"
+                    );
+                    const rect = container.getBoundingClientRect();
+                    const newSize = Math.min(
+                      Math.max(((e.clientX - rect.left) / rect.width) * 100, 30),
+                      80
+                    );
+                    setVideoSize(newSize);
+                  };
+
+                  const handleMouseUp = () => {
+                    document.removeEventListener("mousemove", handleMouseMove);
+                    document.removeEventListener("mouseup", handleMouseUp);
+                  };
+
+                  document.addEventListener("mousemove", handleMouseMove);
+                  document.addEventListener("mouseup", handleMouseUp);
+                }}
+              >
+                <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
+              </div>
+
+              {/* 📋 Right Section: Interactive Features */}
+              <div
+                className="hidden lg:flex lg:flex-col flex-shrink-0 min-w-0"
+                style={{ width: `${100 - videoSize}%` }}
+              >
+                {/* Enhanced Tab Navigation */}
                 <div
                   className={`border-b ${
                     isDark ? "border-gray-700" : "border-gray-200"
-                  }`}
+                  } bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-700/50`}
                 >
-                  <div className="flex overflow-x-auto">
+                  <div
+                    className="flex overflow-x-auto scrollbar-hide px-4 py-2"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
                     {tabs.map((tab) => {
                       const Icon = tab.icon;
                       return (
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`flex items-center justify-center space-x-2 py-4 px-6 whitespace-nowrap transition-all duration-300 relative group ${
+                          className={`group relative flex items-center space-x-2 px-6 py-3 font-medium text-sm transition-all duration-300 rounded-lg mx-1 whitespace-nowrap ${
                             activeTab === tab.id
-                              ? "text-emerald-500 bg-gradient-to-b from-emerald-50 to-transparent dark:from-emerald-900/20"
+                              ? isDark
+                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                                : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                               : isDark
-                              ? "text-gray-400 hover:text-white hover:bg-gray-700/50"
-                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                              ? "text-gray-300 hover:text-white hover:bg-gray-700"
+                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                           }`}
                         >
                           <Icon
-                            className={`w-5 h-5 transition-transform duration-300 ${
-                              activeTab === tab.id
-                                ? "scale-110"
-                                : "group-hover:scale-105"
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                              activeTab === tab.id ? "scale-110" : "group-hover:scale-105"
                             }`}
                           />
-                          <span className="font-medium text-sm">
-                            {tab.label}
-                          </span>
+                          <span>{tab.label}</span>
                           {activeTab === tab.id && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+                            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-emerald-400/20 to-teal-400/20 blur-xl"></div>
                           )}
                         </button>
                       );
@@ -897,10 +990,10 @@ const VideoInteraction = () => {
                   </div>
                 </div>
 
-                {/* Tab Content */}
-                <div className="flex-1 overflow-hidden">
-                  <div className="h-full p-4 flex flex-col">
-                    {activeTab === "chat" && (
+                {/* Desktop Tab Content */}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {/* Chat Tab */}
+                  {activeTab === "chat" && (
                       <div className="h-full flex flex-col p-4">
                         {/* Chat Messages */}
                         <div className="flex-1 space-y-4 mb-4 overflow-y-auto min-h-0">
@@ -1043,51 +1136,167 @@ const VideoInteraction = () => {
                       <div className="h-full flex flex-col p-4">
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                           <div className="flex items-center space-x-3">
-                            <BookOpen className="w-6 h-6 text-emerald-500" />
+                            <BookOpen className="w-6 h-6 text-orange-500" />
                             <h3 className="text-lg font-bold">Video Summary</h3>
                           </div>
-                          <button
-                            onClick={generateSummary}
-                            disabled={isLoading}
-                            className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50 transform hover:scale-105"
-                          >
-                            {isLoading && (
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={generateSummary}
+                              disabled={summaryLoader}
+                              className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                                summaryLoader
+                                  ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
+                                  : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+                              }`}
+                            >
+                              {summaryLoader ? (
+                                <>
+                                  <div className="flex items-center space-x-1">
+                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                                    <div
+                                      className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                                      style={{ animationDelay: "0.1s" }}
+                                    ></div>
+                                    <div
+                                      className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
+                                      style={{ animationDelay: "0.2s" }}
+                                    ></div>
+                                  </div>
+                                  <span>Generating...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>🤖</span>
+                                  <span>Generate Summary</span>
+                                </>
+                              )}
+                            </button>
+                            {videoSummary && (
+                              <button 
+                                onClick={() => navigator.clipboard.writeText(videoSummary)}
+                                className="p-2 text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-all duration-300"
+                                title="Copy summary"
+                              >
+                                <Download className="w-5 h-5" />
+                              </button>
                             )}
-                            <span>
-                              {isLoading ? "Generating..." : "Generate Summary"}
-                            </span>
-                          </button>
+                          </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto min-h-0">
                           {videoSummary ? (
-                            <div
-                              className={`p-6 rounded-xl border shadow-sm ${
-                                isDark
-                                  ? "bg-gray-700/50 border-gray-600"
-                                  : "bg-gradient-to-br from-gray-50 to-white border-gray-200"
-                              }`}
-                            >
-                              <pre className="whitespace-pre-wrap text-sm leading-relaxed font-medium">
-                                {videoSummary}
-                              </pre>
-                            </div>
-                          ) : (
-                            <div className="text-center py-16">
-                              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
-                                <Lightbulb className="w-8 h-8 text-white" />
-                              </div>
-                              <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                                Generate AI Summary
-                              </h3>
-                              <p
-                                className={`text-sm mb-4 max-w-sm mx-auto ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
+                            <div className="space-y-4">
+                              {/* Summary Header */}
+                              <div
+                                className={`p-4 rounded-xl border transition-all duration-300 ${
+                                  isDark
+                                    ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30"
+                                    : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                                 }`}
                               >
-                                Get an intelligent summary with key points,
-                                timestamps, and insights from the video content
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
+                                    <span className="text-white text-xl">📚</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-lg">
+                                      AI Generated Summary
+                                    </h4>
+                                    <p
+                                      className={`text-sm ${
+                                        isDark ? "text-orange-300" : "text-orange-600"
+                                      }`}
+                                    >
+                                      Key insights from this video
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Summary Content */}
+                              <div
+                                className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                                  isDark
+                                    ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750"
+                                    : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                                }`}
+                              >
+                                {/* Copy Button */}
+                                <button
+                                  onClick={() =>
+                                    navigator.clipboard.writeText(videoSummary)
+                                  }
+                                  className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                    isDark
+                                      ? "hover:bg-gray-700 text-gray-400 hover:text-white"
+                                      : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                                  }`}
+                                  title="Copy summary"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </button>
+
+                                {/* Summary Badge */}
+                                <div className="flex items-center space-x-2 mb-4">
+                                  <div
+                                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                      isDark
+                                        ? "bg-orange-900/30 text-orange-400 border border-orange-700"
+                                        : "bg-orange-100 text-orange-700 border border-orange-200"
+                                    }`}
+                                  >
+                                    AI Summary
+                                  </div>
+                                  <div
+                                    className={`px-2 py-1 rounded text-xs ${
+                                      isDark
+                                        ? "bg-gray-700 text-gray-300"
+                                        : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    Auto-generated
+                                  </div>
+                                </div>
+
+                                {/* Summary Text */}
+                                <div
+                                  className={`text-sm leading-relaxed ${
+                                    isDark ? "text-gray-100" : "text-gray-800"
+                                  }`}
+                                >
+                                  <div
+                                    className="prose prose-sm max-w-none prose-headings:text-orange-600 dark:prose-headings:text-orange-400 prose-strong:text-orange-700 dark:prose-strong:text-orange-300"
+                                    dangerouslySetInnerHTML={{
+                                      __html: formatNotesToHTML(videoSummary, isDark),
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className={`text-center py-12 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              <div className="text-4xl mb-4">📚</div>
+                              <p className="text-lg font-medium mb-2">
+                                No summary available
+                              </p>
+                              <p className="text-sm">
+                                Click "Generate Summary" to get AI insights from the video
                               </p>
                             </div>
                           )}
@@ -1099,7 +1308,7 @@ const VideoInteraction = () => {
                       <div className="h-full flex flex-col p-4">
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                           <div className="flex items-center space-x-3">
-                            <FileText className="w-6 h-6 text-emerald-500" />
+                            <FileText className="w-6 h-6 text-purple-500" />
                             <h3 className="text-lg font-bold">
                               Video Transcript
                             </h3>
@@ -1107,20 +1316,41 @@ const VideoInteraction = () => {
                           <div className="flex space-x-2">
                             <button
                               onClick={generateTranscript}
-                              disabled={isLoading}
-                              className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50 transform hover:scale-105"
+                              disabled={transcriptLoader}
+                              className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                                transcriptLoader
+                                  ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
+                                  : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                              }`}
                             >
-                              {isLoading && (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              {transcriptLoader ? (
+                                <>
+                                  <div className="flex items-center space-x-0.5">
+                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                                    <div
+                                      className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                      style={{ animationDelay: "0.1s" }}
+                                    ></div>
+                                    <div
+                                      className="w-1 h-1 bg-white rounded-full animate-bounce"
+                                      style={{ animationDelay: "0.2s" }}
+                                    ></div>
+                                  </div>
+                                  <span>Fetching...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>📜</span>
+                                  <span>Fetch</span>
+                                </>
                               )}
-                              <span>
-                                {isLoading
-                                  ? "Generating..."
-                                  : "Generate Transcript"}
-                              </span>
                             </button>
-                            {transcript && (
-                              <button className="p-2 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all duration-300">
+                            {transcript && transcript.length > 0 && (
+                              <button 
+                                onClick={() => navigator.clipboard.writeText(transcript.map(t => `${Math.floor(t.startTime)}s-${Math.floor(t.endTime)}s: ${t.text}`).join('\n'))}
+                                className="p-2 text-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-300"
+                                title="Copy transcript"
+                              >
                                 <Download className="w-5 h-5" />
                               </button>
                             )}
@@ -1128,33 +1358,185 @@ const VideoInteraction = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto min-h-0">
-                          {transcript ? (
-                            <div
-                              className={`p-6 rounded-xl border shadow-sm h-full ${
-                                isDark
-                                  ? "bg-gray-700/50 border-gray-600"
-                                  : "bg-gradient-to-br from-gray-50 to-white border-gray-200"
-                              }`}
-                            >
-                              <pre className="whitespace-pre-wrap text-sm leading-relaxed font-mono">
-                                {transcript}
-                              </pre>
-                            </div>
-                          ) : (
-                            <div className="text-center py-16">
-                              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
-                                <FileText className="w-8 h-8 text-white" />
-                              </div>
-                              <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                                Extract Transcript
-                              </h3>
-                              <p
-                                className={`text-sm mb-4 max-w-sm mx-auto ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
+                          {transcript && transcript.length > 0 ? (
+                            <div className="space-y-4">
+                              {/* Header Stats */}
+                              <div
+                                className={`p-4 rounded-xl border transition-all duration-300 ${
+                                  isDark
+                                    ? "bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/30"
+                                    : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200"
                                 }`}
                               >
-                                Generate a complete transcript with precise
-                                timestamps for easy reference and study
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
+                                    <span className="text-white text-xl">📜</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-lg">
+                                      Video Transcript
+                                    </h4>
+                                    <p
+                                      className={`text-sm ${
+                                        isDark ? "text-purple-300" : "text-purple-600"
+                                      }`}
+                                    >
+                                      {transcript.length} segments • Auto-generated
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Transcript Segments */}
+                              <div className="space-y-3">
+                                {(showAllTranscript
+                                  ? transcript
+                                  : transcript.slice(0, 5)
+                                ).map((item, index) => (
+                                  <div
+                                    key={index}
+                                    className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
+                                      isDark
+                                        ? "bg-gray-800 border-gray-600 hover:border-purple-500 hover:bg-gray-750"
+                                        : "bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50"
+                                    }`}
+                                  >
+                                    {/* Timestamp Badge */}
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center space-x-2">
+                                        <div
+                                          className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
+                                            isDark
+                                              ? "bg-purple-900/30 text-purple-400 border border-purple-700"
+                                              : "bg-purple-100 text-purple-700 border border-purple-200"
+                                          }`}
+                                        >
+                                          {Math.floor(item.startTime)}s -{" "}
+                                          {Math.floor(item.endTime)}s
+                                        </div>
+                                        <div
+                                          className={`px-2 py-1 rounded text-xs ${
+                                            isDark
+                                              ? "bg-gray-700 text-gray-300"
+                                              : "bg-gray-100 text-gray-600"
+                                          }`}
+                                        >
+                                          #{showAllTranscript ? index + 1 : index + 1}
+                                        </div>
+                                      </div>
+                                      {/* Copy Button */}
+                                      <button
+                                        onClick={() =>
+                                          navigator.clipboard.writeText(item.text)
+                                        }
+                                        className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
+                                          isDark
+                                            ? "hover:bg-gray-700 text-gray-400 hover:text-white"
+                                            : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                                        }`}
+                                        title="Copy text"
+                                      >
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                          />
+                                        </svg>
+                                      </button>
+                                    </div>
+
+                                    {/* Transcript Text */}
+                                    <div
+                                      className={`text-sm leading-relaxed ${
+                                        isDark ? "text-gray-100" : "text-gray-800"
+                                      }`}
+                                    >
+                                      <p className="selection:bg-purple-200 selection:text-purple-900">
+                                        {item.text}
+                                      </p>
+                                    </div>
+
+                                    {/* Duration Indicator */}
+                                    <div
+                                      className={`mt-3 flex items-center justify-between text-xs ${
+                                        isDark ? "text-gray-400" : "text-gray-600"
+                                      }`}
+                                    >
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-purple-500">⏱️</span>
+                                        <span>
+                                          {(item.endTime - item.startTime).toFixed(1)}s
+                                          duration
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center space-x-1">
+                                        <span className="text-purple-500">📝</span>
+                                        <span>{item.text.split(" ").length} words</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* Show More/Less Button */}
+                                {transcript.length > 5 && (
+                                  <div className="flex justify-center pt-4">
+                                    <button
+                                      onClick={() =>
+                                        setShowAllTranscript(!showAllTranscript)
+                                      }
+                                      className={`flex items-center space-x-2 px-6 py-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
+                                        isDark
+                                          ? "border-purple-600 bg-purple-900/20 hover:bg-purple-800/30 text-purple-400 hover:text-purple-300"
+                                          : "border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-600 hover:text-purple-700"
+                                      }`}
+                                    >
+                                      <span className="text-lg">
+                                        {showAllTranscript ? "📋" : "📜"}
+                                      </span>
+                                      <span className="font-medium">
+                                        {showAllTranscript
+                                          ? `Show Less (${transcript.length - 5} hidden)`
+                                          : `Show More (${transcript.length - 5} remaining)`}
+                                      </span>
+                                      <svg
+                                        className={`w-4 h-4 transition-transform duration-300 ${
+                                          showAllTranscript ? "rotate-180" : ""
+                                        }`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 9l-7 7-7-7"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className={`text-center py-12 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              <div className="text-4xl mb-4">📜</div>
+                              <p className="text-lg font-medium mb-2">
+                                No transcript available
+                              </p>
+                              <p className="text-sm">
+                                Click "Fetch Transcript" to load the video transcript
                               </p>
                             </div>
                           )}

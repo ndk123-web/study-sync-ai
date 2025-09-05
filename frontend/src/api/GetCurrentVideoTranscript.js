@@ -1,11 +1,21 @@
 import axios from "axios";
 
+const extractVideoId = (urlOrId) => {
+  const regex =
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/;
+  const match = urlOrId.match(regex);
+  return match ? match[1] : urlOrId;
+};
+
 const GetCurrentVideoTranscriptApi = async ({ currentVideoId }) => {
   try {
+    // 🟢 Pehle ID extract karo
+    const properVideoId = extractVideoId(currentVideoId);
+
     const backendResponse = await axios.post(
       `http://localhost:8000/api/v1/transcripts/get-transcript`,
       {
-        videoId: currentVideoId,
+        videoId: properVideoId, // ✅ Ab backend ko sirf ID bhej raha hai
       },
       {
         withCredentials: true,
