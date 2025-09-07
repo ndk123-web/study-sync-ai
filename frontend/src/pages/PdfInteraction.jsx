@@ -17,8 +17,10 @@ import {
   X
 } from 'lucide-react';
 import { useThemeStore } from "../store/slices/useThemeStore";
+import { useLoaders } from "../store/slices/useLoaders.js";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
+import { LoadPdfFileApi } from '../api/LoadPdfFileApi.js';
 
 const PdfInteraction = () => {
   const theme = useThemeStore((state) =>
@@ -37,31 +39,72 @@ const PdfInteraction = () => {
   const [notes, setNotes] = useState('');
   const [assessmentQuestions, setAssessmentQuestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleFileUpload = (event) => {
+  // Global loaders from store
+  const pdfLoader = useLoaders((state) => state.pdfLoader);
+  const setPdfLoader = useLoaders((state) => state.setPdfLoader);
+  const unsetPdfLoader = useLoaders((state) => state.unsetPdfLoader);
+
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
-      setUploadedPdf({
-        file: file,
-        name: file.name,
-        size: (file.size / 1024 / 1024).toFixed(2), // Size in MB
-        url: URL.createObjectURL(file)
-      });
-      
-      // Initialize with welcome message
-      setChatMessages([
-        {
-          id: 1,
-          type: 'bot',
-          message: `Great! I've loaded "${file.name}". I'm ready to help you understand this document. What would you like to know?`,
-          timestamp: new Date().toLocaleTimeString()
-        }
-      ]);
-    }
-  };
 
-  const handleSendMessage = () => {
+      let maxSizeMB = 100;
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        alert(`File size exceeds the ${maxSizeMB}MB limit. Please upload a smaller file.`);
+        return;
+      }
+
+      try {
+        // Start loading state
+        setIsUploadingPdf(true);
+        setPdfLoader();
+
+        console.log("🚀 Uploading PDF file:", file.name);
+        
+        const apiResponse = await LoadPdfFileApi({ pdfFile: file });
+        
+        console.log("📄 PDF Upload Response:", apiResponse);
+        
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.error("❌ PDF upload failed:", apiResponse);
+          alert("Failed to load PDF. Please try again.");
+          return;
+        }
+        
+        setUploadedPdf({
+          file: file,
+          name: file.name,
+          size: (file.size / 1024 / 1024).toFixed(2), // Size in MB
+          url: URL.createObjectURL(file)
+        });
+        
+        // Initialize with welcome message
+        setChatMessages([
+          {
+            id: 1,
+            type: 'bot',
+            message: `Great! I've successfully uploaded "${file.name}" to the cloud and it's ready for analysis. I can help you understand this document. What would you like to know?`,
+            timestamp: new Date().toLocaleTimeString()
+          }
+        ]);
+        
+        console.log("✅ PDF uploaded successfully!");
+        
+      } catch (error) {
+        console.error("💥 Error during PDF upload:", error);
+        alert("An error occurred while uploading the PDF. Please try again.");
+      } finally {
+        // End loading state
+        setIsUploadingPdf(false);
+        unsetPdfLoader();
+      }
+    } else {
+      alert("Please select a valid PDF file.");
+    }
+  };  const handleSendMessage = () => {
     if (!messageInput.trim()) return;
 
     const newMessage = {
@@ -158,17 +201,32 @@ The document provides detailed insights into various aspects of the subject matt
             <div className="max-w-2xl mx-auto">
               <div 
                 className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-                  isDark 
-                    ? 'border-gray-600 hover:border-emerald-500 bg-gray-800/50' 
-                    : 'border-gray-300 hover:border-emerald-500 bg-gray-50/50'
+                  isUploadingPdf 
+                    ? (isDark ? 'border-emerald-500 bg-emerald-900/20' : 'border-emerald-500 bg-emerald-50') 
+                    : (isDark 
+                      ? 'border-gray-600 hover:border-emerald-500 bg-gray-800/50' 
+                      : 'border-gray-300 hover:border-emerald-500 bg-gray-50/50')
                 }`}
               >
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
-                  <Upload className="w-12 h-12 text-white" />
+                <div className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isUploadingPdf 
+                    ? 'bg-gradient-to-r from-emerald-400 to-teal-400 animate-pulse' 
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                }`}>
+                  {isUploadingPdf ? (
+                    <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Upload className="w-12 h-12 text-white" />
+                  )}
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Upload Your PDF</h3>
+                <h3 className="text-2xl font-bold mb-4">
+                  {isUploadingPdf ? 'Uploading PDF...' : 'Upload Your PDF'}
+                </h3>
                 <p className={`text-lg mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Drop your PDF file here or click to browse
+                  {isUploadingPdf 
+                    ? 'Please wait while we process your PDF file' 
+                    : 'Drop your PDF file here or click to browse'
+                  }
                 </p>
                 <input
                   ref={fileInputRef}
@@ -176,12 +234,18 @@ The document provides detailed insights into various aspects of the subject matt
                   accept=".pdf"
                   onChange={handleFileUpload}
                   className="hidden"
+                  disabled={isUploadingPdf}
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  disabled={isUploadingPdf}
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform shadow-lg ${
+                    isUploadingPdf
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 hover:scale-105'
+                  }`}
                 >
-                  Choose PDF File
+                  {isUploadingPdf ? 'Uploading...' : 'Choose PDF File'}
                 </button>
                 <p className={`text-sm mt-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                   Supported format: PDF (Max 10MB)

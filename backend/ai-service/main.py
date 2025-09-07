@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.db import ping_server
 from contextlib import asynccontextmanager
 import asyncio
+import cloudinary
 
 from app.routes.transcript_router import transcriptRouter
 from app.routes.summary_router import summaryRouter
 from app.routes.chat_router import chatRouter
+from app.routes.pdf_router import pdfRouter
 
 # from api.utils.addMiddlewares import setupMiddlewares
 from app.config.firebase import initialize_firebase , check_firebase_connection
@@ -22,6 +24,7 @@ async def lifespan(app: FastAPI):
     if connected:
         print("✅ Connected to MongoDB successfully!")
         await initialize_firebase()
+        
     else:
         print("❌ MongoDB connection failed!")
 
@@ -35,6 +38,14 @@ async def lifespan(app: FastAPI):
         await initialize_firebase()
     else:
         print("❌ MongoDB connection failed!")
+        
+
+cloudinary.config(
+            cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+            api_key=os.environ.get('CLOUDINARY_API_KEY'),
+            api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+        )
+print("Cloudinary Configured with env variables")
 
 # Load environment variables
 
@@ -61,3 +72,4 @@ async def read_root():
 app.include_router(transcriptRouter, prefix='/api/v1/transcripts')
 app.include_router(summaryRouter, prefix='/api/v1/summaries')
 app.include_router(chatRouter, prefix='/api/v1/chat')
+app.include_router(pdfRouter, prefix='/api/v1/pdf')
