@@ -42,9 +42,17 @@ const formatNotesToHTML = (text, isDark = false) => {
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
       const b64Code = window.btoa(unescape(encodeURIComponent(code)));
-      const langClass = language ? `language-${language}` : 'language-javascript';
+      const langClass = language
+        ? `language-${language}`
+        : "language-javascript";
       codeBlockPlaceholders.push(
-        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
+        `<pre class="${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        } p-4 rounded-lg overflow-x-auto border ${
+          isDark ? "border-gray-700" : "border-gray-200"
+        } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -164,9 +172,17 @@ const formatChatMessageHTML = (text, isDark = false) => {
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
       const b64Code = window.btoa(unescape(encodeURIComponent(code)));
-      const langClass = language ? `language-${language}` : 'language-javascript';
+      const langClass = language
+        ? `language-${language}`
+        : "language-javascript";
       codeBlockPlaceholders.push(
-        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
+        `<pre class="${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        } p-4 rounded-lg overflow-x-auto border ${
+          isDark ? "border-gray-700" : "border-gray-200"
+        } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -267,7 +283,7 @@ const VideoInteraction = () => {
 
   const [videoUrl, setVideoUrl] = useState("");
   const [loadedVideo, setLoadedVideo] = useState(null);
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("notes");
   const [chatMessages, setChatMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
   const [videoSummary, setVideoSummary] = useState("");
@@ -297,6 +313,20 @@ const VideoInteraction = () => {
   const unsetTranscriptLoader = useLoaders(
     (state) => state.unsetTranscriptLoader
   );
+
+  useEffect(() => {
+    if (window.Prism) {
+      const timeoutId = setTimeout(() => {
+        try {
+          window.Prism.highlightAll();
+        } catch (err) {
+          console.error("Prism highlight error:", err);
+        }
+      }, 0); // <- zero delay better than 200/800
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [chatMessages, activeTab, notesPreviewMode]);
 
   // Apply Prism syntax highlighting when chat messages change
   useEffect(() => {
@@ -345,20 +375,7 @@ const VideoInteraction = () => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [
-    chatMessages
-  ]);
-
-  // Also apply Prism when component mounts and Prism is available
-  useEffect(() => {
-    if (window.Prism) {
-      const timeoutId = setTimeout(() => {
-        window.Prism.highlightAll();
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, []);
+  }, [chatMessages, activeTab, notesPreviewMode]);
 
   // Apply Prism syntax highlighting for notes area - only when content finishes changing
   useEffect(() => {
@@ -698,6 +715,128 @@ const VideoInteraction = () => {
     { id: "summary", label: "Summary", icon: BookOpen },
     { id: "assessment", label: "Assessment", icon: FileCheck },
   ];
+
+  // // Apply Prism syntax highlighting when chat messages change
+  // useEffect(() => {
+  //   if (window.Prism && activeTab === "chat") {
+  //     // Wait for DOM to render and then populate code elements from data-raw-code
+  //     const timeoutId = setTimeout(() => {
+  //       try {
+  //         const codeElems = Array.from(
+  //           document.querySelectorAll("code[data-raw-code]")
+  //         );
+
+  //         codeElems.forEach((el) => {
+  //           try {
+  //             const b64 = el.getAttribute("data-raw-code") || "";
+  //             let decoded = "";
+  //             if (b64) {
+  //               try {
+  //                 decoded = decodeURIComponent(escape(window.atob(b64)));
+  //               } catch (e) {
+  //                 // fallback for environments without atob/unescape
+  //                 try {
+  //                   decoded = Buffer.from(b64, "base64").toString("utf-8");
+  //                 } catch (err) {
+  //                   decoded = "";
+  //                 }
+  //               }
+  //             }
+  //             // Set the raw code as textContent to preserve whitespace/newlines
+  //             if (decoded) el.textContent = decoded;
+  //             // Now highlight the element individually
+  //             window.Prism.highlightElement(el);
+  //           } catch (err) {
+  //             console.error("Error processing code element:", err);
+  //           }
+  //         });
+
+  //         console.log(
+  //           "🎨 Prism highlighting applied to",
+  //           codeElems.length,
+  //           "code blocks"
+  //         );
+  //       } catch (error) {
+  //         console.error("Prism highlighting error:", error);
+  //       }
+  //     }, 200); // small delay to let React paint
+
+  //     return () => clearTimeout(timeoutId);
+  //   }
+  // }, [chatMessages]);
+
+  // // Also apply Prism when component mounts and Prism is available
+  // useEffect(() => {
+  //   if (window.Prism) {
+  //     const timeoutId = setTimeout(() => {
+  //       window.Prism.highlightAll();
+  //     }, 300);
+
+  //     return () => clearTimeout(timeoutId);
+  //   }
+  // }, []);
+
+  // // Apply Prism syntax highlighting for notes area - only when content finishes changing
+  // useEffect(() => {
+  //   if (
+  //     typeof window === "undefined" ||
+  //     activeTab !== "notes" ||
+  //     !notesPreviewMode
+  //   )
+  //     return;
+
+  //   const timeoutId = setTimeout(() => {
+  //     try {
+  //       const notesCodeElems = Array.from(
+  //         document.querySelectorAll(
+  //           '[data-notes-area="true"] code[data-raw-code]'
+  //         )
+  //       ).filter((el) => !el.hasAttribute("data-prism-processed"));
+
+  //       notesCodeElems.forEach((el) => {
+  //         try {
+  //           const b64 = el.getAttribute("data-raw-code") || "";
+  //           let decoded = "";
+  //           if (b64) {
+  //             try {
+  //               decoded = decodeURIComponent(escape(window.atob(b64)));
+  //             } catch (e) {
+  //               try {
+  //                 decoded = Buffer.from(b64, "base64").toString("utf-8");
+  //               } catch (err) {
+  //                 decoded = "";
+  //               }
+  //             }
+  //           }
+  //           if (decoded) {
+  //             el.textContent = decoded;
+  //             if (
+  //               window.Prism &&
+  //               typeof window.Prism.highlightElement === "function"
+  //             ) {
+  //               window.Prism.highlightElement(el);
+  //             }
+  //             el.setAttribute("data-prism-processed", "1");
+  //           }
+  //         } catch (err) {
+  //           console.error("Error processing notes code element:", err);
+  //         }
+  //       });
+
+  //       if (notesCodeElems.length > 0) {
+  //         console.log(
+  //           "🎨 Prism notes highlighting applied to",
+  //           notesCodeElems.length,
+  //           "code blocks"
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("Prism notes highlighting error:", error);
+  //     }
+  //   }, 800); // Longer delay to avoid constant re-processing
+
+  //   return () => clearTimeout(timeoutId);
+  // }, [notesPreviewMode, activeTab]); // Only when switching to preview mode
 
   return (
     <div
