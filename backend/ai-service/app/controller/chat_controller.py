@@ -124,7 +124,6 @@ Keep responses clear and short, if the user asks other things instead of learnin
             message=f"Failed to generate AI response: {str(e)}"
         )
 
-
 class FetchChatsRequest(BaseModel):
     courseId: str 
     userData: dict

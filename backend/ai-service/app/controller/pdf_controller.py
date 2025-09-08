@@ -10,9 +10,14 @@ from ..utils.ApiError import ApiError
 from ..utils.ApiResponse import ApiResponse
 from bson import ObjectId
 import uuid
+from bson import ObjectId , json_util
+import json
 
 enrollment_collection = db['enrollmentcourses']
 users_collection = db['users']
+
+def serialize_doc(doc):
+    return json.loads(json_util.dumps(doc))
 
 async def extract_text_from_pdf(pdf_url):
     # Download PDF
@@ -54,6 +59,17 @@ async def extract_text_from_pdf(pdf_url):
 
     print(all_text)
 
+async def get_pdf_metadata_controller(userId , pdfId):
+    userInstance = await users_collection.find_one({"uid": userId})
+    if not userInstance:
+        return ApiError.send("User not found", 404)
+    
+    pdfInstance = await enrollment_collection.find_one({"_id": ObjectId(pdfId), "userId": ObjectId(userInstance["_id"])})
+    if not pdfInstance:
+        return ApiError.send("PDF not found", 404)
+    
+    return ApiResponse.send(200, serialize_doc(pdfInstance), "PDF metadata fetched successfully")
+    
 async def load_pdf_controller(userId, pdfFile):
     try:
         print(f"🚀 Processing PDF upload for user: {userId}")
@@ -86,6 +102,7 @@ async def load_pdf_controller(userId, pdfFile):
                 "userId": ObjectId(userInstance["_id"]),
                 "pdfLink": pdf_url,
                 "pdfName": pdfFile.filename or "Unnamed PDF",
+                "pdfSize": (len(file_content) / 1024 / 1024),  # Size in MB
                 "type": "pdf",
                 "uploadedAt": datetime.now(),
                 "createdAt": datetime.now(),
