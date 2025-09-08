@@ -1,30 +1,29 @@
 import axios from "axios";
 
-const GetPdfMetaDataApi = async ({ pdfId }) => {
+const SendPdfChatApi = async ({ pdfId , question }) => {
   try {
-    console.log("📄 Fetching PDF metadata for ID:", pdfId);
-
-    const backendResponse = await axios.get(
-      "http://localhost:8000/api/v1/pdf/get-pdf-metadata",
+    const backendResponse = await axios.post(
+      "http://localhost:8000/api/v1/pdf/rag-chat",
+      {
+        pdfId,
+        question
+      },
       {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
         },
-        params: {
-          pdfId: pdfId,
-        },
       }
     );
 
-    console.log("📄 PDF Metadata Response:", backendResponse);
+    console.log("backendApiResponse for SendPdfChatApi: ", backendResponse);
 
     return {
       status: backendResponse.status,
       data: backendResponse.data.data, // Return the full data object
     };
   } catch (err) {
-    console.log("❌ Error in GetPdfMetaDataApi:", err.message);
+    console.log("Err in Getting PDF Chat Api: ", err.message);
     return {
       status: err.response?.status || 500,
       data: err.response?.data || {},
@@ -33,4 +32,6 @@ const GetPdfMetaDataApi = async ({ pdfId }) => {
   }
 };
 
-export { GetPdfMetaDataApi };
+export { SendPdfChatApi };
+
+    

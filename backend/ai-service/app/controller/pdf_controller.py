@@ -12,6 +12,13 @@ from bson import ObjectId
 import uuid
 from bson import ObjectId , json_util
 import json
+from pinecone import Pinecone, ServerlessSpec
+import os 
+from langchain_community.llms import Ollama
+from langchain_pinecone import PineconeVectorStore
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain.chains import RetrievalQA
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 enrollment_collection = db['enrollmentcourses']
 users_collection = db['users']
@@ -20,45 +27,90 @@ def serialize_doc(doc):
     return json.loads(json_util.dumps(doc))
 
 async def extract_text_from_pdf(pdf_url):
-    # Download PDF
+    try:
+        # Download PDF
+        resp = requests.get(pdf_url, timeout=30)
+        resp.raise_for_status()
 
-    pdf_url = "https://res.cloudinary.com/dmijbupsf/raw/upload/v1757249690/study_sync/pdfs/pczdlcmzzcimbwkv4ggs.pdf"
+        doc = fitz.open(stream=resp.content, filetype="pdf")
+        all_text = ""
 
-    resp = requests.get(pdf_url, timeout=30)
-    resp.raise_for_status()
+        for i in range(len(doc)):
+            page = doc[i]
 
-    doc = fitz.open(stream=resp.content, filetype="pdf")
-    all_text = ""
+            # try direct text extraction first
+            text = page.get_text("text").strip()
 
-    for i in range(len(doc)):
-        page = doc[i]
+            if not text or len(text) < 6:
+                print(f"Page {i+1}: running OCR fallback")
 
-        # try direct text extraction first
-        text = page.get_text("text").strip()
+                # render at higher resolution for better OCR
+                zoom = 2.0
+                mat = fitz.Matrix(zoom, zoom)
+                pix = page.get_pixmap(matrix=mat, alpha=False)
 
-        if not text or len(text) < 6:
-            print(f"Page {i+1}: running OCR fallback")
+                img = Image.open(io.BytesIO(pix.tobytes("png")))
 
-            # render at higher resolution for better OCR
-            zoom = 2.0
-            mat = fitz.Matrix(zoom, zoom)
-            pix = page.get_pixmap(matrix=mat, alpha=False)
+                # basic preprocessing
+                img = img.convert("L")  # grayscale
+                # optional: simple thresholding (uncomment if needed)
+                # img = img.point(lambda p: 0 if p < 140 else 255)
 
-            img = Image.open(io.BytesIO(pix.tobytes("png")))
+                # run tesseract with config
+                config = "--psm 6 --oem 1"
+                text = pytesseract.image_to_string(img, lang="eng", config=config).strip()
 
-            # basic preprocessing
-            img = img.convert("L")  # grayscale
-            # optional: simple thresholding (uncomment if needed)
-            # img = img.point(lambda p: 0 if p < 140 else 255)
+            all_text += f"\n--- Page {i+1} ---\n{text if text else ''}"
 
-            # run tesseract with config
-            config = "--psm 6 --oem 1"
-            text = pytesseract.image_to_string(img, lang="eng", config=config).strip()
+        print("📄 Extracted text preview:", all_text[:500] + "..." if len(all_text) > 500 else all_text)
+        doc.close()  # Close the document to free memory
+        return all_text
+        
+    except Exception as e:
+        print(f"❌ Error extracting text from PDF: {str(e)}")
+        return ""  # Return empty string instead of None
 
-        all_text += f"\n--- Page {i+1} ---\n{text}"
-
-    print(all_text)
-
+async def rag_chat_controller(userId,pdfId,prompt):
+    try:
+        llm = Ollama(model="mistral")
+        # Use 1024-dimension embedding model to match Pinecone index exactly
+        # Using a model that produces exactly 1024 dimensions
+        embeddings = HuggingFaceEmbeddings(
+            model_name="BAAI/bge-large-en-v1.5",
+            model_kwargs={'device': 'cuda'},
+            encode_kwargs={'normalize_embeddings': True}
+        )
+        
+        # Initialize Pinecone with new API
+        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        index_name = "ndk"
+        namespace = f"user_{userId}_pdf_{pdfId}"
+        
+        # Get existing index
+        index = pc.Index(index_name)
+        vectorstore = PineconeVectorStore(
+            index=index, 
+            embedding=embeddings, 
+            text_key="text",
+            namespace=namespace
+        )
+        
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+        
+        qa = RetrievalQA.from_chain_type(
+        llm=llm,
+        retriever=retriever,
+        chain_type="stuff"
+        )
+        
+        answer = qa.run(prompt)
+        print("Answer:", answer)
+        return ApiResponse.send(200, {"answer": answer}, "RAG chat response generated successfully")
+    
+    except Exception as e:
+        print(f"❌ Error in rag_chat_controller: {str(e)}")
+        return ApiError.send("Failed to process RAG chat", 500)
+    
 async def get_pdf_metadata_controller(userId , pdfId):
     userInstance = await users_collection.find_one({"uid": userId})
     if not userInstance:
@@ -112,11 +164,69 @@ async def load_pdf_controller(userId, pdfFile):
                 return ApiError.send("Failed to add PDF to enrollment", 500)
             
             print("✅ PDF successfully processed and saved to database")
+            
+            # Extract text from PDF
+            text = await extract_text_from_pdf(pdf_url=pdf_url)
+            
+            if not text or text.strip() == "":
+                print("⚠️ No text extracted from PDF, skipping vector storage")
+                return ApiResponse.send(200, {
+                    "pdfUrl": pdf_url,
+                    "pdfName": pdfFile.filename,
+                    "enrollmentId": str(response.inserted_id),
+                    "warning": "PDF uploaded but no text could be extracted"
+                }, "PDF uploaded successfully (no text extracted)")
+            
+            # Split text into chunks
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            chunks = splitter.split_text(text)
+            
+            print(f"✂️ Split into {len(chunks)} chunks for embeddings")
+            
+            if len(chunks) == 0:
+                print("⚠️ No chunks created, skipping vector storage")
+                return ApiResponse.send(200, {
+                    "pdfUrl": pdf_url,
+                    "pdfName": pdfFile.filename,
+                    "enrollmentId": str(response.inserted_id),
+                    "warning": "PDF uploaded but no meaningful content found"
+                }, "PDF uploaded successfully (no content for indexing)")
+            
+            # Init embeddings with 1024-dimension model to match Pinecone index exactly
+            # Using a model that produces exactly 1024 dimensions
+            embeddings = HuggingFaceEmbeddings(
+                model_name="BAAI/bge-large-en-v1.5",
+                model_kwargs={'device': 'cuda'},
+                encode_kwargs={'normalize_embeddings': True}
+            )
+            
+            # Initialize Pinecone with new API
+            pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+            index_name = "ndk"
+            namespace = f"user_{userId}_pdf_{response.inserted_id}"   # 👈 unique per user+pdf
+
+            # Get existing index and create VectorStore
+            index = pc.Index(index_name)
+            vectorstore = PineconeVectorStore(
+                index=index, 
+                embedding=embeddings, 
+                text_key="text",
+                namespace=namespace
+            )
+            
+            # Add embeddings
+            vectorstore.add_texts(
+                texts=chunks,
+                metadatas=[{"userId": str(userInstance["_id"]), "pdfId": str(response.inserted_id)}] * len(chunks)
+            )
+            
+            print(f"📥 Stored {len(chunks)} chunks in Pinecone (namespace={namespace})")
+
             return ApiResponse.send(200, {
                 "pdfUrl": pdf_url,
                 "pdfName": pdfFile.filename,
                 "enrollmentId": str(response.inserted_id)
-            }, "PDF uploaded and added to enrollment successfully")
+            }, "PDF uploaded and processed successfully")
         else:
             return ApiError.send("Failed to upload PDF to cloud storage", 500)
     
