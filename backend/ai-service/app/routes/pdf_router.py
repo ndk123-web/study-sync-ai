@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi import Depends , Request , Query , File , UploadFile, Form
 from fastapi.routing import APIRouter
 from app.utils.Cloudinary import upload_cloudinary
-from ..controller.pdf_controller import load_pdf_controller , get_pdf_metadata_controller
+from ..controller.pdf_controller import load_pdf_controller , get_pdf_metadata_controller , rag_chat_controller
 
 
 pdfRouter = APIRouter()
@@ -21,4 +21,13 @@ async def load_pdf(pdfFile: UploadFile = File(...), userData = Depends(verifyJWT
 @pdfRouter.get('/get-pdf-metadata')
 async def get_pdf_metadata(pdfId: str = Query(...) , userData = Depends(verifyJWT)):
     response = await get_pdf_metadata_controller(userData['uid'], pdfId)
+    return response
+
+class RagRequest(BaseModel):
+    pdfId: str
+    question: str 
+
+@pdfRouter.post('/rag-chat')
+async def rag_chat(rag_request: RagRequest , userData = Depends(verifyJWT)):
+    response = await rag_chat_controller(userData['uid'], rag_request.pdfId, rag_request.question)
     return response
