@@ -113,9 +113,9 @@ const EnrolledCoursesSample = () => {
       // Normalize to UI shape used below
       const normalized = enrollments.map((enr) => {
         const c = enr?.courseId || {};
-        
+
         // Handle different data structures for different types
-        if (enr.type === 'video') {
+        if (enr.type === "video") {
           return {
             id: enr._id || enr.id,
             title: enr.videoTitle || enr.title || "Video Learning Session",
@@ -130,17 +130,20 @@ const EnrolledCoursesSample = () => {
             difficulty: "Beginner",
             nextLesson: "Watch Video",
             certificate: Boolean(enr?.completed),
-            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            lastAccessed:
+              enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
             completed: Boolean(enr?.completed),
             encryptedUrl: enr.videoLink, // Backend sends videoLink (encrypted)
-            type: 'video',
-            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+            type: "video",
+            enrolledDate:
+              new Date(enr?.createdAt).toLocaleDateString() || "Recently",
           };
-        } else if (enr.type === 'pdf') {
+        } else if (enr.type === "pdf") {
           return {
             id: enr._id || enr.id,
             title: enr.title || "PDF Study Material",
-            creator: enr.creator || "PDF Content",
+            creator: `${enr.pdfSize.toFixed(5)} MB` || "PDF Content",
+            pdfName: enr.pdfName || "Untitled PDF",
             category: "PDF Learning",
             rating: 0,
             progress: Number(enr?.progress ?? 0),
@@ -151,11 +154,13 @@ const EnrolledCoursesSample = () => {
             difficulty: "Beginner",
             nextLesson: "Read PDF",
             certificate: Boolean(enr?.completed),
-            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            lastAccessed:
+              enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
             completed: Boolean(enr?.completed),
             encryptedUrl: enr.pdfLink, // Backend sends pdfLink (encrypted)
-            type: 'pdf',
-            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+            type: "pdf",
+            enrolledDate:
+              new Date(enr?.createdAt).toLocaleDateString() || "Recently",
           };
         } else {
           // Course type (existing logic)
@@ -167,16 +172,22 @@ const EnrolledCoursesSample = () => {
             rating: typeof c.rating === "number" ? c.rating : 0,
             progress: Number(enr?.progress ?? 0),
             totalLessons: Number(c?.lessons ?? 0),
-            completedLessons: Math.round((Number(enr?.progress ?? 0) / 100) * Number(c?.lessons ?? 0)),
+            completedLessons: Math.round(
+              (Number(enr?.progress ?? 0) / 100) * Number(c?.lessons ?? 0)
+            ),
             duration: c.duration ? `${c.duration} min` : "",
             students: c.likes || 0,
             difficulty: c.featured ? "Advanced" : "Beginner",
-            nextLesson: c.title ? `Continue: ${c.title}` : "Continue where you left",
+            nextLesson: c.title
+              ? `Continue: ${c.title}`
+              : "Continue where you left",
             certificate: Boolean(enr?.completed),
-            lastAccessed: enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
+            lastAccessed:
+              enr?.updatedAt || enr?.createdAt || new Date().toISOString(),
             completed: Boolean(enr?.completed),
-            type: 'course',
-            enrolledDate: new Date(enr?.createdAt).toLocaleDateString() || 'Recently'
+            type: "course",
+            enrolledDate:
+              new Date(enr?.createdAt).toLocaleDateString() || "Recently",
           };
         }
       });
@@ -199,19 +210,23 @@ const EnrolledCoursesSample = () => {
 
   // Handle click based on content type
   const handleCourseClick = (course) => {
-    if (course.type === 'video') {
+    if (course.type === "video") {
       // Navigate to video learning with encrypted URL
       if (course.encryptedUrl) {
-        window.location.href = `/learn/video?v=${encodeURIComponent(course.encryptedUrl)}`;
+        window.location.href = `/learn/video?v=${encodeURIComponent(
+          course.encryptedUrl
+        )}`;
       } else {
         window.location.href = `/learn/video`;
       }
-    } else if (course.type === 'pdf') {
+    } else if (course.type === "pdf") {
       // Navigate to PDF learning with encrypted URL
       if (course.encryptedUrl) {
-        window.location.href = `/learn/pdf?p=${encodeURIComponent(course.encryptedUrl)}`;
+        window.location.href = `/pdf-learning?pdf=${encodeURIComponent(
+          course.id
+        )}`;
       } else {
-        window.location.href = `/learn/pdf`;
+        window.location.href = `/pdf-learning`;
       }
     } else {
       // Default course navigation
@@ -961,26 +976,32 @@ const EnrolledCoursesSample = () => {
               >
                 {/* Content Type Badge */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
-                    course.type === 'course' 
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                      : course.type === 'pdf'
-                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                      : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
-                  }`}>
+                  <div
+                    className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+                      course.type === "course"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                        : course.type === "pdf"
+                        ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+                        : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
+                    }`}
+                  >
                     <span>
-                      {course.type === 'course' ? '📚' : course.type === 'pdf' ? '📄' : '🎥'}
+                      {course.type === "course"
+                        ? "📚"
+                        : course.type === "pdf"
+                        ? "📄"
+                        : "🎥"}
                     </span>
                     <span className="capitalize">{course.type} Learning</span>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
-                    {course.type === 'course' && course.certificate && (
+                    {course.type === "course" && course.certificate && (
                       <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-1 rounded-full">
                         <Award className="w-4 h-4" />
                       </div>
                     )}
-                    {course.type === 'course' && (
+                    {course.type === "course" && (
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-current" />
                         <span className="text-sm font-medium">
@@ -999,9 +1020,9 @@ const EnrolledCoursesSample = () => {
                 >
                   {course.title}
                 </h3>
-                
+
                 {/* Different metadata based on type */}
-                {course.type === 'course' ? (
+                {course.type === "course" ? (
                   <>
                     <p
                       className={`text-sm mb-1 ${
@@ -1026,20 +1047,22 @@ const EnrolledCoursesSample = () => {
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      {course.type === 'video' ? 'Video Learning Session' : 'PDF Study Material'}
+                      {course.type === "video"
+                        ? "Video Learning Session"
+                        : course.pdfName || "PDF Document"}
                     </p>
                     <p
                       className={`text-xs mb-4 ${
                         isDark ? "text-gray-500" : "text-gray-500"
                       }`}
                     >
-                      {course.creator || 'Learning Content'}
+                      {course.creator || "Learning Content"}
                     </p>
                   </>
                 )}
 
                 {/* Progress Bar for courses only */}
-                {course.type === 'course' && (
+                {course.type === "course" && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span
@@ -1079,7 +1102,8 @@ const EnrolledCoursesSample = () => {
                           isDark ? "text-gray-500" : "text-gray-500"
                         }`}
                       >
-                        {course.completedLessons} of {course.totalLessons} lessons
+                        {course.completedLessons} of {course.totalLessons}{" "}
+                        lessons
                       </span>
                       <span
                         className={`text-xs ${
@@ -1093,25 +1117,31 @@ const EnrolledCoursesSample = () => {
                 )}
 
                 {/* Simple info card for non-course content */}
-                {course.type !== 'course' && (
-                  <div className={`p-3 rounded-lg mb-4 ${
-                    isDark ? "bg-gray-700" : "bg-gray-50"
-                  }`}>
-                    <p className={`text-xs font-medium mb-1 ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}>
+                {course.type !== "course" && (
+                  <div
+                    className={`p-3 rounded-lg mb-4 ${
+                      isDark ? "bg-gray-700" : "bg-gray-50"
+                    }`}
+                  >
+                    <p
+                      className={`text-xs font-medium mb-1 ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       🕰️ Created:
                     </p>
-                    <p className={`text-sm font-medium ${
-                      isDark ? "text-white" : "text-gray-900"
-                    }`}>
-                      {course.enrolledDate || 'Recently'}
+                    <p
+                      className={`text-sm font-medium ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {course.enrolledDate || "Recently"}
                     </p>
                   </div>
                 )}
 
                 {/* Course Stats for courses only */}
-                {course.type === 'course' && (
+                {course.type === "course" && (
                   <div className="flex items-center justify-between text-xs mb-4">
                     <span
                       className={`flex items-center space-x-1 ${
@@ -1136,7 +1166,7 @@ const EnrolledCoursesSample = () => {
                 )}
 
                 {/* Next Lesson for courses */}
-                {course.type === 'course' && (
+                {course.type === "course" && (
                   <div
                     className={`p-3 rounded-lg mb-4 ${
                       isDark ? "bg-gray-700" : "bg-gray-50"
@@ -1147,7 +1177,9 @@ const EnrolledCoursesSample = () => {
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      {course.progress === 100 ? "🎉 Completed!" : "Next Lesson:"}
+                      {course.progress === 100
+                        ? "🎉 Completed!"
+                        : "Next Lesson:"}
                     </p>
                     <p
                       className={`text-sm font-medium ${
@@ -1162,20 +1194,20 @@ const EnrolledCoursesSample = () => {
                 {/* Action Button */}
                 <button
                   className={`w-full py-3 rounded-lg font-medium transition-all transform hover:scale-105 ${
-                    course.type === 'course'
+                    course.type === "course"
                       ? course.progress === 100
                         ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
                         : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
-                      : course.type === 'pdf'
+                      : course.type === "pdf"
                       ? "bg-gradient-to-r from-orange-500 to-red-500 text-white"
                       : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
                   } hover:shadow-lg`}
                 >
-                  {course.type === 'course'
+                  {course.type === "course"
                     ? course.progress === 100
                       ? "✅ Review Course"
                       : "▶️ Continue Learning"
-                    : course.type === 'pdf'
+                    : course.type === "pdf"
                     ? "📄 Open PDF"
                     : "🎥 Watch Video"}
                 </button>

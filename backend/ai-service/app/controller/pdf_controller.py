@@ -156,6 +156,7 @@ async def load_pdf_controller(userId, pdfFile):
                 "pdfName": pdfFile.filename or "Unnamed PDF",
                 "pdfSize": (len(file_content) / 1024 / 1024),  # Size in MB
                 "type": "pdf",
+                "uid": userId,
                 "uploadedAt": datetime.now(),
                 "createdAt": datetime.now(),
             })

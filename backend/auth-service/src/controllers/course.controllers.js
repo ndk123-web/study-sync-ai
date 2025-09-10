@@ -311,6 +311,8 @@ const GetEnrollCoursesController = wrapper(async (req, res) => {
       .json(new ApiResponse(200, [], "User hasn't enrolled in any course"));
   }
 
+  console.log("Enrolled User Courses Found: ", getEnrollUserCourses);
+
   // Return a single array as the `data` payload for consistency
   return res
     .status(200)
