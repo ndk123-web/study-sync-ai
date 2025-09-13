@@ -8,6 +8,7 @@ import {
   StickyNote,
   Download,
   Eye,
+  Edit3,
   Trash2,
   Send,
   Bot,
@@ -26,6 +27,8 @@ import { GetPdfMetaDataApi } from "../api/GetPdfMetaDataApi.js";
 import { GetPDFSummaryApi } from "../api/GetPDFSummaryApi.js";
 import { SendPdfChatApi } from "../api/SendPdfChatApi.js";
 import { GetPdfChats } from "../api/GetPdfChatsApi.js";
+import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
+import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -225,7 +228,49 @@ const formatChatMessageHTML = (text, isDark = false) => {
       `<strong class="font-bold ${
         isDark ? "text-yellow-400" : "text-gray-900"
       }">$1</strong>`
+    )
+    // Italic text  
+    .replace(
+      /\*(.*?)\*/g,
+      `<em class="italic ${
+        isDark ? "text-gray-300" : "text-gray-700"
+      }">$1</em>`
     );
+
+  // Handle bullet lists - process line by line
+  const lines = html.split('\n');
+  const processedLines = [];
+  let inList = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check if this line is a bullet point
+    if (line.match(/^- (.+)/)) {
+      const content = line.replace(/^- /, '');
+      if (!inList) {
+        processedLines.push(`<ul class="list-disc list-inside ml-4 mb-3 space-y-1">`);
+        inList = true;
+      }
+      processedLines.push(`<li class="leading-relaxed">${content}</li>`);
+    } else {
+      // Not a bullet point
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
+      if (line) {
+        processedLines.push(line);
+      }
+    }
+  }
+  
+  // Close any open list
+  if (inList) {
+    processedLines.push('</ul>');
+  }
+  
+  html = processedLines.join('\n');
 
   // Restore inline code blocks first
   inlineCodePlaceholders.forEach((replacement, index) => {
@@ -244,7 +289,9 @@ const formatChatMessageHTML = (text, isDark = false) => {
     if (
       section.includes("<h") ||
       section.includes("<pre") ||
-      section.includes("<code")
+      section.includes("<code") ||
+      section.includes("<ul") ||
+      section.includes("<li")
     ) {
       return section;
     }
@@ -286,6 +333,18 @@ const PdfInteraction = () => {
   const pdfLoader = useLoaders((state) => state.pdfLoader);
   const setPdfLoader = useLoaders((state) => state.setPdfLoader);
   const unsetPdfLoader = useLoaders((state) => state.unsetPdfLoader);
+
+  const chatLoader = useLoaders((state) => state.chatLoader);
+  const setChatLoader = useLoaders((state) => state.setChatLoader);
+  const unsetChatLoader = useLoaders((state) => state.unsetChatLoader);
+
+  const notesLoader = useLoaders((state) => state.notesLoader);
+  const setNotesLoader = useLoaders((state) => state.setNotesLoader);
+  const unsetNotesLoader = useLoaders((state) => state.unsetNotesLoader);
+
+  const summaryLoader = useLoaders((state) => state.summarizeLoader);
+  const setSummaryLoader = useLoaders((state) => state.setSummarizeLoader);
+  const unsetSummaryLoader = useLoaders((state) => state.unsetSummarizeLoader);
 
   const [searchParams] = useSearchParams();
   const pdf = searchParams.get("pdf");
@@ -494,6 +553,80 @@ const PdfInteraction = () => {
     fetchPdfChats();
   }, []);
 
+  // Auto-save notes with debounce (2 seconds like VideoInteraction)
+  useEffect(() => {
+    if (!pdf || !notes) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      console.log("💾 Auto-saving PDF notes...");
+
+      try {
+        setNotesLoader();
+
+        const apiResponse = await SaveCourseNotesApi({
+          type: "pdf",
+          courseId: pdf, // Send pdfId for PDF
+          notes: notes,
+        });
+
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("❌ Error auto-saving PDF notes:", apiResponse?.message);
+          return;
+        }
+
+        console.log("✅ PDF notes auto-saved successfully");
+      } catch (err) {
+        console.error("💥 Error in PDF auto-save:", err);
+      } finally {
+        unsetNotesLoader();
+      }
+    }, 2000); // Save after 2 seconds of no typing
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [notes, pdf]);
+
+  // Auto-fetch notes when PDF loads
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!pdf) {
+        console.log("🚫 No pdfId found, skipping notes fetch");
+        return;
+      }
+
+      try {
+        console.log("📝 Fetching notes for PDF:", pdf);
+        
+        // Set loader while fetching
+        setNotesLoader();
+
+        // Create a special API call for PDF notes
+        const apiResponse = await GetCurrentNotesApi({
+          courseId: pdf,
+          type: "pdf", // Add type parameter for PDF
+        });
+
+        console.log("🚀 API Response for GetCurrentNotesApi (PDF):", apiResponse);
+
+        if (apiResponse.status === 200 || apiResponse.status === 201) {
+          const fetchedNotes = apiResponse.data?.notes || "";
+          setNotes(fetchedNotes);
+          console.log("✅ PDF notes fetched successfully:", fetchedNotes);
+        } else {
+          console.log("📝 No existing PDF notes found");
+          setNotes(""); // Reset notes if none found
+        }
+      } catch (err) {
+        console.error("💥 Error fetching PDF notes:", err);
+        setNotes(""); // Reset on error
+      } finally {
+        // Always unset loader
+        unsetNotesLoader();
+      }
+    };
+
+    fetchNotes();
+  }, [pdf]); // Add pdf as dependency
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -557,6 +690,7 @@ const PdfInteraction = () => {
     if (!messageInput.trim()) return;
 
     try {
+      setChatLoader();
       const newMessage = {
         id: Date.now(),
         type: "user",
@@ -580,7 +714,7 @@ const PdfInteraction = () => {
       const botResponse = {
         id: Date.now() + 1,
         type: "bot",
-        message: apiResponse?.data?.answer || "No response from AI.",
+        message: apiResponse?.data?.answer || apiResponse?.data?.response || "No response from AI.",
         timestamp: new Date().toLocaleTimeString(),
       };
 
@@ -588,7 +722,7 @@ const PdfInteraction = () => {
     } catch (err) {
       alert("Error: ", err.message);
     } finally {
-      setIsLoading(false);
+      unsetChatLoader();
     }
 
     // setChatMessages((prev) => [...prev, newMessage]);
@@ -607,7 +741,7 @@ const PdfInteraction = () => {
 
   const generateSummary = async () => {
     try {
-      // Simulate API call
+      setSummaryLoader();
 
       const apiResponse = await GetPDFSummaryApi({ pdfId: pdf });
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -619,14 +753,12 @@ const PdfInteraction = () => {
       console.log("PDF Summary Response:", apiResponse);
 
       setPdfSummary(apiResponse?.data?.summary || "No summary available.");
-      setIsLoading(false);
     } catch (err) {
       alert("Error: ", err.message);
       console.log("Err in Generating PDF Summary: ", err.message);
     } finally {
-      setIsLoading(false);
+      unsetSummaryLoader();
     }
-    setIsLoading(true);
   };
 
   const generateAssessment = () => {
@@ -772,7 +904,7 @@ const PdfInteraction = () => {
                           isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        PDF Document • {uploadedPdf.size}MB
+                        PDF Document • {uploadedPdf.size.toFixed(2)}MB
                       </p>
                     </div>
                   </div>
@@ -864,11 +996,7 @@ const PdfInteraction = () => {
 
               {/* Right Section - Interactive Features */}
               <div
-                className={`rounded-2xl border overflow-hidden flex flex-col transition-all duration-300 ${
-                  isDark
-                    ? "bg-gray-800 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
+                className="hidden lg:flex lg:flex-col flex-shrink-0 min-w-0"
                 style={{
                   width:
                     window.innerWidth >= 1024
@@ -876,73 +1004,108 @@ const PdfInteraction = () => {
                       : "100%",
                 }}
               >
-                {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 dark:border-gray-700">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 flex items-center justify-center space-x-2 py-4 px-2 transition-all duration-300 ${
-                          activeTab === tab.id
-                            ? "border-b-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600"
-                            : isDark
-                            ? "text-gray-400 hover:text-white hover:bg-gray-700"
-                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium text-sm hidden sm:inline">
-                          {tab.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+                {/* Enhanced Tab Navigation */}
+                <div
+                  className={`border-b ${
+                    isDark ? "border-gray-700" : "border-gray-200"
+                  } bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-700/50`}
+                >
+                  <div
+                    className="flex overflow-x-auto scrollbar-hide px-4 py-2"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`group relative flex items-center space-x-2 px-6 py-3 font-medium text-sm transition-all duration-300 rounded-lg mx-1 whitespace-nowrap ${
+                            activeTab === tab.id
+                              ? isDark
+                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                                : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                              : isDark
+                              ? "text-gray-300 hover:text-white hover:bg-gray-700"
+                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                          }`}
+                        >
+                          <Icon
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                              activeTab === tab.id
+                                ? "scale-110"
+                                : "group-hover:scale-105"
+                            }`}
+                          />
+                          <span>{tab.label}</span>
+                          {activeTab === tab.id && (
+                            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-emerald-400/20 to-teal-400/20 blur-xl"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Tab Content */}
-                <div className="flex-1 overflow-hidden">
+                {/* Desktop Tab Content */}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {/* Chat Tab */}
                   {activeTab === "chat" && (
                     <div className="h-full flex flex-col p-4">
-                      {/* Chat Messages */}
-                      <div className="flex-1 overflow-y-auto mb-4 space-y-4 max-h-[calc(100vh-400px)]">
-                        {chatMessages?.length > 0 ? (
+                      <div className="flex-1 space-y-4 mb-4 overflow-y-auto min-h-0 max-h-[calc(100vh-300px)] pr-2">
+                        {chatMessages.length === 0 && (
+                          <div className="text-center py-12">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                              <MessageSquare className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                              Start a Conversation
+                            </h3>
+                            <p
+                              className={`text-sm mb-4 ${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
+                              Ask questions about the PDF content, concepts, or specific details
+                            </p>
+                          </div>
+                        )}
+                        {chatMessages?.length > 0 &&
                           chatMessages.map((msg) => (
                             <div
                               key={msg.id}
-                              className={`flex ${
+                              className={`flex w-full ${
                                 msg.type === "user"
                                   ? "justify-end"
                                   : "justify-start"
                               }`}
                             >
                               <div
-                                className={`max-w-[85%] rounded-2xl p-4 ${
+                                className={`max-w-[85%] rounded-xl p-4 shadow-sm ${
                                   msg.type === "user"
                                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
                                     : isDark
-                                    ? "bg-gray-700 text-gray-100"
-                                    : "bg-gray-100 text-gray-900"
+                                    ? "bg-gray-700 border border-gray-600"
+                                    : "bg-gray-50 border border-gray-200"
                                 }`}
                               >
                                 <div className="flex items-start space-x-3">
-                                  <div className="flex-shrink-0">
-                                    {msg.type === "bot" ? (
-                                      <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                                        <Bot className="w-4 h-4 text-white" />
-                                      </div>
-                                    ) : (
-                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <User className="w-4 h-4 text-white" />
-                                      </div>
-                                    )}
-                                  </div>
+                                  {msg.type === "bot" && (
+                                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-white text-xs">
+                                        🤖
+                                      </span>
+                                    </div>
+                                  )}
+                                  {msg.type === "user" && (
+                                    <User className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                                  )}
                                   <div className="flex-1 min-w-0">
                                     <div
+                                      className="text-sm leading-relaxed break-words prose prose-sm max-w-none"
                                       dangerouslySetInnerHTML={{
                                         __html: formatChatMessageHTML(
-                                          msg.message,
+                                          msg.message || '',
                                           isDark
                                         ),
                                       }}
@@ -954,127 +1117,198 @@ const PdfInteraction = () => {
                                 </div>
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="text-center">
-                              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                              <p
-                                className={`text-lg ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}
-                              >
-                                Start a conversation about your PDF
-                              </p>
+                          ))}
+
+                        {chatLoader && (
+                          <div className="flex justify-start">
+                            <div
+                              className={`max-w-[85%] rounded-xl p-4 shadow-sm ${
+                                isDark
+                                  ? "bg-gray-700 border border-gray-600"
+                                  : "bg-gray-50 border border-gray-200"
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs">🤖</span>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="flex space-x-1">
+                                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+                                      <div
+                                        className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                                        style={{ animationDelay: "0.1s" }}
+                                      ></div>
+                                      <div
+                                        className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                                        style={{ animationDelay: "0.2s" }}
+                                      ></div>
+                                    </div>
+                                    <span className="text-sm text-emerald-500 font-medium">
+                                      Thinking...
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Message Input */}
-                      <div className="flex space-x-2 flex-shrink-0">
-                        <input
-                          type="text"
-                          value={messageInput}
-                          onChange={(e) => setMessageInput(e.target.value)}
-                          onKeyPress={(e) =>
-                            e.key === "Enter" && handleSendMessage()
-                          }
-                          placeholder="Ask me anything about this PDF..."
-                          className={`flex-1 p-3 rounded-xl border transition-all duration-200 ${
-                            isDark
-                              ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-500"
-                              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500"
-                          } focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
-                        />
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={!messageInput.trim()}
-                          className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-3 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Send className="w-5 h-5" />
-                        </button>
+                      <div
+                        className={`border rounded-xl p-3 ${
+                          isDark
+                            ? "border-gray-600 bg-gray-700/50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="text"
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && handleSendMessage()
+                            }
+                            placeholder="Ask about the PDF content, concepts, or specific details..."
+                            className={`flex-1 px-4 py-3 rounded-lg border-0 text-sm ${
+                              isDark
+                                ? "bg-gray-800 text-white placeholder-gray-400"
+                                : "bg-white text-gray-900 placeholder-gray-500"
+                            } focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                          />
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={!messageInput.trim() || chatLoader}
+                            className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 disabled:opacity-50 transform hover:scale-105"
+                          >
+                            <Send className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {activeTab === "notes" && (
                     <div className="h-full flex flex-col p-4">
-                      {/* Notes Header */}
-                      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                        <h3 className="text-lg font-bold">My Notes</h3>
+                      {/* Enhanced Notes Header */}
+                      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                        <div className="flex items-center space-x-3">
+                          <StickyNote className="w-6 h-6 text-blue-500" />
+                          <h3 className="text-lg font-bold">My Notes</h3>
+                          {notesPreviewMode && (
+                            <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-medium">
+                              Live Preview
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() =>
-                              setNotesPreviewMode(!notesPreviewMode)
-                            }
-                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            onClick={() => setNotesPreviewMode(!notesPreviewMode)}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm ${
                               notesPreviewMode
-                                ? "bg-emerald-500 text-white"
+                                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
                                 : isDark
                                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
                           >
-                            {notesPreviewMode ? "Edit" : "Preview"}
+                            {notesPreviewMode ? (
+                              <>
+                                <Edit3 className="w-4 h-4" />
+                                <span className="font-medium">Edit</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-4 h-4" />
+                                <span className="font-medium">Preview</span>
+                              </>
+                            )}
                           </button>
-                          <button className="text-emerald-500 hover:text-emerald-600 transition-colors">
+                          <button className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-300">
                             <Download className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
 
-                      {/* Notes Content */}
+                      {/* Enhanced Notes Content */}
                       <div className="flex-1 min-h-0">
-                        {notesPreviewMode ? (
+                        {notesLoader ? (
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center space-y-4">
+                              <div className="w-16 h-16 mx-auto border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                              <div>
+                                <h4 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                                  Loading Notes
+                                </h4>
+                                <p className={`text-sm ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  Fetching your PDF notes...
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : notesPreviewMode ? (
                           <div className="h-full overflow-y-auto">
                             <div
-                              className={`p-4 rounded-xl border min-h-full ${
+                              className={`p-6 rounded-xl border min-h-full shadow-sm ${
                                 isDark
-                                  ? "bg-gray-700/50 border-gray-600"
-                                  : "bg-gray-50 border-gray-200"
+                                  ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600"
+                                  : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
                               }`}
                             >
                               {notes ? (
                                 <div
+                                  className="prose prose-sm max-w-none prose-headings:text-blue-600 dark:prose-headings:text-blue-400 prose-strong:text-blue-700 dark:prose-strong:text-blue-300"
                                   dangerouslySetInnerHTML={{
                                     __html: formatNotesToHTML(notes, isDark),
                                   }}
                                 />
                               ) : (
                                 <div className="text-center py-12">
-                                  <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                                  <p
-                                    className={`${
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }`}
-                                  >
-                                    No notes yet. Switch to edit mode to start
-                                    writing!
+                                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center">
+                                    <StickyNote className="w-8 h-8 text-blue-500" />
+                                  </div>
+                                  <h4 className="text-lg font-semibold mb-2">No Notes Yet</h4>
+                                  <p className={`text-sm ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}>
+                                    Switch to edit mode to start writing your notes!
                                   </p>
                                 </div>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Take notes while reading the PDF...
+                          <div className="h-full relative">
+                            <textarea
+                              value={notes}
+                              onChange={(e) => setNotes(e.target.value)}
+                              placeholder="Take notes while reading the PDF...
 
-You can use Markdown formatting:
-- **Bold text**
-- *Italic text*
-- # Headers
-- ```code blocks```
-- - Bullet points
-- [x] Checkboxes"
-                            className={`w-full h-full p-4 rounded-xl border resize-none transition-all duration-200 ${
-                              isDark
-                                ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                            } focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500`}
-                          />
+📝 You can use Markdown formatting:
+• **Bold text** and *italic text*
+• # Headers and ## Subheaders  
+• ```code blocks```
+• - Bullet points and numbered lists
+• [x] Task checkboxes
+• > Quotes and highlights
+
+💡 Tip: Use the Preview mode to see formatted notes!"
+                              className={`w-full h-full p-6 rounded-xl border resize-none transition-all duration-300 shadow-sm ${
+                                isDark
+                                  ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
+                              } focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500`}
+                            />
+                            {notes && (
+                              <div className="absolute bottom-4 right-4 px-3 py-1 bg-blue-500 text-white text-xs rounded-full shadow-lg">
+                                {notes.length} characters
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1082,41 +1316,91 @@ You can use Markdown formatting:
 
                   {activeTab === "summary" && (
                     <div className="h-full flex flex-col p-4">
-                      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                        <h3 className="text-lg font-bold">Document Summary</h3>
+                      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                        <div className="flex items-center space-x-3">
+                          <BookOpen className="w-6 h-6 text-orange-500" />
+                          <h3 className="text-lg font-bold">PDF Summary</h3>
+                        </div>
                         <button
                           onClick={generateSummary}
-                          disabled={isLoading}
-                          className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={summaryLoader}
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                            summaryLoader
+                              ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
+                              : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+                          }`}
                         >
-                          {isLoading ? "Generating..." : "Generate Summary"}
+                          {summaryLoader && (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          )}
+                          <span className="font-medium">
+                            {summaryLoader ? "Generating..." : "✨ Generate Summary"}
+                          </span>
                         </button>
                       </div>
 
                       <div className="flex-1 overflow-y-auto min-h-0">
-                        {pdfSummary ? (
+                        {summaryLoader ? (
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center space-y-4">
+                              <div className="w-16 h-16 mx-auto border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+                              <div>
+                                <h4 className="text-lg font-semibold text-orange-600 dark:text-orange-400 mb-2">
+                                  Analyzing PDF Content
+                                </h4>
+                                <p className={`text-sm ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  AI is reading through your document...
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : pdfSummary ? (
                           <div
-                            className={`p-4 rounded-xl border ${
+                            className={`p-6 rounded-xl border shadow-sm ${
                               isDark
-                                ? "bg-gray-700 border-gray-600"
-                                : "bg-gray-50 border-gray-200"
+                                ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600"
+                                : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
                             }`}
                           >
-                            <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                              {pdfSummary}
-                            </pre>
+                            <div className="flex items-center space-x-2 mb-4">
+                              <span className="text-lg">📄</span>
+                              <h4 className="font-semibold text-orange-600 dark:text-orange-400">
+                                Document Summary
+                              </h4>
+                            </div>
+                            <div
+                              className="prose prose-sm max-w-none prose-headings:text-orange-600 dark:prose-headings:text-orange-400 prose-strong:text-orange-700 dark:prose-strong:text-orange-300"
+                              dangerouslySetInnerHTML={{
+                                __html: formatChatMessageHTML(pdfSummary || '', isDark),
+                              }}
+                            />
                           </div>
                         ) : (
-                          <div className="text-center py-12">
-                            <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                            <p
-                              className={`${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}
-                            >
-                              Click "Generate Summary" to get an AI-powered
-                              summary of your PDF
-                            </p>
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center space-y-4 max-w-md">
+                              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-full flex items-center justify-center">
+                                <BookOpen className="w-10 h-10 text-orange-500" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-semibold mb-2">
+                                  Generate AI Summary
+                                </h4>
+                                <p className={`text-sm mb-4 ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  Get a concise, AI-powered summary highlighting the key points and main concepts from your PDF.
+                                </p>
+                                <div className="flex items-center justify-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
+                                  <span>⚡</span>
+                                  <span>Fast & Accurate</span>
+                                  <span>•</span>
+                                  <span>🎯</span>
+                                  <span>Key Insights</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1125,64 +1409,118 @@ You can use Markdown formatting:
 
                   {activeTab === "assessment" && (
                     <div className="h-full flex flex-col p-4">
-                      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                        <h3 className="text-lg font-bold">Assessment</h3>
+                      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                        <div className="flex items-center space-x-3">
+                          <FileCheck className="w-6 h-6 text-purple-500" />
+                          <h3 className="text-lg font-bold">Assessment</h3>
+                        </div>
                         <button
                           onClick={generateAssessment}
                           disabled={isLoading}
-                          className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                            isLoading
+                              ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
+                              : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                          }`}
                         >
-                          {isLoading ? "Generating..." : "Generate Questions"}
+                          {isLoading && (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          )}
+                          <span className="font-medium">
+                            {isLoading ? "Generating..." : "🧠 Generate Questions"}
+                          </span>
                         </button>
                       </div>
 
                       <div className="flex-1 overflow-y-auto min-h-0">
-                        {assessmentQuestions.length > 0 ? (
-                          <div className="space-y-4">
+                        {isLoading ? (
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center space-y-4">
+                              <div className="w-16 h-16 mx-auto border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin"></div>
+                              <div>
+                                <h4 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">
+                                  Creating Assessment
+                                </h4>
+                                <p className={`text-sm ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  AI is generating quiz questions...
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : assessmentQuestions.length > 0 ? (
+                          <div className="space-y-6">
                             {assessmentQuestions.map((q, index) => (
                               <div
                                 key={q.id}
-                                className={`p-4 rounded-xl border ${
+                                className={`p-6 rounded-xl border shadow-sm ${
                                   isDark
-                                    ? "bg-gray-700 border-gray-600"
-                                    : "bg-gray-50 border-gray-200"
+                                    ? "bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600"
+                                    : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
                                 }`}
                               >
-                                <h4 className="font-semibold mb-3">
-                                  Q{index + 1}. {q.question}
-                                </h4>
-                                <div className="space-y-2">
+                                <div className="flex items-start space-x-3 mb-4">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white font-bold text-sm">
+                                      {index + 1}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-semibold text-lg leading-relaxed">
+                                    {q.question}
+                                  </h4>
+                                </div>
+                                <div className="space-y-3 ml-11">
                                   {q.options.map((option, optIndex) => (
                                     <label
                                       key={optIndex}
-                                      className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                      className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg transition-all duration-200 hover:scale-[1.02] ${
+                                        isDark
+                                          ? "hover:bg-gray-700 border border-gray-700"
+                                          : "hover:bg-purple-50 border border-gray-200"
+                                      }`}
                                     >
                                       <input
                                         type="radio"
                                         name={`q${q.id}`}
-                                        className="text-emerald-500 focus:ring-emerald-500"
+                                        className="w-4 h-4 text-purple-500 focus:ring-purple-500 focus:ring-2"
                                       />
-                                      <span>{option}</span>
+                                      <span className="font-medium">
+                                        {String.fromCharCode(65 + optIndex)}. {option}
+                                      </span>
                                     </label>
                                   ))}
                                 </div>
                               </div>
                             ))}
-                            <button className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-200">
-                              Submit Assessment
+                            <button className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                              ✅ Submit Assessment
                             </button>
                           </div>
                         ) : (
-                          <div className="text-center py-12">
-                            <FileCheck className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                            <p
-                              className={`${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}
-                            >
-                              Click "Generate Questions" to create assessment
-                              questions based on your PDF
-                            </p>
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center space-y-4 max-w-md">
+                              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center">
+                                <FileCheck className="w-10 h-10 text-purple-500" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-semibold mb-2">
+                                  Generate Smart Assessment
+                                </h4>
+                                <p className={`text-sm mb-4 ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  Create intelligent quiz questions based on your PDF content to test comprehension and knowledge retention.
+                                </p>
+                                <div className="flex items-center justify-center space-x-2 text-xs text-purple-600 dark:text-purple-400">
+                                  <span>🧠</span>
+                                  <span>Smart Questions</span>
+                                  <span>•</span>
+                                  <span>📊</span>
+                                  <span>Test Knowledge</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
