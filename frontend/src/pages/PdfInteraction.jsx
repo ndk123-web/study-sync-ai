@@ -24,6 +24,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { LoadPdfFileApi } from "../api/LoadPdfFileApi.js";
 import { GetPdfMetaDataApi } from "../api/GetPdfMetaDataApi.js";
 import { GetPDFSummaryApi } from "../api/GetPDFSummaryApi.js";
+import { SendPdfChatApi } from "../api/SendPdfChatApi.js";
+import { GetPdfChats } from "../api/GetPdfChatsApi.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -458,6 +460,40 @@ const PdfInteraction = () => {
     return () => clearTimeout(timeoutId);
   }, [notesPreviewMode, activeTab]); // Only when switching to preview mode
 
+  useEffect(() => {
+    // here user chat and ai chat interaction
+
+    const fetchPdfChats = async () => {
+      try {
+        const apiResponse = await GetPdfChats({ pdfId: pdf });
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          alert("Failed to fetch PDF chat history. Please try again.");
+          return;
+        }
+        console.log("Fetched PDF Chats:", apiResponse);
+        const formattedChats = apiResponse?.data?.chats?.map((chat) => {
+          let user = {
+            id: chat.id * 2,
+            type: "user",
+            message: chat.prompt,
+          };
+          let bot = {
+            id: chat.id * 2 + 1,
+            type: "bot",
+            message: chat.response,
+          };
+          return [user, bot];
+        });
+        setChatMessages(formattedChats.flat() || []);
+      } catch (err) {
+        alert("Error: ", err.message);
+        console.error("Error in chat interaction:", err);
+      }
+    };
+
+    fetchPdfChats();
+  }, []);
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -517,47 +553,80 @@ const PdfInteraction = () => {
       alert("Please select a valid PDF file.");
     }
   };
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageInput.trim()) return;
 
-    const newMessage = {
-      id: Date.now(),
-      type: "user",
-      message: messageInput,
-      timestamp: new Date().toLocaleTimeString(),
-    };
+    try {
+      const newMessage = {
+        id: Date.now(),
+        type: "user",
+        message: messageInput,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setChatMessages((prev) => [...prev, newMessage]);
+      setMessageInput("");
 
-    setChatMessages((prev) => [...prev, newMessage]);
+      const apiResponse = await SendPdfChatApi({
+        pdfId: pdf,
+        question: messageInput,
+      });
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        console.log("PDF Chat Response:", apiResponse);
+        alert("Failed to fetch PDF chat response. Please try again.");
+        return;
+      }
+
       const botResponse = {
         id: Date.now() + 1,
         type: "bot",
-        message: `I understand you're asking about: "${messageInput}". Based on the PDF content, here's what I can tell you... (This would be the actual AI response)`,
+        message: apiResponse?.data?.answer || "No response from AI.",
         timestamp: new Date().toLocaleTimeString(),
       };
-      setChatMessages((prev) => [...prev, botResponse]);
-    }, 1000);
 
-    setMessageInput("");
+      setChatMessages((prev) => [...prev, botResponse]);
+    } catch (err) {
+      alert("Error: ", err.message);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // setChatMessages((prev) => [...prev, newMessage]);
+
+    // // Simulate AI response (replace with actual API call)
+    // setTimeout(() => {
+    //   const botResponse = {
+    //     id: Date.now() + 1,
+    //     type: "bot",
+    //     message: `I understand you're asking about: "${messageInput}". Based on the PDF content, here's what I can tell you... (This would be the actual AI response)`,
+    //     timestamp: new Date().toLocaleTimeString(),
+    //   };
+    //   setChatMessages((prev) => [...prev, botResponse]);
+    // }, 1000);
   };
 
   const generateSummary = async () => {
-    setIsLoading(true);
-    // Simulate API call
+    try {
+      // Simulate API call
 
-    const apiResponse = await GetPDFSummaryApi({ pdfId: pdf });
-    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+      const apiResponse = await GetPDFSummaryApi({ pdfId: pdf });
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        console.log("PDF Summary Response:", apiResponse);
+        alert("Failed to fetch PDF summary. Please try again.");
+        return;
+      }
+
       console.log("PDF Summary Response:", apiResponse);
-      alert("Failed to fetch PDF summary. Please try again.");
-      return;
+
+      setPdfSummary(apiResponse?.data?.summary || "No summary available.");
+      setIsLoading(false);
+    } catch (err) {
+      alert("Error: ", err.message);
+      console.log("Err in Generating PDF Summary: ", err.message);
+    } finally {
+      setIsLoading(false);
     }
-
-    console.log("PDF Summary Response:", apiResponse);
-
-    setPdfSummary(apiResponse?.data?.summary || "No summary available.");
-    setIsLoading(false);
+    setIsLoading(true);
   };
 
   const generateAssessment = () => {

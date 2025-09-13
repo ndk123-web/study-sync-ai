@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi import Depends , Request , Query , File , UploadFile, Form
 from fastapi.routing import APIRouter
 from app.utils.Cloudinary import upload_cloudinary
-from ..controller.pdf_controller import load_pdf_controller , get_pdf_metadata_controller, pdf_summary_controller , rag_chat_controller
+from ..controller.pdf_controller import load_pdf_controller , get_pdf_metadata_controller, pdf_summary_controller , rag_chat_controller, get_pdf_chats_controller
 from ..utils.ApiError import ApiError
 
 
@@ -55,4 +55,13 @@ async def get_summary(summary_request: SummaryRequest, userData = Depends(verify
     if not uid:
         return ApiError.send(401, {}, "Unauthorized: uid missing")
     response = await pdf_summary_controller(uid, summary_request.pdfId)
+    return response
+
+
+@pdfRouter.get('/get-pdf-chats')
+async def get_pdf_chats(pdfId: str = Query(...) , userData = Depends(verifyJWT)):
+    uid = _extract_uid(userData)
+    if not uid:
+        return ApiError.send(401, {}, "Unauthorized: uid missing")
+    response = await get_pdf_chats_controller(uid, pdfId)
     return response
