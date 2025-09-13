@@ -201,7 +201,6 @@ async def load_pdf_controller(userId, pdfFile):
         print("❌ Error in load_pdf_controller:", str(e))
         return ApiError.send(500, {}, "Internal Server Error")
 
-
 async def rag_chat_controller(userId: str, pdfId: str, question: str):
     try:
         # Validate user and PDF enrollment
@@ -290,12 +289,33 @@ async def rag_chat_controller(userId: str, pdfId: str, question: str):
         user_prompt = f"""
 You are a helpful assistant for StudySync. Use ONLY the following PDF context to answer the question concisely. If the context doesn't contain the answer, say you don't have enough information.
 
+Please format your response using proper Markdown:
+
+# Main Heading
+## Sub Heading
+### Smaller Heading
+
+**Bold text** for emphasis
+*Italic text* for slight emphasis
+
+- Use bullet points for lists
+- Keep points concise and clear
+- Use sub-bullets when needed
+  - Like this for details
+  - Or additional information
+
+```language
+code block example
+```
+
+> Use blockquotes for important notes
+
 Context:
 {context}
 
 Question: {question}
 
-Answer (be concise, use bullet points where helpful):
+Answer (use the markdown formatting above):
 """
 
         ai_response = await asyncio.to_thread(
@@ -374,7 +394,28 @@ async def pdf_summary_controller(userId: str, pdfId: str):
         excerpt = extracted_text[:max_chars]
 
         prompt = f"""
-Please provide a concise, student-friendly summary of the following PDF content. Focus on main ideas, definitions, and key takeaways. Use short paragraphs and bullet points where useful.
+Please provide a concise, student-friendly summary of the following PDF content. Focus on main ideas, definitions, and key takeaways.
+
+Please format your response using proper Markdown:
+
+# Main Topic or Document Title
+
+## Key Concepts
+- **Important Term**: Definition or explanation
+- **Another Term**: Description with details
+
+## Main Points
+- First major point with clear explanation
+- Second major point
+  - Sub-point with additional details
+  - Another sub-point if needed
+
+## Technical Details (if applicable)
+```
+code examples or formulas
+```
+
+**Important**: Use proper headings, bold text for key terms, and bullet points for clarity.
 
 PDF Content:
 {excerpt}
