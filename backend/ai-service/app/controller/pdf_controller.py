@@ -22,6 +22,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 enrollment_collection = db['enrollmentcourses']
 users_collection = db['users']
+chats_collection = db['chats']
 
 def serialize_doc(doc):
     return json.loads(json_util.dumps(doc))
@@ -164,7 +165,7 @@ async def load_pdf_controller(userId, pdfFile):
             # Initialize Pinecone with new API
             pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
             index_name = "ndk"
-            namespace = f"user_{userId}_pdf_{response.inserted_id}"   # 👈 unique per user+pdf
+            namespace = f"user_{userId}_pdf_{str(response.inserted_id)}"   # 👈 unique per user+pdf (explicit str)
             
             print(f"📥 Upload: Creating namespace: {namespace}")
             print(f"🆔 Upload: PDF ID type: {type(response.inserted_id)}, value: {repr(response.inserted_id)}")
@@ -179,6 +180,8 @@ async def load_pdf_controller(userId, pdfFile):
             )
             
             # Add embeddings
+            if len(chunks) > 0:
+                print("🔤 First chunk preview:", (chunks[0] or "")[:200])
             vectorstore.add_texts(
                 texts=chunks,
                 metadatas=[{"userId": str(userInstance["_id"]), "pdfId": str(response.inserted_id)}] * len(chunks)
@@ -229,6 +232,14 @@ async def rag_chat_controller(userId: str, pdfId: str, question: str):
             namespace=namespace
         )
 
+        # Debug: Describe namespace stats
+        try:
+            stats = index.describe_index_stats()
+            ns_stats = (stats or {}).get('namespaces', {}).get(namespace, {})
+            print(f"🧭 Pinecone stats for namespace '{namespace}': ", ns_stats)
+        except Exception as es:
+            print("⚠️ describe_index_stats failed:", str(es))
+
         # Try retriever.invoke first (newer pattern)
         retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
         try:
@@ -243,11 +254,28 @@ async def rag_chat_controller(userId: str, pdfId: str, question: str):
             except Exception:
                 docs = []
 
-        # If still nothing, fallback to raw PDF extraction as a last resort
+        # If still nothing, attempt a direct query via Pinecone index
         context_chunks = []
-        if docs and isinstance(docs, list):
-            context_chunks = [getattr(d, 'page_content', '') for d in docs if getattr(d, 'page_content', '')]
-        else:
+        if not docs:
+            try:
+                qvec = await asyncio.to_thread(embeddings.embed_query, question)
+                direct = index.query(vector=qvec, top_k=4, namespace=namespace, include_metadata=True)
+                matches = (direct or {}).get('matches', [])
+                print("🔎 Pinecone direct query match count:", len(matches))
+                if matches:
+                    for m in matches:
+                        meta = m.get('metadata') or {}
+                        txt = meta.get('text')
+                        if txt:
+                            context_chunks.append(txt)
+            except Exception as eq:
+                print("⚠️ Pinecone direct query failed:", str(eq))
+
+        # If still nothing after direct query, fallback to raw PDF extraction as a last resort
+        if not context_chunks:
+            if docs and isinstance(docs, list):
+                context_chunks = [getattr(d, 'page_content', '') for d in docs if getattr(d, 'page_content', '')]
+        if not context_chunks:
             # Attempt to extract directly from the stored pdf link
             pdf_url = pdfInstance.get("pdfLink")
             if pdf_url:
@@ -284,12 +312,38 @@ Answer (be concise, use bullet points where helpful):
         )
 
         answer = ai_response.get('message', {}).get('content', 'No response generated')
+        
+        await chats_collection.insert_one({
+            "userId": userId,
+            "pdfId": pdfId,
+            "type": "pdf",
+            "response": answer,
+            "prompt": question,
+        })
+        
         return ApiResponse.send(200, {"answer": answer}, "RAG chat response generated")
 
     except Exception as e:
         print("❌ Error in rag_chat_controller:", str(e))
         return ApiError.send(500, {}, f"Internal Server Error: {str(e)}")
 
+async def get_pdf_chats_controller(userId: str, pdfId: str):
+    try:
+        userInstance = await users_collection.find_one({"uid": userId})
+        if not userInstance:
+            return ApiError.send(404, {}, "User not found")
+        
+        pdfInstance = await enrollment_collection.find_one({"_id": ObjectId(pdfId), "userId": ObjectId(userInstance["_id"])})
+        if not pdfInstance:
+            return ApiError.send(404, {}, "PDF not found")
+        
+        chats = chats_collection.find({"userId": userId, "pdfId": pdfId, "type": "pdf"}).sort("createdAt", -1)
+        chat_list = [serialize_doc(chat) for chat in await chats.to_list(length=100)]
+        return ApiResponse.send(200, {"chats": chat_list}, "PDF chats fetched successfully")
+        
+    except Exception as e:
+        print("❌ Error in get_pdf_chats_controller:", str(e))
+        return ApiError.send(500, {}, f"Internal Server Error: {str(e)}")
 
 async def pdf_summary_controller(userId: str, pdfId: str):
     """
