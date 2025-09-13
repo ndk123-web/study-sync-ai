@@ -5,6 +5,7 @@
 3. database -> mongodb atlas 
 4. ai      -> ollama mistral model
 5. 3rd party api -> google v3 (for yt videos metadata)
+6. Pinecone Vector database for Storing Content of PDF namespace wise 
 
 # Features
 
