@@ -23,6 +23,7 @@ import Header from "../components/Header";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { LoadPdfFileApi } from "../api/LoadPdfFileApi.js";
 import { GetPdfMetaDataApi } from "../api/GetPdfMetaDataApi.js";
+import { GetPDFSummaryApi } from "../api/GetPDFSummaryApi.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -35,9 +36,17 @@ const formatNotesToHTML = (text, isDark = false) => {
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
       const b64Code = window.btoa(unescape(encodeURIComponent(code)));
-      const langClass = language ? `language-${language}` : 'language-javascript';
+      const langClass = language
+        ? `language-${language}`
+        : "language-javascript";
       codeBlockPlaceholders.push(
-        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
+        `<pre class="${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        } p-4 rounded-lg overflow-x-auto border ${
+          isDark ? "border-gray-700" : "border-gray-200"
+        } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -157,9 +166,17 @@ const formatChatMessageHTML = (text, isDark = false) => {
     (match, language, code) => {
       const placeholder = `CODEBLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}`;
       const b64Code = window.btoa(unescape(encodeURIComponent(code)));
-      const langClass = language ? `language-${language}` : 'language-javascript';
+      const langClass = language
+        ? `language-${language}`
+        : "language-javascript";
       codeBlockPlaceholders.push(
-        `<pre class="${isDark ? 'bg-gray-900' : 'bg-gray-50'} p-4 rounded-lg overflow-x-auto border ${isDark ? 'border-gray-700' : 'border-gray-200'} my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`
+        `<pre class="${
+          isDark ? "bg-gray-900" : "bg-gray-50"
+        } p-4 rounded-lg overflow-x-auto border ${
+          isDark ? "border-gray-700" : "border-gray-200"
+        } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</code></pre>`
       );
       return placeholder;
     }
@@ -324,10 +341,14 @@ const PdfInteraction = () => {
     const timeoutId = setTimeout(() => {
       try {
         const chatElems = Array.from(
-          document.querySelectorAll('.prose code[data-raw-code]')
+          document.querySelectorAll(".prose code[data-raw-code]")
         ).filter((el) => !el.hasAttribute("data-prism-processed"));
 
-        console.log("🎨 Found", chatElems.length, "unprocessed chat code blocks");
+        console.log(
+          "🎨 Found",
+          chatElems.length,
+          "unprocessed chat code blocks"
+        );
 
         chatElems.forEach((el) => {
           try {
@@ -522,21 +543,21 @@ const PdfInteraction = () => {
     setMessageInput("");
   };
 
-  const generateSummary = () => {
+  const generateSummary = async () => {
     setIsLoading(true);
     // Simulate API call
-    setTimeout(() => {
-      setPdfSummary(`This is a comprehensive summary of the uploaded PDF document. The document covers key topics including...
-      
-Key Points:
-• Main concept 1: Lorem ipsum dolor sit amet
-• Main concept 2: Consectetur adipiscing elit
-• Main concept 3: Sed do eiusmod tempor incididunt
 
-Important Details:
-The document provides detailed insights into various aspects of the subject matter, including practical applications and theoretical foundations.`);
-      setIsLoading(false);
-    }, 2000);
+    const apiResponse = await GetPDFSummaryApi({ pdfId: pdf });
+    if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+      console.log("PDF Summary Response:", apiResponse);
+      alert("Failed to fetch PDF summary. Please try again.");
+      return;
+    }
+
+    console.log("PDF Summary Response:", apiResponse);
+
+    setPdfSummary(apiResponse?.data?.summary || "No summary available.");
+    setIsLoading(false);
   };
 
   const generateAssessment = () => {
@@ -659,11 +680,15 @@ The document provides detailed insights into various aspects of the subject matt
             // Main Interface with VideoInteraction-style layout
             <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
               {/* Left Section - PDF Viewer */}
-              <div 
+              <div
                 className={`rounded-2xl border overflow-hidden flex flex-col transition-all duration-300 ${
-                  isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  isDark
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
                 }`}
-                style={{ width: window.innerWidth >= 1024 ? `${pdfSize}%` : '100%' }}
+                style={{
+                  width: window.innerWidth >= 1024 ? `${pdfSize}%` : "100%",
+                }}
               >
                 {/* PDF Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -673,18 +698,24 @@ The document provides detailed insights into various aspects of the subject matt
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">{uploadedPdf.name}</h3>
-                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         PDF Document • {uploadedPdf.size}MB
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className={`p-2 rounded-lg transition-colors ${
-                      isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                    }`}>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                      }`}
+                    >
                       <Download className="w-5 h-5" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setUploadedPdf(null)}
                       className={`p-2 rounded-lg transition-colors ${
                         isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
@@ -705,13 +736,21 @@ The document provides detailed insights into various aspects of the subject matt
                       style={{ minHeight: "500px" }}
                     />
                   ) : (
-                    <div className={`w-full h-full rounded-xl border-2 border-dashed flex items-center justify-center ${
-                      isDark ? "border-gray-600 bg-gray-700/30" : "border-gray-300 bg-gray-50"
-                    }`}>
+                    <div
+                      className={`w-full h-full rounded-xl border-2 border-dashed flex items-center justify-center ${
+                        isDark
+                          ? "border-gray-600 bg-gray-700/30"
+                          : "border-gray-300 bg-gray-50"
+                      }`}
+                    >
                       <div className="text-center">
                         <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                         <h3 className="text-xl font-bold mb-2">PDF Viewer</h3>
-                        <p className={`${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        <p
+                          className={`${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
                           Your PDF will appear here
                         </p>
                       </div>
@@ -731,28 +770,42 @@ The document provides detailed insights into various aspects of the subject matt
                     const startSize = pdfSize;
 
                     const handleMouseMove = (e) => {
-                      const diff = ((e.clientX - startX) / window.innerWidth) * 100;
-                      const newSize = Math.min(Math.max(startSize + diff, 30), 70);
+                      const diff =
+                        ((e.clientX - startX) / window.innerWidth) * 100;
+                      const newSize = Math.min(
+                        Math.max(startSize + diff, 30),
+                        70
+                      );
                       setPdfSize(newSize);
                     };
 
                     const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
+                      document.removeEventListener(
+                        "mousemove",
+                        handleMouseMove
+                      );
+                      document.removeEventListener("mouseup", handleMouseUp);
                     };
 
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
                   }}
                 />
               </div>
 
               {/* Right Section - Interactive Features */}
-              <div 
+              <div
                 className={`rounded-2xl border overflow-hidden flex flex-col transition-all duration-300 ${
-                  isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  isDark
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
                 }`}
-                style={{ width: window.innerWidth >= 1024 ? `${100 - pdfSize - 1}%` : '100%' }}
+                style={{
+                  width:
+                    window.innerWidth >= 1024
+                      ? `${100 - pdfSize - 1}%`
+                      : "100%",
+                }}
               >
                 {/* Tab Navigation */}
                 <div className="flex border-b border-gray-200 dark:border-gray-700">
@@ -771,7 +824,9 @@ The document provides detailed insights into various aspects of the subject matt
                         }`}
                       >
                         <Icon className="w-4 h-4" />
-                        <span className="font-medium text-sm hidden sm:inline">{tab.label}</span>
+                        <span className="font-medium text-sm hidden sm:inline">
+                          {tab.label}
+                        </span>
                       </button>
                     );
                   })}
@@ -788,7 +843,9 @@ The document provides detailed insights into various aspects of the subject matt
                             <div
                               key={msg.id}
                               className={`flex ${
-                                msg.type === "user" ? "justify-end" : "justify-start"
+                                msg.type === "user"
+                                  ? "justify-end"
+                                  : "justify-start"
                               }`}
                             >
                               <div
@@ -815,10 +872,15 @@ The document provides detailed insights into various aspects of the subject matt
                                   <div className="flex-1 min-w-0">
                                     <div
                                       dangerouslySetInnerHTML={{
-                                        __html: formatChatMessageHTML(msg.message, isDark),
+                                        __html: formatChatMessageHTML(
+                                          msg.message,
+                                          isDark
+                                        ),
                                       }}
                                     />
-                                    <p className="text-xs mt-2 opacity-70">{msg.timestamp}</p>
+                                    <p className="text-xs mt-2 opacity-70">
+                                      {msg.timestamp}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -828,7 +890,11 @@ The document provides detailed insights into various aspects of the subject matt
                           <div className="flex items-center justify-center h-full">
                             <div className="text-center">
                               <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                              <p className={`text-lg ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                              <p
+                                className={`text-lg ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}
+                              >
                                 Start a conversation about your PDF
                               </p>
                             </div>
@@ -842,7 +908,9 @@ The document provides detailed insights into various aspects of the subject matt
                           type="text"
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" && handleSendMessage()
+                          }
                           placeholder="Ask me anything about this PDF..."
                           className={`flex-1 p-3 rounded-xl border transition-all duration-200 ${
                             isDark
@@ -868,7 +936,9 @@ The document provides detailed insights into various aspects of the subject matt
                         <h3 className="text-lg font-bold">My Notes</h3>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => setNotesPreviewMode(!notesPreviewMode)}
+                            onClick={() =>
+                              setNotesPreviewMode(!notesPreviewMode)
+                            }
                             className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
                               notesPreviewMode
                                 ? "bg-emerald-500 text-white"
@@ -905,8 +975,13 @@ The document provides detailed insights into various aspects of the subject matt
                               ) : (
                                 <div className="text-center py-12">
                                   <StickyNote className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                                  <p className={`${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                                    No notes yet. Switch to edit mode to start writing!
+                                  <p
+                                    className={`${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}
+                                  >
+                                    No notes yet. Switch to edit mode to start
+                                    writing!
                                   </p>
                                 </div>
                               )}
@@ -965,8 +1040,13 @@ You can use Markdown formatting:
                         ) : (
                           <div className="text-center py-12">
                             <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                            <p className={`${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                              Click "Generate Summary" to get an AI-powered summary of your PDF
+                            <p
+                              className={`${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
+                              Click "Generate Summary" to get an AI-powered
+                              summary of your PDF
                             </p>
                           </div>
                         )}
@@ -1026,8 +1106,13 @@ You can use Markdown formatting:
                         ) : (
                           <div className="text-center py-12">
                             <FileCheck className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                            <p className={`${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                              Click "Generate Questions" to create assessment questions based on your PDF
+                            <p
+                              className={`${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
+                              Click "Generate Questions" to create assessment
+                              questions based on your PDF
                             </p>
                           </div>
                         )}

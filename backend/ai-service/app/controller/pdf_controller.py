@@ -14,10 +14,10 @@ from bson import ObjectId , json_util
 import json
 from pinecone import Pinecone, ServerlessSpec
 import os 
-from langchain_community.llms import Ollama
+import ollama
+import asyncio
 from langchain_pinecone import PineconeVectorStore
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.chains import RetrievalQA
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 enrollment_collection = db['enrollmentcourses']
@@ -70,55 +70,15 @@ async def extract_text_from_pdf(pdf_url):
         print(f"❌ Error extracting text from PDF: {str(e)}")
         return ""  # Return empty string instead of None
 
-async def rag_chat_controller(userId,pdfId,prompt):
-    try:
-        llm = Ollama(model="mistral")
-        # Use 1024-dimension embedding model to match Pinecone index exactly
-        # Using a model that produces exactly 1024 dimensions
-        embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-large-en-v1.5",
-            model_kwargs={'device': 'cuda'},
-            encode_kwargs={'normalize_embeddings': True}
-        )
-        
-        # Initialize Pinecone with new API
-        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-        index_name = "ndk"
-        namespace = f"user_{userId}_pdf_{pdfId}"
-        
-        # Get existing index
-        index = pc.Index(index_name)
-        vectorstore = PineconeVectorStore(
-            index=index, 
-            embedding=embeddings, 
-            text_key="text",
-            namespace=namespace
-        )
-        
-        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-        
-        qa = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        chain_type="stuff"
-        )
-        
-        answer = qa.run(prompt)
-        print("Answer:", answer)
-        return ApiResponse.send(200, {"answer": answer}, "RAG chat response generated successfully")
-    
-    except Exception as e:
-        print(f"❌ Error in rag_chat_controller: {str(e)}")
-        return ApiError.send("Failed to process RAG chat", 500)
-    
+
 async def get_pdf_metadata_controller(userId , pdfId):
     userInstance = await users_collection.find_one({"uid": userId})
     if not userInstance:
-        return ApiError.send("User not found", 404)
+        return ApiError.send(404, {}, "User not found")
     
     pdfInstance = await enrollment_collection.find_one({"_id": ObjectId(pdfId), "userId": ObjectId(userInstance["_id"])})
     if not pdfInstance:
-        return ApiError.send("PDF not found", 404)
+        return ApiError.send(404, {}, "PDF not found")
     
     return ApiResponse.send(200, serialize_doc(pdfInstance), "PDF metadata fetched successfully")
     
@@ -129,7 +89,7 @@ async def load_pdf_controller(userId, pdfFile):
         
         # Validate file type
         if pdfFile.content_type != "application/pdf":
-            return ApiError.send("Invalid file type. Please upload a PDF file.", 400)
+            return ApiError.send(400, {}, "Invalid file type. Please upload a PDF file.")
         
         # Read file content
         file_content = await pdfFile.read()
@@ -147,7 +107,7 @@ async def load_pdf_controller(userId, pdfFile):
             
             userInstance = await users_collection.find_one({"uid": userId})
             if not userInstance:
-                return ApiError.send("User not found", 404)
+                return ApiError.send(404, {}, "User not found")
             
             # Save to database
             response = await enrollment_collection.insert_one({
@@ -162,7 +122,7 @@ async def load_pdf_controller(userId, pdfFile):
             })
         
             if not response.inserted_id:
-                return ApiError.send("Failed to add PDF to enrollment", 500)
+                return ApiError.send(500, {}, "Failed to add PDF to enrollment")
             
             print("✅ PDF successfully processed and saved to database")
             
@@ -197,7 +157,7 @@ async def load_pdf_controller(userId, pdfFile):
             # Using a model that produces exactly 1024 dimensions
             embeddings = HuggingFaceEmbeddings(
                 model_name="BAAI/bge-large-en-v1.5",
-                model_kwargs={'device': 'cuda'},
+                model_kwargs={'device': 'cpu'},  # Use CPU instead of CUDA
                 encode_kwargs={'normalize_embeddings': True}
             )
             
@@ -205,6 +165,9 @@ async def load_pdf_controller(userId, pdfFile):
             pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
             index_name = "ndk"
             namespace = f"user_{userId}_pdf_{response.inserted_id}"   # 👈 unique per user+pdf
+            
+            print(f"📥 Upload: Creating namespace: {namespace}")
+            print(f"🆔 Upload: PDF ID type: {type(response.inserted_id)}, value: {repr(response.inserted_id)}")
 
             # Get existing index and create VectorStore
             index = pc.Index(index_name)
@@ -229,8 +192,156 @@ async def load_pdf_controller(userId, pdfFile):
                 "enrollmentId": str(response.inserted_id)
             }, "PDF uploaded and processed successfully")
         else:
-            return ApiError.send("Failed to upload PDF to cloud storage", 500)
+            return ApiError.send(500, {}, "Failed to upload PDF to cloud storage")
     
     except Exception as e:
         print("❌ Error in load_pdf_controller:", str(e))
-        return ApiError.send("Internal Server Error", 500)
+        return ApiError.send(500, {}, "Internal Server Error")
+
+
+async def rag_chat_controller(userId: str, pdfId: str, question: str):
+    try:
+        # Validate user and PDF enrollment
+        userInstance = await users_collection.find_one({"uid": userId})
+        if not userInstance:
+            return ApiError.send(404, {}, "User not found")
+
+        pdfInstance = await enrollment_collection.find_one({"_id": ObjectId(pdfId), "userId": ObjectId(userInstance["_id"])})
+        if not pdfInstance:
+            return ApiError.send(404, {}, "PDF not found")
+
+        # Build Pinecone vector store for this namespace
+        embeddings = HuggingFaceEmbeddings(
+            model_name="BAAI/bge-large-en-v1.5",
+            model_kwargs={'device': 'cpu'},
+            encode_kwargs={'normalize_embeddings': True}
+        )
+
+        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        index_name = "ndk"
+        namespace = f"user_{userId}_pdf_{pdfId}"
+
+        index = pc.Index(index_name)
+        vectorstore = PineconeVectorStore(
+            index=index,
+            embedding=embeddings,
+            text_key="text",
+            namespace=namespace
+        )
+
+        # Try retriever.invoke first (newer pattern)
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+        try:
+            docs = await asyncio.to_thread(retriever.invoke, question)
+        except Exception:
+            docs = []
+
+        # Fallback to similarity_search
+        if not docs:
+            try:
+                docs = await asyncio.to_thread(vectorstore.similarity_search, question, 4)
+            except Exception:
+                docs = []
+
+        # If still nothing, fallback to raw PDF extraction as a last resort
+        context_chunks = []
+        if docs and isinstance(docs, list):
+            context_chunks = [getattr(d, 'page_content', '') for d in docs if getattr(d, 'page_content', '')]
+        else:
+            # Attempt to extract directly from the stored pdf link
+            pdf_url = pdfInstance.get("pdfLink")
+            if pdf_url:
+                extracted = await extract_text_from_pdf(pdf_url)
+                if extracted:
+                    # Use first ~4000 characters to keep prompt size manageable
+                    context_chunks = [extracted[:4000]]
+
+        context = "\n\n".join(context_chunks) if context_chunks else ""
+
+        # Build prompt for Ollama
+        user_prompt = f"""
+You are a helpful assistant for StudySync. Use ONLY the following PDF context to answer the question concisely. If the context doesn't contain the answer, say you don't have enough information.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer (be concise, use bullet points where helpful):
+"""
+
+        ai_response = await asyncio.to_thread(
+            ollama.chat,
+            model="mistral",
+            messages=[
+                {"role": "user", "content": user_prompt}
+            ],
+            options={
+                "temperature": 0.3,
+                "top_p": 0.9,
+                "num_predict": 512
+            }
+        )
+
+        answer = ai_response.get('message', {}).get('content', 'No response generated')
+        return ApiResponse.send(200, {"answer": answer}, "RAG chat response generated")
+
+    except Exception as e:
+        print("❌ Error in rag_chat_controller:", str(e))
+        return ApiError.send(500, {}, f"Internal Server Error: {str(e)}")
+
+
+async def pdf_summary_controller(userId: str, pdfId: str):
+    """
+    Generate a concise summary of the PDF by directly extracting text from the stored pdfLink
+    and summarizing with Ollama. Pinecone is NOT used in this flow by design.
+    """
+    try:
+        # Validate user and fetch enrollment record
+        userInstance = await users_collection.find_one({"uid": userId})
+        if not userInstance:
+            return ApiError.send(404, {}, "User not found")
+
+        pdfInstance = await enrollment_collection.find_one({"_id": ObjectId(pdfId), "userId": ObjectId(userInstance["_id"])})
+        if not pdfInstance:
+            return ApiError.send(404, {}, "PDF not found")
+
+        pdf_url = pdfInstance.get("pdfLink")
+        if not pdf_url:
+            return ApiError.send(400, {}, "No PDF link found for this enrollment")
+
+        # Extract text directly from the PDF
+        extracted_text = await extract_text_from_pdf(pdf_url)
+        if not extracted_text or extracted_text.strip() == "":
+            return ApiError.send(500, {}, "Failed to extract text from PDF")
+
+        # Truncate to keep prompt reasonable
+        max_chars = 6000
+        excerpt = extracted_text[:max_chars]
+
+        prompt = f"""
+Please provide a concise, student-friendly summary of the following PDF content. Focus on main ideas, definitions, and key takeaways. Use short paragraphs and bullet points where useful.
+
+PDF Content:
+{excerpt}
+
+Summary:
+"""
+
+        ai_response = await asyncio.to_thread(
+            ollama.chat,
+            model="mistral",
+            messages=[{"role": "user", "content": prompt}],
+            options={
+                "temperature": 0.4,
+                "top_p": 0.9,
+                "num_predict": 700
+            }
+        )
+
+        summary_text = ai_response.get('message', {}).get('content', 'Summary generation failed')
+        return ApiResponse.send(200, {"summary": summary_text}, "PDF summary generated successfully")
+
+    except Exception as e:
+        print("❌ Error in pdf_summary_controller:", str(e))
+        return ApiError.send(500, {}, f"Internal Server Error: {str(e)}")
