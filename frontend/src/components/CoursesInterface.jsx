@@ -52,6 +52,8 @@ import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
 import { SendAiChatApi } from "../api/SendAiChatApi.js";
 import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
+import { SendCourseQuizApi } from "../api/sendQuizCourseApi.js";
+import { SendCourseQuizCompletedApi } from "../api/SendCourseCompletedApi.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -361,6 +363,7 @@ const CoursesInterface = () => {
   const [notStoreNotes, setNotStoreNotes] = useState("");
   const [storedNotes, setStoredNotes] = useState("");
   const [completedVideosIndex, setCompletedVideosIndex] = useState(-1);
+  const [quizId, setQuizId] = useState("");
   const [summaryText, setSummaryText] = useState("");
   // Real-time markdown editor - live preview only
   const [showPreview, setShowPreview] = useState(false); // Mobile preview toggle
@@ -416,6 +419,11 @@ const CoursesInterface = () => {
     (state) => state.unsetTranscriptLoader
   );
 
+  // Quiz loader
+  const quizLoader = useLoaders((state) => state.quizLoader);
+  const setQuizLoader = useLoaders((state) => state.setQuizLoader);
+  const unsetQuizLoader = useLoaders((state) => state.unsetQuizLoader);
+
   const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
   const [activeTab, setActiveTab] = useState("notes");
   const [notesPreviewMode, setNotesPreviewMode] = useState(false); // Toggle between edit and preview
@@ -423,6 +431,13 @@ const CoursesInterface = () => {
   const [videoSize, setVideoSize] = useState(55); // Default 50%
   const [chatMessages, setChatMessages] = useState([]); // Start with empty array
   const [transcriptText, setTranscriptText] = useState([]);
+
+  // Quiz related state
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
+  const [isQuizGenerated, setIsQuizGenerated] = useState(false);
+  const [userAnswers, setUserAnswers] = useState({}); // Store user selected answers
+  const [isQuizSubmitted, setIsQuizSubmitted] = useState(false); // Track if quiz is submitted
   const currentCourse = {
     title: "Complete React Hooks Guide",
     instructor: "React Developer Pro",
@@ -1123,6 +1138,145 @@ const CoursesInterface = () => {
     } finally {
       unsetChatLoader(); // Stop loader
     }
+  };
+
+  // Generate Quiz function
+  const generateQuiz = async () => {
+    setQuizLoader();
+
+    try {
+      // Simulate API call - replace with actual API when backend is ready
+
+      const apiResponse = await SendCourseQuizApi({
+        level: selectedDifficulty,
+        courseId: courseId,
+      });
+
+      console.log("Api Response for Quiz: ", apiResponse);
+      console.log("Full API Response structure:", JSON.stringify(apiResponse, null, 2));
+      
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        alert(
+          "Error generating quiz: " + (apiResponse?.message || "Unknown error")
+        );
+        unsetQuizLoader();
+        return;
+      }
+
+      const questionsFromApi = apiResponse?.data?.data?.questions?.questions || [];
+      const generatedQuizId = apiResponse?.data?.data?.id;
+      
+      console.log("Generated Quiz ID:", generatedQuizId);
+      console.log("Generated Quiz ID type:", typeof generatedQuizId);
+      console.log("Raw _id object:", apiResponse?.data?.data?.questions?._id);
+      
+      // Validate that we have a valid quizId
+      if (!generatedQuizId || typeof generatedQuizId !== 'string' || generatedQuizId.trim() === '') {
+        console.error("❌ Invalid quiz ID received:", generatedQuizId);
+        console.error("❌ Raw _id object:", apiResponse?.data?.data?.questions?._id);
+        console.error("❌ Full API response structure:", JSON.stringify(apiResponse, null, 2));
+        alert("Error: Invalid quiz ID received from server. Please try again.");
+        unsetQuizLoader();
+        return;
+      }
+      
+      console.log("Questions from API:", questionsFromApi);
+      console.log("Questions from API type:", typeof questionsFromApi);
+      
+      setQuizId(generatedQuizId); // this is important for fetching the quiz later
+
+      if (questionsFromApi.length === 0) {
+        alert("No questions found for the selected course and difficulty.");
+        unsetQuizLoader();
+        return;
+      }
+
+      setQuizQuestions(questionsFromApi);
+      setIsQuizGenerated(true);
+      setUserAnswers({}); // Reset user answers
+      setIsQuizSubmitted(false); // Reset submission state
+      unsetQuizLoader();
+    } catch (error) {
+      console.error("Error generating quiz:", error);
+      alert("Failed to generate quiz. Please try again.");
+      unsetQuizLoader();
+    }
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionIndex, selectedOption) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionIndex]: selectedOption,
+    }));
+  };
+
+  // Submit quiz and show results
+  const handleQuizSubmit = async () => {
+    if (!quizId) {
+      alert("Quiz ID not found. Please regenerate the quiz.");
+      console.error("❌ Quiz ID is missing:", quizId);
+      return;
+    }
+
+    console.log("Submitting quiz with ID:", quizId);
+
+    try {
+      const score = calculateScore();
+      console.log("📊 Quiz Submitted. Score:", score, "Total Questions:", quizQuestions.length, "Quiz ID:", quizId);
+      console.log("📊 Data Types - Score type:", typeof score, "QuizId type:", typeof quizId);
+      console.log("📊 Data Values - Score value:", score, "QuizId value:", quizId);
+      
+      // Ensure score is an integer and quizId is a string
+      const payload = {
+        score: parseInt(score),
+        quizId: String(quizId)
+      };
+      
+      console.log("📊 Final payload to send:", payload);
+      console.log("📊 Payload types - score:", typeof payload.score, "quizId:", typeof payload.quizId);
+      
+      const apiResponse = await SendCourseQuizCompletedApi(payload);
+      
+      console.log("✅ Quiz completion API response:", apiResponse);
+      
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+        console.error("❌ API Error:", apiResponse);
+        alert(
+          "Error submitting quiz results: " +
+            (apiResponse?.message || apiResponse?.data?.message || "Unknown error")
+        );
+        return;
+      }
+      
+      setIsQuizSubmitted(true);
+      console.log(`🎉 Quiz completed successfully! Score: ${score}/${quizQuestions.length} (${Math.round((score/quizQuestions.length)*100)}%)`);
+      
+    } catch (err) {
+      console.error("💥 Error in submitting quiz:", err);
+      alert("Error in submitting quiz: " + (err.message || "Unknown error"));
+      return;
+    }
+  };
+
+  // Reset quiz to generate new one
+  const handleResetQuiz = () => {
+    setIsQuizGenerated(false);
+    setQuizQuestions([]);
+    setUserAnswers({});
+    setIsQuizSubmitted(false);
+    setQuizId(null); // Reset quiz ID
+  };
+
+  // Calculate quiz score
+  const calculateScore = () => {
+    let correctAnswers = 0;
+    quizQuestions.forEach((question, index) => {
+      if (userAnswers[index] === question.answer) {
+        correctAnswers++;
+      }
+    });
+    return correctAnswers;
   };
 
   return (
@@ -3131,10 +3285,10 @@ const example = 'This is important';
             )}
 
             {activeTab === "quiz" && (
-              <div className="space-y-6 max-w-full">
+              <div className="space-y-6 max-w-full h-full flex flex-col">
                 {/* Quiz Header */}
                 <div
-                  className={`p-4 rounded-2xl bg-gradient-to-r max-w-full ${
+                  className={`p-4 rounded-2xl bg-gradient-to-r flex-shrink-0 ${
                     isDark
                       ? "from-red-900/30 to-pink-900/30 border border-red-500/30"
                       : "from-red-50 to-pink-50 border border-red-200"
@@ -3153,120 +3307,441 @@ const example = 'This is important';
                           isDark ? "text-gray-400" : "text-gray-600"
                         } truncate`}
                       >
-                        Test your knowledge on React Hooks
+                        Test your knowledge with AI-generated questions
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Quiz Question */}
-                <div
-                  className={`p-6 rounded-2xl ${
-                    isDark ? "bg-gray-800/50" : "bg-white/50"
-                  } border ${
-                    isDark ? "border-gray-700" : "border-gray-200"
-                  } max-w-full backdrop-blur-sm`}
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-semibold text-lg">Question 1 of 5</h4>
-                    <div
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        isDark
-                          ? "bg-emerald-900/30 text-emerald-400"
-                          : "bg-emerald-100 text-emerald-700"
-                      }`}
-                    >
-                      Easy Level
-                    </div>
-                  </div>
-
-                  <p className="mb-6 text-lg leading-relaxed break-words">
-                    Which hook is used for managing state in functional
-                    components?
-                  </p>
-
-                  <div className="space-y-3">
-                    {["useEffect", "useState", "useContext", "useReducer"].map(
-                      (option, index) => (
-                        <button
-                          key={index}
-                          className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.02] break-words ${
-                            isDark
-                              ? "border-gray-600 hover:border-emerald-500 hover:bg-gray-700/50 bg-gray-800/30"
-                              : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 bg-white/80"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
-                                isDark
-                                  ? "bg-gray-700 text-gray-300"
-                                  : "bg-gray-100 text-gray-600"
-                              }`}
-                            >
-                              {String.fromCharCode(65 + index)}
-                            </div>
-                            <span className="break-words font-medium">
-                              {option}
-                            </span>
-                          </div>
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  <div className="flex justify-between items-center mt-6 flex-wrap gap-3">
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className={`w-2 h-2 rounded-full bg-emerald-500`}
-                      ></div>
-                      <span
-                        className={`text-sm font-medium ${
+                {!isQuizGenerated ? (
+                  /* Generate Quiz Section */
+                  <div
+                    className={`p-6 rounded-2xl border flex-1 ${
+                      isDark
+                        ? "bg-gray-800/50 border-gray-700"
+                        : "bg-white/50 border-gray-200"
+                    } backdrop-blur-sm flex flex-col justify-center items-center space-y-6`}
+                  >
+                    <div className="text-center space-y-4">
+                      <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
+                        <Brain className="w-10 h-10 text-white" />
+                      </div>
+                      <h4 className="text-2xl font-bold">Generate Quiz</h4>
+                      <p
+                        className={`text-lg ${
                           isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        Progress: 1/5
-                      </span>
+                        Choose difficulty level and generate AI-powered quiz
+                        questions
+                      </p>
                     </div>
-                    <button className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium flex-shrink-0 shadow-lg transform hover:scale-105">
-                      Next Question →
+
+                    {/* Difficulty Level Options */}
+                    <div className="w-full max-w-md space-y-4">
+                      <h5 className="text-lg font-semibold text-center mb-4">
+                        Select Difficulty Level:
+                      </h5>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          {
+                            id: "easy",
+                            label: "Easy",
+                            color: "from-green-500 to-emerald-500",
+                            emoji: "😊",
+                          },
+                          {
+                            id: "intermediate",
+                            label: "Intermediate",
+                            color: "from-yellow-500 to-orange-500",
+                            emoji: "🤔",
+                          },
+                          {
+                            id: "legend",
+                            label: "Legend",
+                            color: "from-red-500 to-purple-500",
+                            emoji: "🔥",
+                          },
+                        ].map((level) => (
+                          <button
+                            key={level.id}
+                            onClick={() => setSelectedDifficulty(level.id)}
+                            className={`w-full p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
+                              selectedDifficulty === level.id
+                                ? `bg-gradient-to-r ${level.color} text-white border-transparent shadow-lg`
+                                : isDark
+                                ? "border-gray-600 hover:border-gray-500 bg-gray-700/50"
+                                : "border-gray-200 hover:border-gray-300 bg-white/80"
+                            }`}
+                          >
+                            <div className="flex items-center justify-center space-x-3">
+                              <span className="text-2xl">{level.emoji}</span>
+                              <div className="text-center">
+                                <div className="text-lg font-bold">
+                                  {level.label}
+                                </div>
+                                <div
+                                  className={`text-sm ${
+                                    selectedDifficulty === level.id
+                                      ? "text-white/80"
+                                      : isDark
+                                      ? "text-gray-400"
+                                      : "text-gray-600"
+                                  }`}
+                                >
+                                  {level.id === "easy" && "Basic questions"}
+                                  {level.id === "intermediate" &&
+                                    "Moderate challenge"}
+                                  {level.id === "legend" && "Expert level"}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Generate Button */}
+                    <button
+                      onClick={generateQuiz}
+                      disabled={quizLoader}
+                      className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-bold text-lg shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                    >
+                      {quizLoader ? (
+                        <>
+                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Generating Quiz...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="w-6 h-6" />
+                          <span>Generate Quiz</span>
+                        </>
+                      )}
                     </button>
                   </div>
-                </div>
+                ) : (
+                  /* Quiz Questions Display */
+                  <div className="flex-1 min-h-0">
+                    <div
+                      className={`h-full rounded-2xl border overflow-hidden ${
+                        isDark
+                          ? "bg-gray-800/50 border-gray-700"
+                          : "bg-white/50 border-gray-200"
+                      } backdrop-blur-sm`}
+                    >
+                      {/* Quiz Content Header */}
+                      <div
+                        className={`p-4 border-b flex items-center justify-between ${
+                          isDark ? "border-gray-700" : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">
+                              {quizQuestions.length}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-lg">
+                              Quiz Questions
+                            </h4>
+                            <p
+                              className={`text-sm ${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
+                              {selectedDifficulty.charAt(0).toUpperCase() +
+                                selectedDifficulty.slice(1)}{" "}
+                              Level
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleResetQuiz}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                            isDark
+                              ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                              : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          Generate New Quiz
+                        </button>
+                      </div>
 
-                {/* Enhanced Quiz Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div
-                    className={`p-6 rounded-2xl text-center border ${
-                      isDark
-                        ? "bg-gray-800/50 border-gray-700"
-                        : "bg-white/50 border-gray-200"
-                    } backdrop-blur-sm`}
-                  >
-                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <TrendingUp className="w-6 h-6 text-white" />
+                      {/* Scrollable Quiz Area */}
+                      <div className="h-full overflow-y-auto p-6 space-y-6">
+                        {quizQuestions.map((question, questionIndex) => (
+                          <div
+                            key={questionIndex}
+                            className={`p-6 rounded-xl border ${
+                              isDark
+                                ? "bg-gray-900/50 border-gray-600"
+                                : "bg-white/80 border-gray-200"
+                            } space-y-4`}
+                          >
+                            {/* Question Header */}
+                            <div className="flex items-start space-x-3">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-sm font-bold">
+                                  {questionIndex + 1}
+                                </span>
+                              </div>
+                              <div className="flex-1">
+                                <h5 className="text-lg font-semibold mb-2">
+                                  Question {questionIndex + 1}
+                                </h5>
+                                <p className="text-base leading-relaxed">
+                                  {question.question}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Interactive Options */}
+                            <div className="space-y-3 ml-11">
+                              {question.options.map((option, optionIndex) => {
+                                const isSelected =
+                                  userAnswers[questionIndex] === option;
+                                const isCorrect = option === question.answer;
+                                const isWrong =
+                                  isQuizSubmitted && isSelected && !isCorrect;
+                                const showCorrect =
+                                  isQuizSubmitted && isCorrect;
+
+                                return (
+                                  <button
+                                    key={optionIndex}
+                                    onClick={() =>
+                                      !isQuizSubmitted &&
+                                      handleAnswerSelect(questionIndex, option)
+                                    }
+                                    disabled={isQuizSubmitted}
+                                    className={`w-full p-3 rounded-lg border transition-all duration-300 text-left ${
+                                      isQuizSubmitted
+                                        ? showCorrect
+                                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                                          : isWrong
+                                          ? "border-red-500 bg-red-50 dark:bg-red-900/20"
+                                          : isDark
+                                          ? "border-gray-600 bg-gray-800/30"
+                                          : "border-gray-200 bg-gray-50/50"
+                                        : isSelected
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 transform scale-[1.02]"
+                                        : isDark
+                                        ? "border-gray-600 bg-gray-800/30 hover:border-blue-400 hover:bg-blue-900/10"
+                                        : "border-gray-200 bg-gray-50/50 hover:border-blue-400 hover:bg-blue-50"
+                                    } ${
+                                      !isQuizSubmitted
+                                        ? "cursor-pointer"
+                                        : "cursor-default"
+                                    }`}
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <div
+                                        className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                                          isQuizSubmitted
+                                            ? showCorrect
+                                              ? "bg-emerald-500 text-white"
+                                              : isWrong
+                                              ? "bg-red-500 text-white"
+                                              : isDark
+                                              ? "bg-gray-700 text-gray-300"
+                                              : "bg-gray-200 text-gray-600"
+                                            : isSelected
+                                            ? "bg-blue-500 text-white"
+                                            : isDark
+                                            ? "bg-gray-700 text-gray-300"
+                                            : "bg-gray-200 text-gray-600"
+                                        }`}
+                                      >
+                                        {isQuizSubmitted && showCorrect && (
+                                          <Check className="w-4 h-4" />
+                                        )}
+                                        {isQuizSubmitted && isWrong && "✕"}
+                                        {(!isQuizSubmitted ||
+                                          (!showCorrect && !isWrong)) &&
+                                          String.fromCharCode(65 + optionIndex)}
+                                      </div>
+                                      <span
+                                        className={`text-sm ${
+                                          isQuizSubmitted
+                                            ? showCorrect
+                                              ? "text-emerald-700 dark:text-emerald-300 font-semibold"
+                                              : isWrong
+                                              ? "text-red-700 dark:text-red-300"
+                                              : ""
+                                            : isSelected
+                                            ? "text-blue-700 dark:text-blue-300 font-medium"
+                                            : ""
+                                        }`}
+                                      >
+                                        {option}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Show result after submission */}
+                            {isQuizSubmitted && (
+                              <div className="ml-11">
+                                {userAnswers[questionIndex] ===
+                                question.answer ? (
+                                  <div className="p-3 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20">
+                                    <div className="flex items-center space-x-2">
+                                      <Check className="w-4 h-4 text-emerald-500" />
+                                      <span className="text-sm font-medium text-emerald-500">
+                                        Correct! Well done! 🎉
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="p-3 rounded-lg border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-red-500 text-sm">
+                                          ✕
+                                        </span>
+                                        <span className="text-sm font-medium text-red-500">
+                                          Incorrect. You selected:{" "}
+                                          {userAnswers[questionIndex] ||
+                                            "No answer"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="p-3 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20">
+                                      <div className="flex items-center space-x-2">
+                                        <Check className="w-4 h-4 text-emerald-500" />
+                                        <span className="text-sm font-medium text-emerald-500">
+                                          Correct Answer: {question.answer}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Quiz Submission Section */}
+                        {quizQuestions.length > 0 && !isQuizSubmitted && (
+                          <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-transparent pt-6 pb-4">
+                            <div
+                              className={`p-6 rounded-xl border ${
+                                isDark
+                                  ? "bg-gray-800/50 border-gray-700"
+                                  : "bg-white/50 border-gray-200"
+                              } backdrop-blur-sm`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                  <div
+                                    className={`text-sm ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}
+                                  >
+                                    Progress: {Object.keys(userAnswers).length}/
+                                    {quizQuestions.length} answered
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    {quizQuestions.map((_, index) => (
+                                      <div
+                                        key={index}
+                                        className={`w-3 h-3 rounded-full ${
+                                          userAnswers[index]
+                                            ? "bg-emerald-500"
+                                            : isDark
+                                            ? "bg-gray-600"
+                                            : "bg-gray-300"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={handleQuizSubmit}
+                                  disabled={
+                                    Object.keys(userAnswers).length === 0
+                                  }
+                                  className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                >
+                                  <span>Submit Quiz</span>
+                                  <span>📝</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quiz Results */}
+                        {isQuizSubmitted && (
+                          <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-transparent pt-6 pb-4">
+                            <div
+                              className={`p-6 rounded-xl border ${
+                                isDark
+                                  ? "bg-gray-800/50 border-gray-700"
+                                  : "bg-white/50 border-gray-200"
+                              } backdrop-blur-sm`}
+                            >
+                              <div className="text-center space-y-4">
+                                <div className="w-16 h-16 mx-auto bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                                  <Award className="w-8 h-8 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="text-xl font-bold text-emerald-500 mb-2">
+                                    Quiz Complete! 🎉
+                                  </h4>
+                                  <div className="text-3xl font-bold mb-2">
+                                    {calculateScore()}/{quizQuestions.length}
+                                  </div>
+                                  <p
+                                    className={`text-sm ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}
+                                  >
+                                    Score:{" "}
+                                    {Math.round(
+                                      (calculateScore() /
+                                        quizQuestions.length) *
+                                        100
+                                    )}
+                                    %
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={handleResetQuiz}
+                                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium"
+                                >
+                                  Try Again
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {quizQuestions.length === 0 && (
+                          <div className="text-center py-12">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center">
+                              <Brain className="w-8 h-8 text-gray-500" />
+                            </div>
+                            <h4 className="text-lg font-semibold mb-2">
+                              No Questions Generated
+                            </h4>
+                            <p
+                              className={`text-sm ${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              }`}
+                            >
+                              Click "Generate New Quiz" to create questions
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-3xl font-bold text-emerald-500 mb-1">
-                      85%
-                    </div>
-                    <div className="text-sm font-medium">Accuracy Rate</div>
                   </div>
-                  <div
-                    className={`p-6 rounded-2xl text-center border ${
-                      isDark
-                        ? "bg-gray-800/50 border-gray-700"
-                        : "bg-white/50 border-gray-200"
-                    } backdrop-blur-sm`}
-                  >
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Award className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="text-3xl font-bold text-blue-500 mb-1">
-                      12
-                    </div>
-                    <div className="text-sm font-medium">Completed</div>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 

@@ -16,6 +16,7 @@ const useLoaders = createPersistedStore("loaders", (set) => ({
   transcriptLoader: false,
   dashboardYearLoader: false,
   pdfLoader: false,
+  quizLoader: false,
 
   setLoader: () => set(() => ({ loader: true })),
   unsetLoader: () => set(() => ({ loader: false })),
@@ -61,6 +62,9 @@ const useLoaders = createPersistedStore("loaders", (set) => ({
 
   setPdfLoader: () => set(() => ({ pdfLoader: true })),
   unsetPdfLoader: () => set(() => ({ pdfLoader: false })),
+
+  setQuizLoader: () => set(() => ({ quizLoader: true })),
+  unsetQuizLoader: () => set(() => ({ quizLoader: false })),
 }));
 
 export { useLoaders };

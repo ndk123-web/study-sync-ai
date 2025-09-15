@@ -339,6 +339,8 @@ Answer (use the markdown formatting above):
             "type": "pdf",
             "response": answer,
             "prompt": question,
+            "completed": False,
+            "score": "0"
         })
         
         return ApiResponse.send(200, {"answer": answer}, "RAG chat response generated")
