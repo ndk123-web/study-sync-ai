@@ -2,7 +2,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middleware/verifyJWT.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { GetTrendAnalysisYearController , GetTrendAnalysisController } from "../controllers/dashboard.controller.js";
+import { GetTrendAnalysisYearController , GetTrendAnalysisController, GetTopicsWiseProgressController } from "../controllers/dashboard.controller.js";
 
 const dashboardRouter = Router();
 
@@ -16,6 +16,12 @@ dashboardRouter.get(
   '/get-trend-analysis/',
   verifyJWT,
   GetTrendAnalysisController
+)
+
+dashboardRouter.get(
+  '/get-topics-wise-progress/',
+  verifyJWT,
+  GetTopicsWiseProgressController
 )
 
 export default dashboardRouter;

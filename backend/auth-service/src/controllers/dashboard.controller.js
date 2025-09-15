@@ -157,4 +157,86 @@ const GetTrendAnalysisController = wrapper(async (req, res) => {
     );
 });
 
-export { GetTrendAnalysisYearController, GetTrendAnalysisController };
+// Response format
+// const categoryDistribution = [
+//   { name: 'Frontend', value: 32, color: '#10B981' },
+//   { name: 'Backend', value: 24, color: '#3B82F6' },
+//   { name: 'DSA', value: 18, color: '#8B5CF6' },
+//   { name: 'DevOps', value: 14, color: '#F59E0B' },
+//   { name: 'AI/ML', value: 12, color: '#EF4444' },
+// ];
+const GetTopicsWiseProgressController = wrapper(async (req, res) => {
+  const userData = req.user;
+
+  const userInstance = await User.findOne({ uid: userData.uid });
+  if (!userInstance) {
+    throw new ApiError("User not found", 404);
+  }
+  const userId = userInstance._id;
+
+  const userEnrollments = await Enrollment.find({ userId }).populate(
+    "courseId",
+    "type category"
+  );
+
+  if (!userEnrollments || userEnrollments.length === 0) {
+    throw new ApiError("No enrollments found for user", 404);
+  }
+
+  console.log("User Enrollments: ", userEnrollments);
+
+  // fixed color mapping
+  const categoryColors = {
+    Frontend: "#10B981",
+    Backend: "#3B82F6",
+    DSA: "#8B5CF6",
+    DevOps: "#F59E0B",
+    "AI/ML": "#EF4444",
+  };
+
+  // helper → random hex color
+  const getRandomColor = () =>
+    "#" + Math.floor(Math.random() * 16777215).toString(16);
+
+  // Step 1: normalize categories
+  let categories = userEnrollments
+    .filter((enrollment) => enrollment.type === "course")
+    .map((enrollment) => {
+      let category = enrollment?.courseId?.category;
+      if (!category) return null;
+      if (category.toLowerCase() === "programming") category = "Languages";
+      return category;
+    })
+    .filter(Boolean); // remove nulls
+
+  // Step 2: count categories
+  const categoryCountMap = {};
+  categories.forEach((cat) => {
+    if (categoryCountMap[cat]) {
+      categoryCountMap[cat] += 1;
+    } else {
+      categoryCountMap[cat] = 1;
+    }
+  });
+
+  // Step 3: final formatted response
+  const categoryDistribution = Object.entries(categoryCountMap).map(
+    ([name, value]) => {
+      return {
+        name,
+        value,
+        color: categoryColors[name] || getRandomColor(), // if not in map → random
+      };
+    }
+  );
+
+  console.log("Category Distribution: ", categoryDistribution);
+
+  return res.status(200).json(new ApiResponse(200, { categoryDistribution }));
+});
+
+export {
+  GetTrendAnalysisYearController,
+  GetTrendAnalysisController,
+  GetTopicsWiseProgressController,
+};
