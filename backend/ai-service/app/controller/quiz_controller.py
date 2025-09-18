@@ -121,6 +121,30 @@ async def complete_quiz_controller(quizId: str, score: int, userId):
         if update_result.modified_count == 0:
             return ApiResponse.send(500, {"error": "Failed to update quiz status"})
         print("Quiz updated:", update_result.modified_count)
+        
+        # If score >= 70%, add +5 skill points to user
+        user_instance = await users_collection.find_one({ "uid": userId })
+        if not user_instance:
+            return ApiResponse.send(404, {"error": "User not found"})
+        
+        if percentage_score >= 70:
+            print("Current skill points:", user_instance.get('skillPoints', 0))
+            new_skill_points = (user_instance.get('skillPoints', 0) or 0) + 5
+            await users_collection.update_one(
+                { "uid": userId },
+                { "$set": { "skillPoints": new_skill_points } }
+            )
+            print(f"✅ Added 5 skill points to user {userId}. New skill points: {new_skill_points}")
+        else:
+            # add 3 skill points for attempting the quiz
+            new_skill_points = (user_instance.get('skillPoints', 0) or 0) + 3
+            await users_collection.update_one(
+                { "uid": userId },
+                { "$set": { "skillPoints": new_skill_points } }
+            )
+            print(f"✅ Added 3 skill points to user {userId}. New skill points: {new_skill_points}")
+            print(f"ℹ️ No skill points added. User {userId} scored {percentage_score:.2f}%")
+        
         return ApiResponse.send(200, {
             "message": "Quiz completed successfully", 
             "score": score,

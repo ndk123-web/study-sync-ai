@@ -53,6 +53,10 @@ const enrollmentSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    addedCompletedPoints : {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,

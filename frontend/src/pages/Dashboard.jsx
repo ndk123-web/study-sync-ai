@@ -59,6 +59,7 @@ import { GetTrendAnalysisYearApi } from "../api/GetTrendAnalysisYearApi.js";
 import { GetTrendAnalysisApi } from "../api/GetTrendAnalysisApi.js";
 import { GetTopicsWiseProgressApi } from "../api/GetTopicWiseDashboardApi.js";
 import { GetQuizPerformanceApi } from "../api/GetQuizPerformanceApi.js";
+import { GetPerformanceApi } from "../api/GetPerformanceApi.js";
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -124,6 +125,48 @@ const Dashboard = () => {
   const [categoryDistribution, setCategoryDistribution] = useState([]);
   const [quizScoresByCourse, setQuizScoresByCourse] = useState([]);
   const [quizLoader, setQuizLoader] = useState(false);
+  const [statsCards, setStatCards] = useState([
+    {
+      title: "Study Streak",
+      value: "loading...",
+      // change: "+3 days",
+      // changePercent: "+18%",
+      color: "from-orange-500 to-red-500",
+      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      icon: <Flame className="w-5 h-5 md:w-6 md:h-6" />,
+      trend: "up",
+    },
+    {
+      title: "Topics Studied",
+      value: "loading...",
+      // change: "+5 this week",
+      // changePercent: "+26%",
+      color: "from-emerald-500 to-teal-500",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      icon: <BookOpenCheck className="w-5 h-5 md:w-6 md:h-6" />,
+      trend: "up",
+    },
+    {
+      title: "Quizzes Completed",
+      value: "loading...",
+      // change: "+12%",
+      // changePercent: "+12%",
+      color: "from-blue-500 to-purple-500",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      icon: <Trophy className="w-5 h-5 md:w-6 md:h-6" />,
+      trend: "up",
+    },
+    {
+      title: "Skill Points",
+      value: "loading...",
+      // change: "+8.2h",
+      // changePercent: "+22%",
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      icon: <Timer className="w-5 h-5 md:w-6 md:h-6" />,
+      trend: "up",
+    },
+  ]);
 
   // Auth check
   useEffect(() => {
@@ -247,6 +290,27 @@ const Dashboard = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchPerformanceData = async () => {
+      try {
+        const apiResponse = await GetPerformanceApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error fetching Performance data: ", apiResponse);
+        }
+        console.log("Performance Data: ", apiResponse);
+        statsCards[0].value = apiResponse?.data?.studyStreaks || "0";
+        statsCards[1].value = apiResponse?.data?.enrollmentsCount || "0";
+        statsCards[2].value = apiResponse?.data?.quizzesCount || "0";
+        statsCards[3].value = apiResponse?.data?.skillPoint || "0";
+      } catch (err) {
+        alert("Error in fetching Performance data: ", err.message);
+        return;
+      }
+    };
+
+    fetchPerformanceData();
+  }, []);
+
   // debug State change ko track karne ke liye separate useEffect
   // useEffect(() => {
   //   console.log("Available User Years State Updated: ", availableUserYears);
@@ -257,50 +321,6 @@ const Dashboard = () => {
     logoutUser();
     setIsSidebarOpen(false);
   };
-
-  // Sample data with analytics
-  const statsCards = [
-    {
-      title: "Study Streak",
-      value: user?.streak || "7",
-      // change: "+3 days",
-      // changePercent: "+18%",
-      color: "from-orange-500 to-red-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
-      icon: <Flame className="w-5 h-5 md:w-6 md:h-6" />,
-      trend: "up",
-    },
-    {
-      title: "Topics Studied",
-      value: user?.totalTopics || "24",
-      // change: "+5 this week",
-      // changePercent: "+26%",
-      color: "from-emerald-500 to-teal-500",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
-      icon: <BookOpenCheck className="w-5 h-5 md:w-6 md:h-6" />,
-      trend: "up",
-    },
-    {
-      title: "Quizzes Completed",
-      value: user?.completedQuizzes || "18",
-      // change: "+12%",
-      // changePercent: "+12%",
-      color: "from-blue-500 to-purple-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      icon: <Trophy className="w-5 h-5 md:w-6 md:h-6" />,
-      trend: "up",
-    },
-    {
-      title: "Skill Points",
-      value: `${user?.skillPoints || "0"}`,
-      // change: "+8.2h",
-      // changePercent: "+22%",
-      color: "from-purple-500 to-pink-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      icon: <Timer className="w-5 h-5 md:w-6 md:h-6" />,
-      trend: "up",
-    },
-  ];
 
   // Removed older analyticsData; not needed after simplifying charts
 

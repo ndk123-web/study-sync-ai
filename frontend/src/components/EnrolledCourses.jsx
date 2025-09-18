@@ -141,7 +141,7 @@ const EnrolledCoursesSample = () => {
         } else if (enr.type === "pdf") {
           return {
             id: enr._id || enr.id,
-            title: enr.title || "PDF Study Material",
+            title: enr.pdfName || "PDF Study Material",
             creator: `${enr.pdfSize.toFixed(5)} MB` || "PDF Content",
             pdfName: enr.pdfName || "Untitled PDF",
             category: "PDF Learning",
