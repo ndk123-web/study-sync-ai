@@ -58,6 +58,7 @@ import * as Recharts from "recharts";
 import { GetTrendAnalysisYearApi } from "../api/GetTrendAnalysisYearApi.js";
 import { GetTrendAnalysisApi } from "../api/GetTrendAnalysisApi.js";
 import { GetTopicsWiseProgressApi } from "../api/GetTopicWiseDashboardApi.js";
+import { GetQuizPerformanceApi } from "../api/GetQuizPerformanceApi.js";
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -121,6 +122,8 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [categoryDistribution, setCategoryDistribution] = useState([]);
+  const [quizScoresByCourse, setQuizScoresByCourse] = useState([]);
+  const [quizLoader, setQuizLoader] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -217,6 +220,30 @@ const Dashboard = () => {
       return;
     } finally {
       setCategoryLoader(false);
+    }
+  }, []);
+
+  // Quiz Performace Data
+  useEffect(() => {
+    setQuizLoader(false);
+    try {
+      setQuizLoader(true);
+      const fetchQuizPerformance = async () => {
+        const apiResponse = await GetQuizPerformanceApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error fetching Quiz Performance data: ", apiResponse);
+          alert("Error fetching Quiz Performance data");
+        }
+        console.log("Quiz Performance Data: ", apiResponse);
+        setQuizScoresByCourse(apiResponse?.data?.quizScoresByCourse || []);
+        setQuizLoader(false);
+      };
+      fetchQuizPerformance();
+    } catch (err) {
+      alert("Error in fetching Quiz Performance data: ", err.message);
+      return;
+    } finally {
+      setQuizLoader(false);
     }
   }, []);
 
@@ -365,13 +392,13 @@ const Dashboard = () => {
   //   { name: 'AI/ML', value: 12, color: '#EF4444' },
   // ];
 
-  const quizScoresByCourse = [
-    { course: "React", avgScore: 82, attempts: 3 },
-    { course: "Node", avgScore: 74, attempts: 2 },
-    { course: "DSA", avgScore: 68, attempts: 4 },
-    { course: "DevOps", avgScore: 71, attempts: 1 },
-    { course: "ML", avgScore: 77, attempts: 2 },
-  ];
+  // const quizScoresByCourse = [
+  //   { course: "React", avgScore: 82, attempts: 1 },
+  //   { course: "Node", avgScore: 74, attempts: 2 },
+  //   { course: "DSA", avgScore: 68, attempts: 4 },
+  //   { course: "DevOps", avgScore: 71, attempts: 1 },
+  //   { course: "ML", avgScore: 77, attempts: 2 },
+  // ];
 
   // Datasets for tab content and side sections
   const searchTopics = [
@@ -818,7 +845,7 @@ const Dashboard = () => {
         >
           <Recharts.CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? "#374151" : "#E5E7EB"}
+            stroke={isDark ? "#374151" : "#000000ff"}
           />
           <Recharts.XAxis
             dataKey="course"
@@ -828,7 +855,10 @@ const Dashboard = () => {
             tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
             domain={[0, 100]}
           />
-          <Recharts.Tooltip content={<ReTooltip />} />
+          <Recharts.Tooltip
+            content={<ReTooltip />}
+            wrapperStyle={{ background: "transparent", border: "none" }}
+          />
           <Recharts.Legend />
           <Recharts.ReferenceLine
             y={70}

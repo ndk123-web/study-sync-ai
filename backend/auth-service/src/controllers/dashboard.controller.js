@@ -4,6 +4,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import User from "../models/user.models.js";
 import Course from "../models/courses.models.js";
+import Quiz from "../models/quiz.models.js";
 // import { wrap } from "module";
 
 const GetTrendAnalysisYearController = wrapper(async (req, res) => {
@@ -235,8 +236,56 @@ const GetTopicsWiseProgressController = wrapper(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, { categoryDistribution }));
 });
 
+// Response format
+// const quizScoresByCourse = [
+//   { course: "React", avgScore: 82, attempts: 1 },
+//   { course: "Node", avgScore: 74, attempts: 2 },
+//   { course: "DSA", avgScore: 68, attempts: 4 },
+//   { course: "DevOps", avgScore: 71, attempts: 1 },
+//   { course: "ML", avgScore: 77, attempts: 2 },
+// ];
+const GetQuizPerformanceController = wrapper(async (req, res) => {
+  const userData = req.user;
+  const userInstance = await User.findOne({ uid: userData.uid });
+  if (!userInstance) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const userId = userInstance._id;
+  const userEnrollments = await Enrollment.find({
+    userId: userId,
+    type: "course",
+  }).populate("courseId", "courseId title category");
+
+  if (!userEnrollments || userEnrollments.length === 0) {
+    throw new ApiError("No course enrollments found for user", 404);
+  }
+  console.log("User Enrollments: ", userEnrollments);
+
+  const quizScoresByCourse = [];
+  for (let enrollment of userEnrollments) {
+    const courseId = enrollment.courseId._id;
+
+    const quizzes = await Quiz.find({ courseId: courseId, userId: userId });
+    if (quizzes.length === 0) continue;
+
+    const totalAvgScore = quizzes.reduce((sum, quiz) => sum + quiz.score, 0);
+    const avgScore = Math.round(totalAvgScore / quizzes.length);
+
+    quizScoresByCourse.push({
+      course: enrollment.courseId.title,
+      avgScore,
+      attempts: quizzes.length,
+    });
+  }
+  console.log("Quiz Scores By Course: ", quizScoresByCourse);
+
+  return res.status(200).json(new ApiResponse(200, { quizScoresByCourse }));
+});
+
 export {
   GetTrendAnalysisYearController,
   GetTrendAnalysisController,
   GetTopicsWiseProgressController,
+  GetQuizPerformanceController,
 };
