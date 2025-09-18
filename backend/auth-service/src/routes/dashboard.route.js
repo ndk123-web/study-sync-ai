@@ -7,6 +7,7 @@ import {
   GetTrendAnalysisController,
   GetTopicsWiseProgressController,
   GetQuizPerformanceController,
+  GetPerformanceDataController,
 } from "../controllers/dashboard.controller.js";
 
 const dashboardRouter = Router();
@@ -33,6 +34,12 @@ dashboardRouter.get(
   "/get-quiz-performance",
   verifyJWT,
   GetQuizPerformanceController
+);
+
+dashboardRouter.get(
+  "/get-performance-data",
+  verifyJWT,
+  GetPerformanceDataController
 );
 
 export default dashboardRouter;

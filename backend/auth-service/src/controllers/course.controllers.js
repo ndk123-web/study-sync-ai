@@ -5,6 +5,7 @@ import wrapper from "../utils/Wrapper.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import coursesRouter from "../routes/course.routes.js";
+import { get } from "mongoose";
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
@@ -61,7 +62,7 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     uid: currentUser.uid,
     progress: "0",
     completed: false,
-    type: "course"
+    type: "course",
   });
 
   const userEnrollment = await enrollment.save();
@@ -69,6 +70,10 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     console.log("Enrollment Creation Failed");
     throw new ApiError("500", "Enrollment Creation Failed");
   }
+
+  // for enroll add +3 skill points
+  getCurrentUser.skillPoints = (getCurrentUser.skillPoints || 0) + 3;
+  await getCurrentUser.save();
 
   console.log("Enrollment Created");
 
@@ -134,6 +139,18 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
   if (currentIndex - 1 === totalVideos) {
     progressCalculation = 100;
     lastVideo = true;
+    console.log("Last Video Completed");
+    console.log("Adding Skill Points for Course Completion +10");
+
+    if (isEnrollment.addedCompletedPoints) {
+      // add +10 skill points on course completion only once 
+      getCurrentUser.skillPoints = (getCurrentUser.skillPoints || 0) + 10;
+      await getCurrentUser.save();
+      console.log("Skill Points Added");
+      console.log("New Skill Points: ", getCurrentUser.skillPoints);
+    }
+    isEnrollment.addedCompletedPoints = true;
+    await isEnrollment.save();
   }
 
   if (!lastVideo) {
@@ -274,6 +291,14 @@ const TrackPlaylistIndexController = wrapper(async (req, res) => {
     isEnrollment.progress
   );
 
+  if (isEnrollment.progress === "100") {
+    // add +10 skill points on course completion
+    getCurrentUser.skillPoints = (getCurrentUser.skillPoints || 0) + 10;
+    await getCurrentUser.save();
+    console.log("Skill Points Added");
+    console.log("New Skill Points: ", getCurrentUser.skillPoints);
+  }
+
   return res.status(200).json(
     new ApiResponse(200, {
       trackCompletedVideosIndex: isEnrollment.trackCompletedVideosIndex,
@@ -296,10 +321,11 @@ const GetEnrollCoursesController = wrapper(async (req, res) => {
 
   const getEnrollUserCourses = await Enrollment.find({
     uid: currentUser.uid,
-    // type: "course"  
+    // type: "course"
   }).populate({
     path: "courseId",
-  select: "courseId title description instructor price thumbnail duration category rating featured lessons createdAt availableLanguages likes"
+    select:
+      "courseId title description instructor price thumbnail duration category rating featured lessons createdAt availableLanguages likes",
   });
 
   console.log("Enrolled User Courses: ", getEnrollUserCourses);
