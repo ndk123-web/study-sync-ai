@@ -352,10 +352,36 @@ const GetPerformanceDataController = wrapper(async (req, res) => {
   );
 });
 
+const GetUserActivitiesController = wrapper(async (req, res) => {
+  const userData = req.user;
+  const userInstance = await User.findOne({ uid: userData.uid });
+  if (!userInstance) throw new ApiError("User not found", 404);
+
+  const userId = userInstance._id;
+  const userActivities = await Activity.find({
+    userId,
+  })
+    .sort({ createdAt: -1 })
+    .limit(20);
+
+  if (!userActivities || userActivities.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { userActivities: [] }, "No activities found"));
+  }
+
+  console.log("User Activities: ", userActivities);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { userActivities }, "User activities fetched"));
+});
+
 export {
   GetTrendAnalysisYearController,
   GetTrendAnalysisController,
   GetTopicsWiseProgressController,
   GetQuizPerformanceController,
   GetPerformanceDataController,
+  GetUserActivitiesController,
 };

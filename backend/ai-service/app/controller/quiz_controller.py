@@ -1,3 +1,4 @@
+from datetime import datetime
 import ollama
 from ..db.db import db
 import asyncio
@@ -7,6 +8,7 @@ from ..utils.ApiError import ApiError
 quizzes_collection = db['quizzes']
 courses_collection = db['courses']
 users_collection = db['users']
+activity_collection = db['activities']
 
 import json
 import ollama
@@ -144,6 +146,26 @@ async def complete_quiz_controller(quizId: str, score: int, userId):
             )
             print(f"✅ Added 3 skill points to user {userId}. New skill points: {new_skill_points}")
             print(f"ℹ️ No skill points added. User {userId} scored {percentage_score:.2f}%")
+        
+        course = None
+        if quizInstance.get("courseId"):
+            course = await courses_collection.find_one(
+                { "_id": quizInstance.get("courseId") },
+                { "title": 1 }
+            )
+        
+        # New Activity: Quiz Completed
+        await activity_collection.insert_one({
+            "userId": user_instance.get('_id'),
+            "type": "quiz-completed",
+            "description": f"Completed quiz for courseId {course.get('title')} with score {percentage_score:.2f}%",
+            "metadata": {
+                "quizId": quizInstance.get('_id'),
+                "score": f"{percentage_score:.2f}"
+            },
+            "createdAt": datetime.utcnow()
+        })
+        print("✅ Activity logged for quiz completion")
         
         return ApiResponse.send(200, {
             "message": "Quiz completed successfully", 

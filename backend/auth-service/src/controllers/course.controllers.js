@@ -77,7 +77,7 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     type: "enrollment",
     description: `Enrolled in course: ${getCurrentCourse.title}`,
     metadata: {
-      courseId: getCurrentCourse._id,
+      courseId: getCurrentCourse.courseId,
       courseTitle: getCurrentCourse.title,
     },
   });
@@ -205,6 +205,39 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
   );
   if (!updateUserEnrollmentCourseProgress) {
     throw new ApiError("404", "Enrollment not found");
+  }
+
+  const isExistingActivity = await Activity.findOne({
+    userId: getCurrentUser._id,
+    type: "course-progress",
+    "metadata.courseId": getCurrentCourse.courseId,
+  });
+
+  if (isExistingActivity) {
+    console.log("Existing Activity Found, updating it");
+    isExistingActivity.description = `Made progress in course: ${getCurrentCourse.title} - ${progressCalculation}% completed`;
+    isExistingActivity.metadata.progress = progressCalculation;
+    isExistingActivity.metadata.videoIndex = currentIndex + 2;
+
+    // important to mark modified for nested objects
+    isExistingActivity.markModified("metadata");
+    
+    await isExistingActivity.save();
+  } else {
+    console.log("No Existing Activity Found, creating new one");
+    // New Activity for Course Progress
+    const newActivity = new Activity({
+      userId: getCurrentUser._id,
+      type: "course-progress",
+      description: `Made progress in course: ${getCurrentCourse.title} - ${progressCalculation}% completed`,
+      metadata: {
+        courseId: getCurrentCourse.courseId,
+        progress: progressCalculation,
+        courseTitle: getCurrentCourse.title,
+        videoIndex: currentIndex + 2,
+      },
+    });
+    await newActivity.save();
   }
 
   return res.status(200).json(

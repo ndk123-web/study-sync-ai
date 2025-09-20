@@ -8,7 +8,7 @@ const activitySchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["course", "enrollment", "quiz"],
+    enum: ["course-progress", "enrollment", "quiz-completed"],
     required: true,
   },
   refId: {
