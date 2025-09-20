@@ -5,7 +5,7 @@ import wrapper from "../utils/Wrapper.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import coursesRouter from "../routes/course.routes.js";
-import { get } from "mongoose";
+import Activity from "../models/activity.models.js";
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
@@ -70,6 +70,19 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     console.log("Enrollment Creation Failed");
     throw new ApiError("500", "Enrollment Creation Failed");
   }
+
+  // New Activity for Enrollment
+  const newActivity = new Activity({
+    userId: getCurrentUser._id,
+    type: "enrollment",
+    description: `Enrolled in course: ${getCurrentCourse.title}`,
+    metadata: {
+      courseId: getCurrentCourse._id,
+      courseTitle: getCurrentCourse.title,
+    },
+  });
+
+  await newActivity.save();
 
   // for enroll add +3 skill points
   getCurrentUser.skillPoints = (getCurrentUser.skillPoints || 0) + 3;
@@ -143,7 +156,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
     console.log("Adding Skill Points for Course Completion +10");
 
     if (isEnrollment.addedCompletedPoints) {
-      // add +10 skill points on course completion only once 
+      // add +10 skill points on course completion only once
       getCurrentUser.skillPoints = (getCurrentUser.skillPoints || 0) + 10;
       await getCurrentUser.save();
       console.log("Skill Points Added");

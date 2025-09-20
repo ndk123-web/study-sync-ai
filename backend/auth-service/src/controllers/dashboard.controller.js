@@ -5,6 +5,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import User from "../models/user.models.js";
 import Course from "../models/courses.models.js";
 import Quiz from "../models/quiz.models.js";
+import Activity from "../models/activity.models.js";
 // import { wrap } from "module";
 
 const GetTrendAnalysisYearController = wrapper(async (req, res) => {
@@ -286,32 +287,69 @@ const GetQuizPerformanceController = wrapper(async (req, res) => {
 const GetPerformanceDataController = wrapper(async (req, res) => {
   const userData = req.user;
   const userInstance = await User.findOne({ uid: userData.uid });
-  if (!userInstance) {
-    throw new ApiError("User not found", 404);
-  }
+  if (!userInstance) throw new ApiError("User not found", 404);
 
   const enrollmentsWithNotZeroProgress = await Enrollment.find({
     userId: userInstance._id,
     progress: { $gt: 0 },
   });
-
   const enrollmentsCount = enrollmentsWithNotZeroProgress.length;
 
   const quizzesGivenByUser = await Quiz.find({ userId: userInstance._id });
   const quizzesCount = quizzesGivenByUser.length;
 
   const skillPoint = userInstance.skillPoints || 0;
-  const studyStreaks = userInstance.studyStreaks || 0;
 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { enrollmentsCount, quizzesCount, skillPoint, studyStreaks },
-        "Performance data fetched successfully"
-      )
-    );
+  // Today range
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  // Yesterday range
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const yesterdayEnd = new Date(todayEnd);
+  yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+
+  const lastActiveDate = userInstance.lastActiveDate
+    ? new Date(userInstance.lastActiveDate)
+    : null;
+  if (lastActiveDate) lastActiveDate.setHours(0, 0, 0, 0);
+
+  // Has activity today?
+  const activityToday = await Activity.findOne({
+    userId: userInstance._id,
+    createdAt: { $gte: todayStart, $lte: todayEnd },
+  });
+
+  if (activityToday) {
+    // already counted today
+    if (lastActiveDate?.getTime() === todayStart.getTime()) {
+      // do nothing (no increment)
+    } else if (lastActiveDate?.getTime() === yesterdayStart.getTime()) {
+      // continue streak
+      userInstance.studyStreaks += 1;
+    } else {
+      // new streak
+      userInstance.studyStreaks = 1;
+    }
+    userInstance.lastActiveDate = todayStart;
+    await userInstance.save();
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        enrollmentsCount,
+        quizzesCount,
+        skillPoint,
+        studyStreaks: userInstance.studyStreaks,
+      },
+      "Performance data fetched successfully"
+    )
+  );
 });
 
 export {
@@ -319,5 +357,5 @@ export {
   GetTrendAnalysisController,
   GetTopicsWiseProgressController,
   GetQuizPerformanceController,
-  GetPerformanceDataController
+  GetPerformanceDataController,
 };
