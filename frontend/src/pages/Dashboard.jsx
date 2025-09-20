@@ -47,6 +47,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
@@ -60,6 +61,7 @@ import { GetTrendAnalysisApi } from "../api/GetTrendAnalysisApi.js";
 import { GetTopicsWiseProgressApi } from "../api/GetTopicWiseDashboardApi.js";
 import { GetQuizPerformanceApi } from "../api/GetQuizPerformanceApi.js";
 import { GetPerformanceApi } from "../api/GetPerformanceApi.js";
+import { GetUserActivitiesApi } from "../api/GetUserActivities.js";
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -70,6 +72,7 @@ const Dashboard = () => {
     ).toString(CryptoJs.enc.Utf8)
   );
   const setMode = useThemeStore((state) => state.setMode);
+  const navigate = useNavigate();
 
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
@@ -167,6 +170,7 @@ const Dashboard = () => {
       trend: "up",
     },
   ]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
   // Auth check
   useEffect(() => {
@@ -290,6 +294,7 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Performance Data (for stats cards)
   useEffect(() => {
     const fetchPerformanceData = async () => {
       try {
@@ -309,6 +314,68 @@ const Dashboard = () => {
     };
 
     fetchPerformanceData();
+  }, []);
+
+  // For Activities
+  // {
+  //   id: 3,
+  //   icon: <Trophy className="w-5 h-5 text-yellow-500" />,
+  //   title: "Quiz: Sorting Algorithms",
+  //   action: "Quiz",
+  //   time: "1d ago",
+  //   progress: 85,
+  // },
+  useEffect(() => {
+    try {
+      const fetchUserActivities = async () => {
+        const apiResponse = await GetUserActivitiesApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error fetching User Activities data: ", apiResponse);
+          alert("Error fetching User Activities data");
+          return;
+        }
+        console.log("User Activities Data: ", apiResponse);
+        let activities = apiResponse?.data?.userActivities || [];
+        let formattedActivities = activities
+          .map((activity, idx) => {
+            if (activity.type === "enrollment") {
+              let icon = <BookOpen className="w-5 h-5 text-indigo-500" />;
+              let id = idx + 1;
+              let title = activity?.description || "Started a new course";
+              let courseId = activity?.metadata?.courseId || "";
+              let time = new Date(activity?.createdAt).toLocaleString();
+              let action = "enrollment";
+              return { id, icon, title, action, time, courseId };
+            } else if (activity.type === "course-progress") {
+              let icon = <CheckCircle className="w-5 h-5 text-emerald-500" />;
+              let id = idx + 1;
+              let title = activity?.description || "Made progress in a course";
+              let courseId = activity?.metadata?.courseId || "";
+              let time = new Date(activity?.createdAt).toLocaleString();
+              let action = "course-progress";
+              let progress = activity?.metadata?.progress || 0;
+              return { id, icon, title, action, time, progress, courseId };
+            } else if (activity.type === "quiz-completed") {
+              let icon = <Trophy className="w-5 h-5 text-yellow-500" />;
+              let id = idx + 1;
+              let title = activity?.description || "Completed a quiz";
+              let time = new Date(activity?.createdAt).toLocaleString();
+              let action = "quiz-completed";
+              let progress = activity?.metadata?.score || "0";
+              return { id, icon, title, action, time, progress };
+            } else {
+              return null;
+            }
+          })
+          .filter(Boolean); // Remove null entries
+        setRecentActivities(formattedActivities);
+      };
+
+      fetchUserActivities();
+    } catch (err) {
+      alert("Error in fetching User Activities data: ", err.message);
+      return;
+    }
   }, []);
 
   // debug State change ko track karne ke liye separate useEffect
@@ -505,33 +572,6 @@ const Dashboard = () => {
       content: "Time vs space complexity quick reference...",
       tags: ["dsa"],
       date: "Aug 8, 2025",
-    },
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      icon: <PlayCircle className="w-5 h-5 text-emerald-500" />,
-      title: "Watched React State Patterns",
-      action: "Video",
-      time: "2h ago",
-      progress: 60,
-    },
-    {
-      id: 2,
-      icon: <BookOpen className="w-5 h-5 text-indigo-500" />,
-      title: "Read DSA Notes - Trees",
-      action: "PDF",
-      time: "5h ago",
-      progress: 100,
-    },
-    {
-      id: 3,
-      icon: <Trophy className="w-5 h-5 text-yellow-500" />,
-      title: "Quiz: Sorting Algorithms",
-      action: "Quiz",
-      time: "1d ago",
-      progress: 85,
     },
   ];
 
@@ -1879,46 +1919,63 @@ const Dashboard = () => {
                 />
               </div>
               <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div
-                    key={activity.id}
-                    className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-lg transition-all duration-200 transform hover:scale-105 animate-slide-in-right`}
-                    style={{ animationDelay: `${0.9 + index * 0.1}s` }}
+                {recentActivities.length === 0 && (
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
                   >
+                    No recent activities.
+                  </p>
+                )}
+                {recentActivities.length > 0 &&
+                  recentActivities.map((activity, index) => (
                     <div
-                      className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg transition-colors duration-300 ${
-                        isDark ? "bg-gray-700" : "bg-gray-100"
-                      } flex items-center justify-center transform hover:rotate-12 transition-transform`}
+                      key={activity.id}
+                      className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-lg transition-all duration-200 transform hover:scale-105 animate-slide-in-right`}
+                      style={{ animationDelay: `${0.9 + index * 0.1}s` }}
+
+                      // only navigate for course-related activities (course-progress, enrollment)
+                      onClick={() => {
+                        (activity.action === "course-progress" ||
+                          activity.action === "enrollment") &&
+                          navigate(`/learn/${activity.courseId}`);
+                      }}
                     >
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm lg:text-base font-medium transition-colors duration-300 ${
-                          isDark ? "text-white" : "text-gray-900"
-                        } truncate`}
+                      <div
+                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg transition-colors duration-300 ${
+                          isDark ? "bg-gray-700" : "bg-gray-100"
+                        } flex items-center justify-center transform hover:rotate-12 transition-transform`}
                       >
-                        {activity.title}
-                      </p>
-                      <p
-                        className={`text-xs lg:text-sm transition-colors duration-300 ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        {activity.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm lg:text-base font-medium transition-colors duration-300 ${
+                            isDark ? "text-white" : "text-gray-900"
+                          } truncate`}
+                        >
+                          {activity.title}
+                        </p>
+                        <p
+                          className={`text-xs lg:text-sm transition-colors duration-300 ${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          {activity.action} • {activity.time}
+                        </p>
+                      </div>
+                      <div
+                        className={`text-xs lg:text-sm font-medium ${
+                          activity.progress === 100
+                            ? "text-green-500"
+                            : "text-blue-500"
+                        } animate-pulse`}
                       >
-                        {activity.action} • {activity.time}
-                      </p>
+                        {activity.progress}%
+                      </div>
                     </div>
-                    <div
-                      className={`text-xs lg:text-sm font-medium ${
-                        activity.progress === 100
-                          ? "text-green-500"
-                          : "text-blue-500"
-                      } animate-pulse`}
-                    >
-                      {activity.progress}%
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
 
