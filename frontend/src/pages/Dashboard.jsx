@@ -128,6 +128,7 @@ const Dashboard = () => {
   const [categoryDistribution, setCategoryDistribution] = useState([]);
   const [quizScoresByCourse, setQuizScoresByCourse] = useState([]);
   const [quizLoader, setQuizLoader] = useState(false);
+  const [activitiesLoader, setActivitiesLoader] = useState(false);
   const [statsCards, setStatCards] = useState([
     {
       title: "Study Streak",
@@ -327,6 +328,7 @@ const Dashboard = () => {
   // },
   useEffect(() => {
     try {
+      setActivitiesLoader(true);
       const fetchUserActivities = async () => {
         const apiResponse = await GetUserActivitiesApi();
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -369,11 +371,13 @@ const Dashboard = () => {
           })
           .filter(Boolean); // Remove null entries
         setRecentActivities(formattedActivities);
+        setActivitiesLoader(false);
       };
 
       fetchUserActivities();
     } catch (err) {
       alert("Error in fetching User Activities data: ", err.message);
+      setActivitiesLoader(false);
       return;
     }
   }, []);
@@ -833,44 +837,73 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
-      <ResponsiveChartBox min={210} vh={32} max={320}>
-        <Recharts.PieChart>
-          <Recharts.Pie
-            data={categoryDistribution}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={95}
-            labelLine={false}
-            label={({ name, percent }) =>
-              `${name} ${(percent * 100).toFixed(0)}%`
-            }
-            dataKey="value"
-          >
-            {categoryDistribution.map((entry, index) => (
-              <Recharts.Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Recharts.Pie>
-          <Recharts.Tooltip content={<ReTooltip />} />
-        </Recharts.PieChart>
-      </ResponsiveChartBox>
-      <div className="grid grid-cols-2 gap-2 mt-4">
-        {categoryDistribution.map((cat) => (
-          <div key={cat.name} className="flex items-center space-x-2">
-            <span
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: cat.color }}
-            />
-            <span
-              className={`text-sm ${
-                isDark ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              {cat.name}
-            </span>
+      
+      {categoryLoader ? (
+        // Professional Skeleton Loader for Categories
+        <div className="animate-pulse">
+          <div className="flex items-center justify-center mb-6">
+            <div className={`w-48 h-48 rounded-full border-8 ${isDark ? 'border-gray-700' : 'border-gray-200'} relative`}>
+              <div className={`absolute inset-4 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+              <div className="absolute inset-0 rounded-full border-t-8 border-indigo-500 animate-spin"></div>
+            </div>
           </div>
-        ))}
-      </div>
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} flex-1`}></div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-4">
+            <div className={`inline-flex items-center space-x-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading categories...</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <ResponsiveChartBox min={210} vh={32} max={320}>
+            <Recharts.PieChart>
+              <Recharts.Pie
+                data={categoryDistribution}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={95}
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+                dataKey="value"
+              >
+                {categoryDistribution.map((entry, index) => (
+                  <Recharts.Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Recharts.Pie>
+              <Recharts.Tooltip content={<ReTooltip />} />
+            </Recharts.PieChart>
+          </ResponsiveChartBox>
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            {categoryDistribution.map((cat) => (
+              <div key={cat.name} className="flex items-center space-x-2">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: cat.color }}
+                />
+                <span
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  {cat.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -898,68 +931,99 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
-      <ResponsiveChartBox min={210} vh={32} max={320}>
-        <Recharts.BarChart
-          data={quizScoresByCourse}
-          margin={{ top: 5, right: 16, left: 0, bottom: 5 }}
-        >
-          <Recharts.CartesianGrid
-            strokeDasharray="3 3"
-            stroke={isDark ? "#374151" : "#000000ff"}
-          />
-          <Recharts.XAxis
-            dataKey="course"
-            tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
-          />
-          <Recharts.YAxis
-            tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
-            domain={[0, 100]}
-          />
-          <Recharts.Tooltip
-            content={<ReTooltip />}
-            wrapperStyle={{ background: "transparent", border: "none" }}
-          />
-          <Recharts.Legend />
-          <Recharts.ReferenceLine
-            y={70}
-            stroke="#F59E0B"
-            strokeDasharray="3 3"
-            label={{
-              value: "Target 70%",
-              position: "insideTopRight",
-              fill: isDark ? "#FBBF24" : "#92400E",
-              fontSize: 10,
-            }}
-          />
-          <Recharts.Bar
-            dataKey="avgScore"
-            name="Avg Score"
-            fill="#3B82F6"
-            radius={[8, 8, 0, 0]}
-            barSize={32}
-          >
-            <Recharts.LabelList
-              dataKey="avgScore"
-              position="top"
-              formatter={(v) => `${v}%`}
-              style={{ fill: isDark ? "#E5E7EB" : "#374151", fontSize: 12 }}
-            />
-          </Recharts.Bar>
-        </Recharts.BarChart>
-      </ResponsiveChartBox>
-      {/* Attempts badges */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {quizScoresByCourse.map((c) => (
-          <span
-            key={c.course}
-            className={`px-2 py-1 text-xs rounded-full ${
-              isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {c.course}: {c.attempts} attempts
-          </span>
-        ))}
-      </div>
+      
+      {quizLoader ? (
+        // Professional Skeleton Loader for Quiz Performance
+        <div className="animate-pulse">
+          <div className="h-80 flex items-end justify-center space-x-4 px-4 py-8">
+            {[1,2,3,4,5].map((i) => (
+              <div key={i} className="flex flex-col items-center space-y-2">
+                <div 
+                  className={`w-12 rounded-t-lg ${isDark ? 'bg-gradient-to-t from-purple-800 to-purple-600' : 'bg-gradient-to-t from-purple-300 to-purple-500'} animate-pulse`}
+                  style={{ height: `${Math.random() * 150 + 50}px` }}
+                ></div>
+                <div className={`w-16 h-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {[1,2,3,4,5].map((i) => (
+              <div key={i} className={`px-3 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} h-6 w-20`}></div>
+            ))}
+          </div>
+          <div className="text-center mt-4">
+            <div className={`inline-flex items-center space-x-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading quiz performance...</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <ResponsiveChartBox min={210} vh={32} max={320}>
+            <Recharts.BarChart
+              data={quizScoresByCourse}
+              margin={{ top: 5, right: 16, left: 0, bottom: 5 }}
+            >
+              <Recharts.CartesianGrid
+                strokeDasharray="3 3"
+                stroke={isDark ? "#374151" : "#000000ff"}
+              />
+              <Recharts.XAxis
+                dataKey="course"
+                tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+              />
+              <Recharts.YAxis
+                tick={{ fontSize: 12, fill: isDark ? "#9CA3AF" : "#6B7280" }}
+                domain={[0, 100]}
+              />
+              <Recharts.Tooltip
+                content={<ReTooltip />}
+                wrapperStyle={{ background: "transparent", border: "none" }}
+              />
+              <Recharts.Legend />
+              <Recharts.ReferenceLine
+                y={70}
+                stroke="#F59E0B"
+                strokeDasharray="3 3"
+                label={{
+                  value: "Target 70%",
+                  position: "insideTopRight",
+                  fill: isDark ? "#FBBF24" : "#92400E",
+                  fontSize: 10,
+                }}
+              />
+              <Recharts.Bar
+                dataKey="avgScore"
+                name="Avg Score"
+                fill="#3B82F6"
+                radius={[8, 8, 0, 0]}
+                barSize={32}
+              >
+                <Recharts.LabelList
+                  dataKey="avgScore"
+                  position="top"
+                  formatter={(v) => `${v}%`}
+                  style={{ fill: isDark ? "#E5E7EB" : "#374151", fontSize: 12 }}
+                />
+              </Recharts.Bar>
+            </Recharts.BarChart>
+          </ResponsiveChartBox>
+          {/* Attempts badges */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quizScoresByCourse.map((c) => (
+              <span
+                key={c.course}
+                className={`px-2 py-1 text-xs rounded-full ${
+                  isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {c.course}: {c.attempts} attempts
+              </span>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -1894,89 +1958,120 @@ const Dashboard = () => {
           {/* End charts */}
 
           {/* Recent Activities & Trending Topics */}
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 xl:gap-8">
             {/* Recent Activities */}
             <div
               className={`${
                 isDark
                   ? "bg-gray-800 border-gray-700"
                   : "bg-white border-gray-200"
-              } border rounded-xl p-4 lg:p-6 transition-colors duration-300 animate-fade-in`}
+              } border rounded-xl p-3 sm:p-4 lg:p-6 transition-colors duration-300 animate-fade-in`}
               style={{ animationDelay: "0.8s" }}
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2
-                  className={`text-lg lg:text-xl font-semibold transition-colors duration-300 ${
+                  className={`text-base sm:text-lg lg:text-xl font-semibold transition-colors duration-300 ${
                     isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
                   Recent Activities
                 </h2>
                 <ChevronRight
-                  className={`w-5 h-5 transition-colors duration-300 ${
+                  className={`w-4 h-4 lg:w-5 lg:h-5 transition-colors duration-300 ${
                     isDark ? "text-gray-400" : "text-gray-600"
                   } animate-pulse`}
                 />
               </div>
-              <div className="space-y-4">
-                {recentActivities.length === 0 && (
-                  <p
-                    className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    No recent activities.
-                  </p>
-                )}
-                {recentActivities.length > 0 &&
-                  recentActivities.map((activity, index) => (
-                    <div
-                      key={activity.id}
-                      className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-lg transition-all duration-200 transform hover:scale-105 animate-slide-in-right`}
-                      style={{ animationDelay: `${0.9 + index * 0.1}s` }}
-
-                      // only navigate for course-related activities (course-progress, enrollment)
-                      onClick={() => {
-                        (activity.action === "course-progress" ||
-                          activity.action === "enrollment") &&
-                          navigate(`/learn/${activity.courseId}`);
-                      }}
-                    >
-                      <div
-                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg transition-colors duration-300 ${
-                          isDark ? "bg-gray-700" : "bg-gray-100"
-                        } flex items-center justify-center transform hover:rotate-12 transition-transform`}
-                      >
-                        {activity.icon}
+              
+              {activitiesLoader ? (
+                // Professional Skeleton Loader for Activities
+                <div className="space-y-2 lg:space-y-4 animate-pulse">
+                  {[1,2,3,4,5].map((i) => (
+                    <div key={i} className="flex items-center space-x-2 lg:space-x-3 p-2">
+                      <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                      <div className="flex-1 space-y-1 lg:space-y-2">
+                        <div className={`h-3 lg:h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} w-3/4`}></div>
+                        <div className={`h-2 lg:h-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} w-1/2`}></div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm lg:text-base font-medium transition-colors duration-300 ${
-                            isDark ? "text-white" : "text-gray-900"
-                          } truncate`}
-                        >
-                          {activity.title}
-                        </p>
-                        <p
-                          className={`text-xs lg:text-sm transition-colors duration-300 ${
-                            isDark ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {activity.action} • {activity.time}
-                        </p>
-                      </div>
-                      <div
-                        className={`text-xs lg:text-sm font-medium ${
-                          activity.progress === 100
-                            ? "text-green-500"
-                            : "text-blue-500"
-                        } animate-pulse`}
-                      >
-                        {activity.progress}%
-                      </div>
+                      <div className={`w-10 lg:w-12 h-3 lg:h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                     </div>
                   ))}
-              </div>
+                  <div className="text-center mt-4">
+                    <div className={`inline-flex items-center space-x-2 text-xs lg:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Loading recent activities...</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Scrollable Activities Container
+                <div className="max-h-96 overflow-y-auto custom-scrollbar pr-1 lg:pr-2">
+                  <div className="space-y-2 lg:space-y-4">
+                    {recentActivities.length === 0 && (
+                      <div className="text-center py-8">
+                        <Activity className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                        <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                          No recent activities found.
+                        </p>
+                        <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+                          Start learning to see your progress here!
+                        </p>
+                      </div>
+                    )}
+                    {recentActivities.length > 0 &&
+                      recentActivities.map((activity, index) => (
+                        <div
+                          key={activity.id}
+                          className={`flex items-center space-x-2 lg:space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 lg:p-3 rounded-lg transition-all duration-200 transform hover:scale-[1.02] animate-slide-in-right border ${
+                            isDark ? 'border-transparent hover:border-gray-600' : 'border-transparent hover:border-gray-200'
+                          }`}
+                          style={{ animationDelay: `${0.9 + index * 0.1}s` }}
+                          onClick={() => {
+                            (activity.action === "course-progress" ||
+                              activity.action === "enrollment") &&
+                              navigate(`/learn/${activity.courseId}`);
+                          }}
+                        >
+                          <div
+                            className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg transition-colors duration-300 ${
+                              isDark ? "bg-gray-700" : "bg-gray-100"
+                            } flex items-center justify-center transform hover:rotate-12 transition-transform shadow-sm flex-shrink-0`}
+                          >
+                            {activity.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-xs sm:text-sm lg:text-base font-medium transition-colors duration-300 ${
+                                isDark ? "text-white" : "text-gray-900"
+                              } truncate leading-tight`}
+                            >
+                              {activity.title}
+                            </p>
+                            <p
+                              className={`text-xs transition-colors duration-300 ${
+                                isDark ? "text-gray-400" : "text-gray-600"
+                              } truncate`}
+                            >
+                              {activity.action} • {activity.time}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end space-y-1 flex-shrink-0">
+                            <div
+                              className={`text-xs font-medium px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full ${
+                                activity.progress === 100
+                                  ? "text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-400"
+                                  : "text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-400"
+                              }`}
+                            >
+                              {activity.progress}%
+                            </div>
+                            <ChevronRight className={`w-3 h-3 ${isDark ? 'text-gray-500' : 'text-gray-400'} hidden sm:block`} />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Trending Topics */}
@@ -1985,37 +2080,37 @@ const Dashboard = () => {
                 isDark
                   ? "bg-gray-800 border-gray-700"
                   : "bg-white border-gray-200"
-              } border rounded-xl p-4 lg:p-6 transition-colors duration-300 animate-fade-in`}
+              } border rounded-xl p-3 sm:p-4 lg:p-6 transition-colors duration-300 animate-fade-in`}
               style={{ animationDelay: "1s" }}
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3 lg:mb-4">
                 <h2
-                  className={`text-lg lg:text-xl font-semibold transition-colors duration-300 ${
+                  className={`text-base sm:text-lg lg:text-xl font-semibold transition-colors duration-300 ${
                     isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
                   Trending Topics
                 </h2>
                 <TrendingUp
-                  className={`w-5 h-5 transition-colors duration-300 ${
+                  className={`w-4 h-4 lg:w-5 lg:h-5 transition-colors duration-300 ${
                     isDark ? "text-gray-400" : "text-gray-600"
                   } animate-bounce`}
                 />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2 lg:space-y-4">
                 {trendingTopics.map((topic, index) => (
                   <div
                     key={topic.id}
-                    className={`p-3 lg:p-4 rounded-lg transition-all duration-300 cursor-pointer hover:shadow-md transform hover:scale-105 animate-bounce-in ${
+                    className={`p-2 sm:p-3 lg:p-4 rounded-lg transition-all duration-300 cursor-pointer hover:shadow-md transform hover:scale-105 animate-bounce-in ${
                       isDark
                         ? "bg-gray-700 hover:bg-gray-600"
                         : "bg-gray-50 hover:bg-gray-100"
                     }`}
                     style={{ animationDelay: `${1.1 + index * 0.1}s` }}
                   >
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-start space-x-2 lg:space-x-3">
                       <div
-                        className="text-2xl lg:text-3xl transform hover:scale-125 transition-transform animate-bounce"
+                        className="text-xl sm:text-2xl lg:text-3xl transform hover:scale-125 transition-transform animate-bounce flex-shrink-0"
                         style={{ animationDelay: `${1.2 + index * 0.1}s` }}
                       >
                         {topic.thumbnail}
@@ -2023,19 +2118,19 @@ const Dashboard = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <h3
-                            className={`text-sm lg:text-base font-medium transition-colors duration-300 ${
+                            className={`text-xs sm:text-sm lg:text-base font-medium transition-colors duration-300 ${
                               isDark ? "text-white" : "text-gray-900"
-                            } line-clamp-2`}
+                            } line-clamp-2 leading-tight`}
                           >
                             {topic.title}
                           </h3>
                           {topic.isNew && (
-                            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2 animate-pulse">
+                            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full flex-shrink-0 ml-1 lg:ml-2 animate-pulse">
                               New
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center space-x-4 mt-2">
+                        <div className="flex items-center space-x-2 lg:space-x-4 mt-1 lg:mt-2">
                           <span
                             className={`text-xs transition-colors duration-300 ${
                               isDark ? "text-gray-400" : "text-gray-600"
