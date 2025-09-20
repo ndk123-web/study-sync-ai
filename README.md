@@ -1,4 +1,4 @@
-# StudySync AI
+# StudySync AI ( Not Done Yet )
 
 **StudySync AI** is an AI-powered platform that transforms YouTube videos and study content into personalized learning experiences. It summarizes content, generates quizzes, offers topic-based note-taking, and tracks user progress — all using the power of Gemini AI and modern full-stack technologies.
 
