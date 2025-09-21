@@ -6,6 +6,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import coursesRouter from "../routes/course.routes.js";
 import Activity from "../models/activity.models.js";
+import kafka from '../../kafka/client.js'
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
@@ -89,6 +90,28 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
   await getCurrentUser.save();
 
   console.log("Enrollment Created");
+
+  // Kafka producer produce the event to the topic
+  const producer = kafka.producer();
+
+  await producer.connect();
+  console.log("Producer connected to Kafka");
+
+  const event = {
+    event: "student_enrolled",
+    userId: getCurrentUser.uid,
+    courseId: getCurrentCourse.courseId,
+    message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`
+  };
+
+  await producer.send({
+    topic: "enrolled-events", // topic name
+    messages: [{ value: JSON.stringify(event) }],
+  });
+
+  console.log("✅ Event sent:", event);
+
+  await producer.disconnect();
 
   return res
     .status(201)
@@ -221,7 +244,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
 
     // important to mark modified for nested objects
     isExistingActivity.markModified("metadata");
-    
+
     await isExistingActivity.save();
   } else {
     console.log("No Existing Activity Found, creating new one");
