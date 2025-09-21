@@ -229,34 +229,34 @@ const formatChatMessageHTML = (text, isDark = false) => {
         isDark ? "text-yellow-400" : "text-gray-900"
       }">$1</strong>`
     )
-    // Italic text  
+    // Italic text
     .replace(
       /\*(.*?)\*/g,
-      `<em class="italic ${
-        isDark ? "text-gray-300" : "text-gray-700"
-      }">$1</em>`
+      `<em class="italic ${isDark ? "text-gray-300" : "text-gray-700"}">$1</em>`
     );
 
   // Handle bullet lists - process line by line
-  const lines = html.split('\n');
+  const lines = html.split("\n");
   const processedLines = [];
   let inList = false;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Check if this line is a bullet point
     if (line.match(/^- (.+)/)) {
-      const content = line.replace(/^- /, '');
+      const content = line.replace(/^- /, "");
       if (!inList) {
-        processedLines.push(`<ul class="list-disc list-inside ml-4 mb-3 space-y-1">`);
+        processedLines.push(
+          `<ul class="list-disc list-inside ml-4 mb-3 space-y-1">`
+        );
         inList = true;
       }
       processedLines.push(`<li class="leading-relaxed">${content}</li>`);
     } else {
       // Not a bullet point
       if (inList) {
-        processedLines.push('</ul>');
+        processedLines.push("</ul>");
         inList = false;
       }
       if (line) {
@@ -264,13 +264,13 @@ const formatChatMessageHTML = (text, isDark = false) => {
       }
     }
   }
-  
+
   // Close any open list
   if (inList) {
-    processedLines.push('</ul>');
+    processedLines.push("</ul>");
   }
-  
-  html = processedLines.join('\n');
+
+  html = processedLines.join("\n");
 
   // Restore inline code blocks first
   inlineCodePlaceholders.forEach((replacement, index) => {
@@ -365,7 +365,9 @@ const PdfInteraction = () => {
           setPdfLoader();
           const apiResponse = await GetPdfMetaDataApi({ pdfId: pdf });
           if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-            alert("Failed to fetch PDF metadata. Please try again.");
+            if (pdf) {
+              // alert("Failed to fetch PDF metadata. Please try again.");
+            }
             return;
           }
           setUploadedPdf({
@@ -526,7 +528,7 @@ const PdfInteraction = () => {
       try {
         const apiResponse = await GetPdfChats({ pdfId: pdf });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-          alert("Failed to fetch PDF chat history. Please try again.");
+          // alert("Failed to fetch PDF chat history. Please try again.");
           return;
         }
         console.log("Fetched PDF Chats:", apiResponse);
@@ -595,7 +597,7 @@ const PdfInteraction = () => {
 
       try {
         console.log("📝 Fetching notes for PDF:", pdf);
-        
+
         // Set loader while fetching
         setNotesLoader();
 
@@ -605,7 +607,10 @@ const PdfInteraction = () => {
           type: "pdf", // Add type parameter for PDF
         });
 
-        console.log("🚀 API Response for GetCurrentNotesApi (PDF):", apiResponse);
+        console.log(
+          "🚀 API Response for GetCurrentNotesApi (PDF):",
+          apiResponse
+        );
 
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           const fetchedNotes = apiResponse.data?.notes || "";
@@ -707,14 +712,17 @@ const PdfInteraction = () => {
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         console.log("PDF Chat Response:", apiResponse);
-        alert("Failed to fetch PDF chat response. Please try again.");
+        // alert("Failed to fetch PDF chat response. Please try again.");
         return;
       }
 
       const botResponse = {
         id: Date.now() + 1,
         type: "bot",
-        message: apiResponse?.data?.answer || apiResponse?.data?.response || "No response from AI.",
+        message:
+          apiResponse?.data?.answer ||
+          apiResponse?.data?.response ||
+          "No response from AI.",
         timestamp: new Date().toLocaleTimeString(),
       };
 
@@ -746,7 +754,7 @@ const PdfInteraction = () => {
       const apiResponse = await GetPDFSummaryApi({ pdfId: pdf });
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         console.log("PDF Summary Response:", apiResponse);
-        alert("Failed to fetch PDF summary. Please try again.");
+        // alert("Failed to fetch PDF summary. Please try again.");
         return;
       }
 
@@ -1066,7 +1074,8 @@ const PdfInteraction = () => {
                                 isDark ? "text-gray-400" : "text-gray-600"
                               }`}
                             >
-                              Ask questions about the PDF content, concepts, or specific details
+                              Ask questions about the PDF content, concepts, or
+                              specific details
                             </p>
                           </div>
                         )}
@@ -1105,7 +1114,7 @@ const PdfInteraction = () => {
                                       className="text-sm leading-relaxed break-words prose prose-sm max-w-none"
                                       dangerouslySetInnerHTML={{
                                         __html: formatChatMessageHTML(
-                                          msg.message || '',
+                                          msg.message || "",
                                           isDark
                                         ),
                                       }}
@@ -1205,7 +1214,9 @@ const PdfInteraction = () => {
                         </div>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => setNotesPreviewMode(!notesPreviewMode)}
+                            onClick={() =>
+                              setNotesPreviewMode(!notesPreviewMode)
+                            }
                             className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-sm ${
                               notesPreviewMode
                                 ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
@@ -1242,9 +1253,11 @@ const PdfInteraction = () => {
                                 <h4 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
                                   Loading Notes
                                 </h4>
-                                <p className={`text-sm ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}>
+                                <p
+                                  className={`text-sm ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}
+                                >
                                   Fetching your PDF notes...
                                 </p>
                               </div>
@@ -1271,11 +1284,16 @@ const PdfInteraction = () => {
                                   <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center">
                                     <StickyNote className="w-8 h-8 text-blue-500" />
                                   </div>
-                                  <h4 className="text-lg font-semibold mb-2">No Notes Yet</h4>
-                                  <p className={`text-sm ${
-                                    isDark ? "text-gray-400" : "text-gray-600"
-                                  }`}>
-                                    Switch to edit mode to start writing your notes!
+                                  <h4 className="text-lg font-semibold mb-2">
+                                    No Notes Yet
+                                  </h4>
+                                  <p
+                                    className={`text-sm ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}
+                                  >
+                                    Switch to edit mode to start writing your
+                                    notes!
                                   </p>
                                 </div>
                               )}
@@ -1334,7 +1352,9 @@ const PdfInteraction = () => {
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                           )}
                           <span className="font-medium">
-                            {summaryLoader ? "Generating..." : "✨ Generate Summary"}
+                            {summaryLoader
+                              ? "Generating..."
+                              : "✨ Generate Summary"}
                           </span>
                         </button>
                       </div>
@@ -1348,9 +1368,11 @@ const PdfInteraction = () => {
                                 <h4 className="text-lg font-semibold text-orange-600 dark:text-orange-400 mb-2">
                                   Analyzing PDF Content
                                 </h4>
-                                <p className={`text-sm ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}>
+                                <p
+                                  className={`text-sm ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}
+                                >
                                   AI is reading through your document...
                                 </p>
                               </div>
@@ -1373,7 +1395,10 @@ const PdfInteraction = () => {
                             <div
                               className="prose prose-sm max-w-none prose-headings:text-orange-600 dark:prose-headings:text-orange-400 prose-strong:text-orange-700 dark:prose-strong:text-orange-300"
                               dangerouslySetInnerHTML={{
-                                __html: formatChatMessageHTML(pdfSummary || '', isDark),
+                                __html: formatChatMessageHTML(
+                                  pdfSummary || "",
+                                  isDark
+                                ),
                               }}
                             />
                           </div>
@@ -1387,10 +1412,14 @@ const PdfInteraction = () => {
                                 <h4 className="text-lg font-semibold mb-2">
                                   Generate AI Summary
                                 </h4>
-                                <p className={`text-sm mb-4 ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}>
-                                  Get a concise, AI-powered summary highlighting the key points and main concepts from your PDF.
+                                <p
+                                  className={`text-sm mb-4 ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}
+                                >
+                                  Get a concise, AI-powered summary highlighting
+                                  the key points and main concepts from your
+                                  PDF.
                                 </p>
                                 <div className="flex items-center justify-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
                                   <span>⚡</span>
@@ -1427,7 +1456,9 @@ const PdfInteraction = () => {
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                           )}
                           <span className="font-medium">
-                            {isLoading ? "Generating..." : "🧠 Generate Questions"}
+                            {isLoading
+                              ? "Generating..."
+                              : "🧠 Generate Questions"}
                           </span>
                         </button>
                       </div>
@@ -1441,9 +1472,11 @@ const PdfInteraction = () => {
                                 <h4 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-2">
                                   Creating Assessment
                                 </h4>
-                                <p className={`text-sm ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}>
+                                <p
+                                  className={`text-sm ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}
+                                >
                                   AI is generating quiz questions...
                                 </p>
                               </div>
@@ -1486,7 +1519,8 @@ const PdfInteraction = () => {
                                         className="w-4 h-4 text-purple-500 focus:ring-purple-500 focus:ring-2"
                                       />
                                       <span className="font-medium">
-                                        {String.fromCharCode(65 + optIndex)}. {option}
+                                        {String.fromCharCode(65 + optIndex)}.{" "}
+                                        {option}
                                       </span>
                                     </label>
                                   ))}
@@ -1507,10 +1541,14 @@ const PdfInteraction = () => {
                                 <h4 className="text-lg font-semibold mb-2">
                                   Generate Smart Assessment
                                 </h4>
-                                <p className={`text-sm mb-4 ${
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }`}>
-                                  Create intelligent quiz questions based on your PDF content to test comprehension and knowledge retention.
+                                <p
+                                  className={`text-sm mb-4 ${
+                                    isDark ? "text-gray-400" : "text-gray-600"
+                                  }`}
+                                >
+                                  Create intelligent quiz questions based on
+                                  your PDF content to test comprehension and
+                                  knowledge retention.
                                 </p>
                                 <div className="flex items-center justify-center space-x-2 text-xs text-purple-600 dark:text-purple-400">
                                   <span>🧠</span>
