@@ -62,6 +62,7 @@ import { GetTopicsWiseProgressApi } from "../api/GetTopicWiseDashboardApi.js";
 import { GetQuizPerformanceApi } from "../api/GetQuizPerformanceApi.js";
 import { GetPerformanceApi } from "../api/GetPerformanceApi.js";
 import { GetUserActivitiesApi } from "../api/GetUserActivities.js";
+import { io } from "socket.io-client";
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -172,6 +173,28 @@ const Dashboard = () => {
     },
   ]);
   const [recentActivities, setRecentActivities] = useState([]);
+
+  // Socket.io for real-time notifications
+  useEffect(() => {
+    const socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("Connected with socket id:", socket.id);
+
+      // Authenticate using JWT
+      console.log("Sending auth token:", cookieStore.get("token")?.value);
+      socket.emit("authenticate", cookieStore.get("token")?.value);
+    });
+
+    socket.on("notification", (data) => {
+      console.log("Received notification:", data);
+      alert(data.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Auth check
   useEffect(() => {
