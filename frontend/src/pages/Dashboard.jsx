@@ -583,29 +583,32 @@ const Dashboard = () => {
     {
       id: 1,
       thumbnail: "🧠",
-      title: "Neural Networks from Scratch",
+      title: "Complete Python Programming — freeCodeCamp Compilation",
       views: "21k",
       duration: "35m",
       rating: 4.9,
       isNew: true,
+      courseId: "PYTHON2025ENG",
     },
     {
       id: 2,
       thumbnail: "⚙️",
-      title: "CI/CD with GitHub Actions",
+      title: "Python Data Science & Machine Learning Bootcamp ",
       views: "15k",
       duration: "28m",
       rating: 4.7,
       isNew: false,
+      courseId: "AIML2025ENG",
     },
     {
       id: 3,
       thumbnail: "🚀",
-      title: "Next.js 15 Server Actions",
+      title: "Flutter Tutorial for Beginners - Full Course",
       views: "18k",
       duration: "32m",
       rating: 4.8,
       isNew: true,
+      courseId: "FLUTTER2025EN",
     },
   ];
 
@@ -837,26 +840,46 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
-      
+
       {categoryLoader ? (
         // Professional Skeleton Loader for Categories
         <div className="animate-pulse">
           <div className="flex items-center justify-center mb-6">
-            <div className={`w-48 h-48 rounded-full border-8 ${isDark ? 'border-gray-700' : 'border-gray-200'} relative`}>
-              <div className={`absolute inset-4 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+            <div
+              className={`w-48 h-48 rounded-full border-8 ${
+                isDark ? "border-gray-700" : "border-gray-200"
+              } relative`}
+            >
+              <div
+                className={`absolute inset-4 rounded-full ${
+                  isDark ? "bg-gray-700" : "bg-gray-200"
+                }`}
+              ></div>
               <div className="absolute inset-0 rounded-full border-t-8 border-indigo-500 animate-spin"></div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
-            {[1,2,3,4].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
-                <div className={`h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} flex-1`}></div>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isDark ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                ></div>
+                <div
+                  className={`h-4 rounded ${
+                    isDark ? "bg-gray-700" : "bg-gray-200"
+                  } flex-1`}
+                ></div>
               </div>
             ))}
           </div>
           <div className="text-center mt-4">
-            <div className={`inline-flex items-center space-x-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div
+              className={`inline-flex items-center space-x-2 text-sm ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
               <span>Loading categories...</span>
             </div>
@@ -931,28 +954,45 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
-      
+
       {quizLoader ? (
         // Professional Skeleton Loader for Quiz Performance
         <div className="animate-pulse">
           <div className="h-80 flex items-end justify-center space-x-4 px-4 py-8">
-            {[1,2,3,4,5].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex flex-col items-center space-y-2">
-                <div 
-                  className={`w-12 rounded-t-lg ${isDark ? 'bg-gradient-to-t from-purple-800 to-purple-600' : 'bg-gradient-to-t from-purple-300 to-purple-500'} animate-pulse`}
+                <div
+                  className={`w-12 rounded-t-lg ${
+                    isDark
+                      ? "bg-gradient-to-t from-purple-800 to-purple-600"
+                      : "bg-gradient-to-t from-purple-300 to-purple-500"
+                  } animate-pulse`}
                   style={{ height: `${Math.random() * 150 + 50}px` }}
                 ></div>
-                <div className={`w-16 h-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div
+                  className={`w-16 h-3 rounded ${
+                    isDark ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                ></div>
               </div>
             ))}
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
-            {[1,2,3,4,5].map((i) => (
-              <div key={i} className={`px-3 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} h-6 w-20`}></div>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className={`px-3 py-1 rounded-full ${
+                  isDark ? "bg-gray-700" : "bg-gray-200"
+                } h-6 w-20`}
+              ></div>
             ))}
           </div>
           <div className="text-center mt-4">
-            <div className={`inline-flex items-center space-x-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div
+              className={`inline-flex items-center space-x-2 text-sm ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
               <span>Loading quiz performance...</span>
             </div>
@@ -1015,7 +1055,9 @@ const Dashboard = () => {
               <span
                 key={c.course}
                 className={`px-2 py-1 text-xs rounded-full ${
-                  isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"
+                  isDark
+                    ? "bg-gray-700 text-gray-300"
+                    : "bg-gray-100 text-gray-700"
                 }`}
               >
                 {c.course}: {c.attempts} attempts
@@ -1669,12 +1711,6 @@ const Dashboard = () => {
                 href: "/video-learning",
               },
               {
-                id: "notes",
-                label: "My Notes",
-                icon: <FileText className="w-5 h-5" />,
-                emoji: "📝",
-              },
-              {
                 id: "help",
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
@@ -1982,22 +2018,45 @@ const Dashboard = () => {
                   } animate-pulse`}
                 />
               </div>
-              
+
               {activitiesLoader ? (
                 // Professional Skeleton Loader for Activities
                 <div className="space-y-2 lg:space-y-4 animate-pulse">
-                  {[1,2,3,4,5].map((i) => (
-                    <div key={i} className="flex items-center space-x-2 lg:space-x-3 p-2">
-                      <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-center space-x-2 lg:space-x-3 p-2"
+                    >
+                      <div
+                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg ${
+                          isDark ? "bg-gray-700" : "bg-gray-200"
+                        }`}
+                      ></div>
                       <div className="flex-1 space-y-1 lg:space-y-2">
-                        <div className={`h-3 lg:h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} w-3/4`}></div>
-                        <div className={`h-2 lg:h-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'} w-1/2`}></div>
+                        <div
+                          className={`h-3 lg:h-4 rounded ${
+                            isDark ? "bg-gray-700" : "bg-gray-200"
+                          } w-3/4`}
+                        ></div>
+                        <div
+                          className={`h-2 lg:h-3 rounded ${
+                            isDark ? "bg-gray-700" : "bg-gray-200"
+                          } w-1/2`}
+                        ></div>
                       </div>
-                      <div className={`w-10 lg:w-12 h-3 lg:h-4 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                      <div
+                        className={`w-10 lg:w-12 h-3 lg:h-4 rounded ${
+                          isDark ? "bg-gray-700" : "bg-gray-200"
+                        }`}
+                      ></div>
                     </div>
                   ))}
                   <div className="text-center mt-4">
-                    <div className={`inline-flex items-center space-x-2 text-xs lg:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div
+                      className={`inline-flex items-center space-x-2 text-xs lg:text-sm ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                       <span>Loading recent activities...</span>
                     </div>
@@ -2009,11 +2068,23 @@ const Dashboard = () => {
                   <div className="space-y-2 lg:space-y-4">
                     {recentActivities.length === 0 && (
                       <div className="text-center py-8">
-                        <Activity className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
-                        <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        <Activity
+                          className={`w-12 h-12 mx-auto mb-3 ${
+                            isDark ? "text-gray-600" : "text-gray-400"
+                          }`}
+                        />
+                        <p
+                          className={`text-sm ${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
                           No recent activities found.
                         </p>
-                        <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+                        <p
+                          className={`text-xs mt-1 ${
+                            isDark ? "text-gray-500" : "text-gray-500"
+                          }`}
+                        >
                           Start learning to see your progress here!
                         </p>
                       </div>
@@ -2023,7 +2094,9 @@ const Dashboard = () => {
                         <div
                           key={activity.id}
                           className={`flex items-center space-x-2 lg:space-x-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 lg:p-3 rounded-lg transition-all duration-200 transform hover:scale-[1.02] animate-slide-in-right border ${
-                            isDark ? 'border-transparent hover:border-gray-600' : 'border-transparent hover:border-gray-200'
+                            isDark
+                              ? "border-transparent hover:border-gray-600"
+                              : "border-transparent hover:border-gray-200"
                           }`}
                           style={{ animationDelay: `${0.9 + index * 0.1}s` }}
                           onClick={() => {
@@ -2065,7 +2138,11 @@ const Dashboard = () => {
                             >
                               {activity.progress}%
                             </div>
-                            <ChevronRight className={`w-3 h-3 ${isDark ? 'text-gray-500' : 'text-gray-400'} hidden sm:block`} />
+                            <ChevronRight
+                              className={`w-3 h-3 ${
+                                isDark ? "text-gray-500" : "text-gray-400"
+                              } hidden sm:block`}
+                            />
                           </div>
                         </div>
                       ))}
@@ -2107,6 +2184,9 @@ const Dashboard = () => {
                         : "bg-gray-50 hover:bg-gray-100"
                     }`}
                     style={{ animationDelay: `${1.1 + index * 0.1}s` }}
+                    onClick={() => {
+                      navigate(`/learn/${topic.courseId}`);
+                    }}
                   >
                     <div className="flex items-start space-x-2 lg:space-x-3">
                       <div
