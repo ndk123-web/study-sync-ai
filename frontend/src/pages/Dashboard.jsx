@@ -51,6 +51,7 @@ import { useNavigate } from "react-router-dom";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
+import { useNotifications } from "../store/slices/useNotifications.js";
 import Header from "../components/Header";
 import CryptoJs from "crypto-js";
 import SuccessNotification from "../components/SuccessNotification";
@@ -176,14 +177,14 @@ const Dashboard = () => {
 
   // Socket.io for real-time notifications
   useEffect(() => {
-    const socket = io("http://localhost:4000");
+    // withCredentials: true ensures cookies are sent with the WS handshake
+    const socket = io("http://localhost:4000", {
+      withCredentials: true,
+    });
 
     socket.on("connect", () => {
       console.log("Connected with socket id:", socket.id);
-
-      // Authenticate using JWT
-      console.log("Sending auth token:", cookieStore.get("token")?.value);
-      socket.emit("authenticate", cookieStore.get("token")?.value);
+      // No need to emit token, HTTP-only cookie is automatically sent
     });
 
     socket.on("notification", (data) => {
@@ -191,9 +192,7 @@ const Dashboard = () => {
       alert(data.message);
     });
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, []);
 
   // Auth check
