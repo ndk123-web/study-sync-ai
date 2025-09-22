@@ -282,9 +282,10 @@ const Home = () => {
 
       {/* Floating Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Subtle Animated Gradient Blobs */}
-        <div className={`absolute top-20 -left-20 w-72 h-72 rounded-full blur-3xl opacity-3 animate-blob-morph ${isDark ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-emerald-300 to-teal-300'}`}></div>
-        <div className={`absolute -bottom-20 right-20 w-80 h-80 rounded-full blur-3xl opacity-2 animate-blob-morph animation-delay-4000 ${isDark ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gradient-to-r from-blue-300 to-cyan-300'}`}></div>
+        {/* Animated Gradient Blobs */}
+        <div className={`absolute top-20 -left-20 w-72 h-72 rounded-full blur-3xl opacity-8 animate-blob-morph ${isDark ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-emerald-300 to-teal-300'}`}></div>
+        <div className={`absolute top-40 -right-20 w-96 h-96 rounded-full blur-3xl opacity-6 animate-blob-morph animation-delay-2000 ${isDark ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-gradient-to-r from-purple-300 to-pink-300'}`}></div>
+        <div className={`absolute -bottom-20 left-1/3 w-80 h-80 rounded-full blur-3xl opacity-5 animate-blob-morph animation-delay-4000 ${isDark ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-gradient-to-r from-blue-300 to-cyan-300'}`}></div>
         
         {/* Floating Particles */}
         <div className="particles-container">
@@ -303,9 +304,13 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Minimal Floating Geometric Shapes */}
-        <div className="absolute top-32 left-12 w-6 h-6 border border-emerald-500/20 rotate-45 animate-floating-shapes"></div>
-        <div className="absolute bottom-48 right-1/4 w-4 h-4 bg-emerald-500/10 rounded-full animate-floating-shapes animation-delay-2000"></div>
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-32 left-12 w-8 h-8 border-2 border-emerald-500/30 rotate-45 animate-floating-shapes"></div>
+        <div className="absolute top-64 right-24 w-6 h-6 bg-purple-500/20 rounded-full animate-floating-shapes animation-delay-1000"></div>
+        <div className="absolute bottom-48 left-1/4 w-10 h-10 border-2 border-teal-500/30 rotate-12 animate-floating-shapes animation-delay-2000"></div>
+        <div className="absolute top-48 right-1/3 w-4 h-4 bg-pink-500/30 rotate-45 animate-floating-shapes animation-delay-3000"></div>
+        <div className="absolute top-20 right-12 w-5 h-5 border border-cyan-500/25 rounded-full animate-floating-shapes animation-delay-1500"></div>
+        <div className="absolute bottom-32 left-16 w-7 h-7 bg-emerald-500/15 rotate-12 animate-floating-shapes animation-delay-2500"></div>
       </div>
 
       {/* Hero Section */}
@@ -845,8 +850,9 @@ const Home = () => {
       >
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl opacity-5 ${isDark ? 'bg-emerald-600' : 'bg-emerald-400'}`}></div>
-          <div className={`absolute bottom-10 right-10 w-40 h-40 rounded-full blur-3xl opacity-4 ${isDark ? 'bg-teal-600' : 'bg-teal-400'}`}></div>
+          <div className={`absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl opacity-12 ${isDark ? 'bg-emerald-600' : 'bg-emerald-400'}`}></div>
+          <div className={`absolute bottom-10 right-10 w-40 h-40 rounded-full blur-3xl opacity-10 ${isDark ? 'bg-teal-600' : 'bg-teal-400'}`}></div>
+          <div className={`absolute top-1/2 left-1/4 w-24 h-24 rounded-full blur-2xl opacity-8 ${isDark ? 'bg-cyan-600' : 'bg-cyan-400'}`}></div>
         </div>
 
         <div className="relative container mx-auto px-4">
