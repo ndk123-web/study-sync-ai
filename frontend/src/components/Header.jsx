@@ -18,6 +18,7 @@ import {
   Sparkles,
   FileText,
   Video,
+  HelpCircle,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import { useThemeStore } from "../store/slices/useThemeStore";
@@ -100,6 +101,8 @@ const Header = () => {
 
   // Socket.io for real-time notifications
   useEffect(() => {
+
+    if (!isAuth) return;
     // withCredentials: true ensures cookies are sent with the WS handshake
     const socket = io("http://localhost:4000", {
       withCredentials: true,
@@ -377,6 +380,17 @@ const Header = () => {
                   }`}
                 >
                   Contact
+                </button>
+              </Link>
+              <Link to="/help">
+                <button
+                  className={`hover:text-emerald-500 transition-all duration-300 transform hover:scale-105 font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  } ${
+                    location.pathname === "/help" ? "text-emerald-500" : ""
+                  }`}
+                >
+                  Help
                 </button>
               </Link>
             </nav>
@@ -991,6 +1005,22 @@ const Header = () => {
                 >
                   <MessageCircle className="w-5 h-5 text-emerald-500" />
                   <span>Contact</span>
+                </button>
+              </Link>
+
+              <Link to="/help">
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`w-full py-3 px-4 text-left rounded-xl transition-all duration-300 transform hover:translate-x-2 hover:bg-gradient-to-r from-emerald-500/10 to-teal-500/10 flex items-center space-x-3 ${
+                    isDark
+                      ? "text-gray-300 hover:text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  } ${
+                    location.pathname === "/help" ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20" : ""
+                  }`}
+                >
+                  <HelpCircle className="w-5 h-5 text-emerald-500" />
+                  <span>Help & Support</span>
                 </button>
               </Link>
             </nav>

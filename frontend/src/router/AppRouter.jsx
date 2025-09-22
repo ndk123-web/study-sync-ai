@@ -12,6 +12,7 @@ import About from "../components/About.jsx";
 import Contact from "../components/Contact.jsx";
 import CoursesInterface from "../components/CoursesInterface";
 import EnrolledCourses from "../components/EnrolledCourses";
+import HelpSupport from "../pages/HelpSupport.jsx";
 
 const AppRouter = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/contact",
     element: <Contact />,
+  },
+  {
+    path: "/help",
+    element: <HelpSupport />,
   },
   {
     path: "/signin",

@@ -47,7 +47,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { href, useNavigate } from "react-router-dom";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useIsAuth } from "../store/slices/useIsAuth";
 import { useUserStore } from "../store/slices/useUserStore";
@@ -175,25 +175,25 @@ const Dashboard = () => {
   ]);
   const [recentActivities, setRecentActivities] = useState([]);
 
-  // Socket.io for real-time notifications
-  useEffect(() => {
-    // withCredentials: true ensures cookies are sent with the WS handshake
-    const socket = io("http://localhost:4000", {
-      withCredentials: true,
-    });
+  // // Socket.io for real-time notifications
+  // useEffect(() => {
+  //   // withCredentials: true ensures cookies are sent with the WS handshake
+  //   const socket = io("http://localhost:4000", {
+  //     withCredentials: true,
+  //   });
 
-    socket.on("connect", () => {
-      console.log("Connected with socket id:", socket.id);
-      // No need to emit token, HTTP-only cookie is automatically sent
-    });
+  //   socket.on("connect", () => {
+  //     console.log("Connected with socket id:", socket.id);
+  //     // No need to emit token, HTTP-only cookie is automatically sent
+  //   });
 
-    socket.on("notification", (data) => {
-      console.log("Received notification:", data);
-      alert(data.message);
-    });
+  //   socket.on("notification", (data) => {
+  //     console.log("Received notification:", data);
+  //     alert(data.message);
+  //   });
 
-    return () => socket.disconnect();
-  }, []);
+  //   return () => socket.disconnect();
+  // }, []);
 
   // Auth check
   useEffect(() => {
@@ -440,11 +440,11 @@ const Dashboard = () => {
       stats: "Upload & learn",
     },
     {
-      title: "📝 My Notes",
-      description: "Access saved notes",
+      title: "📝 Video Learning",
+      description: "Learn Specific Topics",
       color: "from-orange-500 to-red-600",
-      action: () => setActiveTab("notes"),
-      stats: "12 notes saved",
+      action: () => navigate("/video-learning"),
+      stats: "Insert YT Link & Learn",
     },
   ];
 
@@ -1737,6 +1737,7 @@ const Dashboard = () => {
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
                 emoji: "❓",
+                href: "/help"
               },
             ].map((item, index) =>
               item.isLink || item.href ? (

@@ -6,6 +6,8 @@
 4. ai      -> ollama mistral model
 5. 3rd party api -> google v3 (for yt videos metadata)
 6. Pinecone Vector database for Storing Content of PDF namespace wise 
+7. Kafka + zookeeper -> To Produce and Consume Notifications on Topic (Enrollment) 
+8. Web Socket -> To Send the message From Consumer to User in Real Time using Web Socket 
 
 # Features
 
@@ -13,3 +15,4 @@
 - Use Mongodb aggregation pipeline for dashboard
 - Data Persistance used Zustand 
 - jwt based authentication and authorization 
+- Real Time In App Notification
