@@ -1,18 +1,24 @@
 import axios from "axios";
+import { getAuthConfig } from "./authUtils.js";
+import CryptoJS from "crypto-js";
 
-const EnrollmentVideoApi = async (encryptedVideoUrl) => {
+const EnrollmentVideoApi = async (videoUrl) => {
   try {
+    // Get authentication config with fresh Firebase token
+    const authConfig = await getAuthConfig();
+    
+    // Encrypt the video URL as backend expects encrypted URL
+    const encryptedVideoUrl = CryptoJS.AES.encrypt(
+      videoUrl,
+      import.meta.env.VITE_ENCRYPTION_SECRET
+    ).toString();
+
     const backendResponse = await axios.post(
       "http://localhost:5000/api/v1/video/enroll-video",
       {
         videoUrl: encryptedVideoUrl,
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse: ", backendResponse);

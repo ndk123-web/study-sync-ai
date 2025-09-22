@@ -79,6 +79,7 @@ const Dashboard = () => {
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
   const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
+  const clearNotifications = useNotifications((state) => state.clearNotifications);
 
   const [signInNotification, setSignInNotification] = useState(false);
   const [availableUserYears, setAvailableUserYears] = useState([]);
@@ -234,7 +235,7 @@ const Dashboard = () => {
         const apiResponse = await GetTrendAnalysisYearApi();
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching trend analysis data: ", apiResponse);
-          alert("Error fetching trend analysis data");
+          // alert("Error fetching trend analysis data");
           return;
         }
 
@@ -268,7 +269,7 @@ const Dashboard = () => {
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         console.log("Error fetching trend analysis data: ", apiResponse);
-        alert("Error fetching trend analysis data");
+        // alert("Error fetching trend analysis data");
         return;
       }
 
@@ -290,7 +291,7 @@ const Dashboard = () => {
             "Error fetching topics wise progress data: ",
             apiResponse
           );
-          alert("Error fetching topics wise progress data");
+          // alert("Error fetching topics wise progress data");
           return;
         }
 
@@ -299,7 +300,7 @@ const Dashboard = () => {
 
       fetchTopicsWiseProgress();
     } catch (err) {
-      alert("Error in fetching Topics wise progress data: ", err.message);
+      // alert("Error in fetching Topics wise progress data: ", err.message);
       return;
     } finally {
       setCategoryLoader(false);
@@ -315,7 +316,7 @@ const Dashboard = () => {
         const apiResponse = await GetQuizPerformanceApi();
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching Quiz Performance data: ", apiResponse);
-          alert("Error fetching Quiz Performance data");
+          // alert("Error fetching Quiz Performance data");
         }
         console.log("Quiz Performance Data: ", apiResponse);
         setQuizScoresByCourse(apiResponse?.data?.quizScoresByCourse || []);
@@ -323,7 +324,7 @@ const Dashboard = () => {
       };
       fetchQuizPerformance();
     } catch (err) {
-      alert("Error in fetching Quiz Performance data: ", err.message);
+      // alert("Error in fetching Quiz Performance data: ", err.message);
       return;
     } finally {
       setQuizLoader(false);
@@ -344,7 +345,7 @@ const Dashboard = () => {
         statsCards[2].value = apiResponse?.data?.quizzesCount || "0";
         statsCards[3].value = apiResponse?.data?.skillPoint || "0";
       } catch (err) {
-        alert("Error in fetching Performance data: ", err.message);
+        // alert("Error in fetching Performance data: ", err.message);
         return;
       }
     };
@@ -368,7 +369,7 @@ const Dashboard = () => {
         const apiResponse = await GetUserActivitiesApi();
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching User Activities data: ", apiResponse);
-          alert("Error fetching User Activities data");
+          // alert("Error fetching User Activities data");
           return;
         }
         console.log("User Activities Data: ", apiResponse);
@@ -411,7 +412,7 @@ const Dashboard = () => {
 
       fetchUserActivities();
     } catch (err) {
-      alert("Error in fetching User Activities data: ", err.message);
+      // alert("Error in fetching User Activities data: ", err.message);
       setActivitiesLoader(false);
       return;
     }
@@ -425,6 +426,7 @@ const Dashboard = () => {
   const handleLogout = () => {
     removeAuth();
     logoutUser();
+    clearNotifications();
     setIsSidebarOpen(false);
   };
 

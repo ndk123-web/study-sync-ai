@@ -56,16 +56,52 @@ async def generate_quiz_controller(courseId: str , level: str, uid: str):
         raw_content = ai_response["message"]["content"]
         print("AI Raw Response:", raw_content)
 
-        # Parse JSON string -> Python list
+        # Clean and parse JSON string -> Python list
         try:
+            # Clean the AI response to fix common JSON issues
+            cleaned_content = raw_content.strip()
+            
+            # Remove markdown code blocks if present
+            if cleaned_content.startswith("```json"):
+                cleaned_content = cleaned_content.replace("```json", "").replace("```", "")
+            elif cleaned_content.startswith("```"):
+                cleaned_content = cleaned_content.replace("```", "")
+            
+            # Remove any extra text before/after JSON
+            cleaned_content = cleaned_content.strip()
+            
+            # Find the JSON array bounds
+            start_idx = cleaned_content.find('[')
+            end_idx = cleaned_content.rfind(']')
+            
+            if start_idx != -1 and end_idx != -1:
+                cleaned_content = cleaned_content[start_idx:end_idx+1]
+            
+            print("Cleaned AI Response:", cleaned_content[:200] + "..." if len(cleaned_content) > 200 else cleaned_content)
+            
             # json can convert any type of string and convert into any type of python variable
             # if the string = "123" -> it will convert to int 123
             # if the string = "[1,2,3]" -> it will convert to list [1,2,3]
             # if the string = '{"a":1}' -> it will convert to dict {"a":1}
-            questions = json.loads(raw_content) # converting array of object to python list of dict 
-        except json.JSONDecodeError as e:
-            print("❌ JSON parse error:", str(e))
-            return ApiResponse.send(500, {"error": "Invalid JSON from AI"})
+            questions = json.loads(cleaned_content) # converting array of object to python list of dict 
+            
+            # Validate that we have a list with questions
+            if not isinstance(questions, list) or len(questions) == 0:
+                raise ValueError("AI response is not a valid question array")
+                
+            # Validate each question has required fields
+            for i, q in enumerate(questions):
+                if not isinstance(q, dict):
+                    raise ValueError(f"Question {i+1} is not a valid object")
+                if not all(key in q for key in ['question', 'options', 'answer']):
+                    raise ValueError(f"Question {i+1} missing required fields")
+                if not isinstance(q['options'], list) or len(q['options']) != 4:
+                    raise ValueError(f"Question {i+1} options must be array of 4 items")
+                    
+        except (json.JSONDecodeError, ValueError) as e:
+            print("❌ JSON parse/validation error:", str(e))
+            print("❌ Raw AI Response:", raw_content)
+            return ApiResponse.send(500, {"error": f"Invalid JSON from AI: {str(e)}"})
         quizInstance = await quizzes_collection.insert_one({
             "courseId": courseInstance.get('_id'),
             "userId": userInstance.get('_id'),
