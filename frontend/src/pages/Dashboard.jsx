@@ -131,10 +131,23 @@ const Dashboard = () => {
   const [quizScoresByCourse, setQuizScoresByCourse] = useState([]);
   const [quizLoader, setQuizLoader] = useState(false);
   const [activitiesLoader, setActivitiesLoader] = useState(false);
+
+  const statsLoader = () => {
+    return (
+      <div>
+        <div className="animate-pulse space-y-3">
+          <div className="h-6 w-3/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
+          <div className="h-10 w-1/2 bg-gray-300 dark:bg-gray-700 rounded"></div>
+          <div className="h-4 w-1/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+
   const [statsCards, setStatCards] = useState([
     {
       title: "Study Streak",
-      value: "loading...",
+      value: statsLoader(),
       // change: "+3 days",
       // changePercent: "+18%",
       color: "from-orange-500 to-red-500",
@@ -144,7 +157,7 @@ const Dashboard = () => {
     },
     {
       title: "Topics Studied",
-      value: "loading...",
+      value: statsLoader(),
       // change: "+5 this week",
       // changePercent: "+26%",
       color: "from-emerald-500 to-teal-500",
@@ -154,7 +167,7 @@ const Dashboard = () => {
     },
     {
       title: "Quizzes Completed",
-      value: "loading...",
+      value: statsLoader(),
       // change: "+12%",
       // changePercent: "+12%",
       color: "from-blue-500 to-purple-500",
@@ -164,7 +177,7 @@ const Dashboard = () => {
     },
     {
       title: "Skill Points",
-      value: "loading...",
+      value: statsLoader(),
       // change: "+8.2h",
       // changePercent: "+22%",
       color: "from-purple-500 to-pink-500",
