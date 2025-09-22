@@ -204,8 +204,10 @@ const Header = () => {
   // NotificationCard Component
   const NotificationCard = ({ notification, onClose }) => (
     <div
-      className={`p-3 rounded-lg border mb-2 last:mb-0 transform transition-all duration-300 hover:scale-105 ${
-        isDark ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200"
+      className={`p-3 rounded-lg border mb-2 last:mb-0 transition-all duration-200 hover:shadow-md ${
+        isDark 
+          ? "bg-gray-700 border-gray-600 hover:bg-gray-650 hover:border-gray-500" 
+          : "bg-gray-50 border-gray-200 hover:bg-white hover:border-gray-300"
       }`}
     >
       <div className="flex items-start justify-between">
@@ -437,7 +439,7 @@ const Header = () => {
                       </button>
                       {showNotifications && (
                         <div
-                          className={`notification-dropdown absolute right-0 mt-2 w-[22rem] ${
+                          className={`notification-dropdown absolute right-0 mt-2 w-[26rem] ${
                             isDark
                               ? "bg-gray-800 border-gray-700"
                               : "bg-white border-gray-200"
@@ -465,7 +467,7 @@ const Header = () => {
                                 </button>
                               )}
                             </div>
-                            <div className="max-h-72 overflow-y-auto">
+                            <div className="max-h-80 overflow-y-auto">
                               {userNotifications.length === 0 ? (
                                 <div className="text-center py-8">
                                   <Bell
@@ -706,7 +708,7 @@ const Header = () => {
 
                     {showNotifications && (
                       <div
-                        className={`notification-dropdown absolute right-0 mt-2 w-[21rem] max-w-[calc(100vw-2rem)] ${
+                        className={`notification-dropdown absolute right-0 mt-2 w-[24rem] max-w-[calc(100vw-2rem)] ${
                           isDark
                             ? "bg-gray-800 border-gray-700"
                             : "bg-white border-gray-200"
@@ -732,7 +734,7 @@ const Header = () => {
                               <X className="w-4 h-4" />
                             </button>
                           </div>
-                          <div className="max-h-56 overflow-y-auto">
+                          <div className="max-h-84 overflow-y-auto">
                             {userNotifications.length === 0 ? (
                               <p
                                 className={`text-sm text-center py-4 ${

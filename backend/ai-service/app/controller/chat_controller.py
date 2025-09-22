@@ -21,7 +21,7 @@ enrollment_collection = db['enrollmentcourses']
 
 async def get_chat_response( chatRequest: ChatRequest):
 
-    systemPrompt = f"""You are StudySync AI assistant. Help with course content, explain concepts, and guide learning.
+    systemPrompt = f"""You are StudySync AI assistant. Help with course content, explain concepts, and guide learning about {chatRequest.courseId}.
 
 Format responses with:
 - **bold** for key terms
@@ -29,7 +29,9 @@ Format responses with:
 - `code` for code
 - - for lists
 
-Keep responses clear and short, if the user asks other things instead of learning then kindly reply user"""
+Keep responses clear and short, if the user asks other things instead of learning then kindly reply user
+if user asks anything other than course related queries then politely refuse and say
+"""
 
     # Use the actual user's prompt/question  
     user_message = chatRequest.prompt

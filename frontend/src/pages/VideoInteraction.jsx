@@ -580,9 +580,20 @@ const VideoInteraction = () => {
         return;
       }
 
-      const response = await EnrollmentVideoApi({ videoUrl });
+      const response = await EnrollmentVideoApi(videoUrl);
+      console.log("EnrollmentVideoApi response:", response);
 
       if (response.status === 200 || response.status === 201) {
+        // Encrypt the video URL for browser URL
+        const encryptedUrl = CryptoJS.AES.encrypt(
+          videoUrl,
+          import.meta.env.VITE_ENCRYPTION_SECRET
+        ).toString();
+
+        // Update browser URL with encrypted video parameter
+  // Use canonical path; alias /video-interaction still supported
+  navigate(`/video-learning?v=${encodeURIComponent(encryptedUrl)}`, { replace: true });
+
         const videoData = {
           videoId,
           title: response.data?.title || "YouTube Video",
@@ -592,8 +603,6 @@ const VideoInteraction = () => {
           originalUrl: videoUrl,
         };
         setLoadedVideo(videoData);
-      } else {
-        alert("Failed to load video: " + response.message);
       }
     } catch (error) {
       console.error("Error loading video:", error);

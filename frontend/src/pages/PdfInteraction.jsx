@@ -912,7 +912,7 @@ const PdfInteraction = () => {
                           isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        PDF Document • {uploadedPdf.size.toFixed(2)}MB
+                        PDF Document • {uploadedPdf?.size?.toFixed(2)}MB
                       </p>
                     </div>
                   </div>

@@ -10,86 +10,127 @@ import CryptoJS from "crypto-js";
 const LoadVideoController = wrapper(async (req, res) => {
   const user = req.user;
 
-  const { videoUrl } = req.body;
-
-  if (!videoUrl) {
-    throw new ApiError(400, "Video URL is required");
+  // Accept either { videoUrl: "..." } or nested { videoUrl: { videoUrl: "..." } }
+  let rawVideoUrl = req.body?.videoUrl;
+  if (rawVideoUrl && typeof rawVideoUrl === 'object' && rawVideoUrl.videoUrl) {
+    console.log('[Video] Unwrapping nested videoUrl object');
+    rawVideoUrl = rawVideoUrl.videoUrl;
   }
 
-  const decryptedVideoUrl = CryptoJS.AES.decrypt(
-    videoUrl,
-    process.env.ENCRYPTION_SECRET
-  ).toString(CryptoJS.enc.Utf8); 
+  console.log('[Video] Received body.videoUrl =', req.body?.videoUrl);
+  console.log('[Video] Normalized rawVideoUrl =', rawVideoUrl, 'type:', typeof rawVideoUrl);
 
-  // use regex to find the videoId
-  const videoIdMatch = decryptedVideoUrl.match(
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})|(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/
-  );
+  if (!rawVideoUrl || typeof rawVideoUrl !== 'string') {
+    throw new ApiError(400, 'Video URL is required');
+  }
 
-  const videoId = videoIdMatch
-    ? videoIdMatch[1] || videoIdMatch[2]
-    : null;
+  // Try decrypt – if fails, treat as plain URL
+  let decryptedVideoUrl = rawVideoUrl;
+  try {
+    const bytes = CryptoJS.AES.decrypt(rawVideoUrl, process.env.ENCRYPTION_SECRET);
+    const decoded = bytes.toString(CryptoJS.enc.Utf8);
+    if (decoded) {
+      decryptedVideoUrl = decoded;
+      console.log('[Video] Decryption successful');
+    } else {
+      console.log('[Video] Decryption returned empty string, assuming plain URL');
+    }
+  } catch (err) {
+    console.log('[Video] Decryption error, assuming plain URL:', err.message);
+  }
+
+  // Normalize possible short forms
+  decryptedVideoUrl = decryptedVideoUrl.trim();
+
+  // Robust regex with grouping only for ID
+  const YT_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = decryptedVideoUrl.match(YT_REGEX);
+  const videoId = match ? match[1] : null;
 
   if (!videoId) {
-    throw new ApiError(400, "Invalid YouTube URL");
+    console.log('[Video] Failed to extract videoId from URL:', decryptedVideoUrl);
+    throw new ApiError(400, 'Invalid YouTube URL');
   }
 
-  const apiKey = process.env.GOOGLE_API_KEY;
-  const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoId}&key=${apiKey}`;
-  
-  const videoDetails = await fetch(apiUrl)
-  .then(response => response.json())
-  .then(data => {
-    if (data.items && data.items.length > 0) {
-      return data.items[0];
-    } else {
-      throw new ApiError(404, "Video not found");
+  console.log('[Video] Extracted videoId =', videoId);
+
+  if (!process.env.GOOGLE_API_KEY) {
+    throw new ApiError(500, 'Server missing GOOGLE_API_KEY');
+  }
+
+  const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoId}&key=${process.env.GOOGLE_API_KEY}`;
+
+  let videoDetails;
+  try {
+    const resp = await fetch(apiUrl);
+    const data = await resp.json();
+    if (!data.items || data.items.length === 0) {
+      throw new ApiError(404, 'Video not found');
     }
-  })
-  .catch(error => {
-    console.error("Error fetching video details:", error);
-    throw new ApiError(500, "Failed to fetch video details");
-  });
-
-  const videoTitle = videoDetails.snippet.title;
-  const videoCreator = videoDetails.snippet.channelTitle;
-  const videoDuration = videoDetails.contentDetails.duration;
-
-  console.log("Video Details: ", videoDetails);
-  if (!videoDetails) {
-    throw new ApiError(404, "Video details not found");
+    videoDetails = data.items[0];
+  } catch (err) {
+    console.error('[Video] Error fetching YouTube metadata:', err.message);
+    if (err instanceof ApiError) throw err;
+    throw new ApiError(500, 'Failed to fetch video details');
   }
 
-  console.log("Video URL: ", videoUrl);
-  console.log("Decrypted Video URL: ", decryptedVideoUrl);
+  const videoTitle = videoDetails?.snippet?.title || 'Untitled Video';
+  const videoCreator = videoDetails?.snippet?.channelTitle || 'Unknown Creator';
+  const isoDuration = videoDetails?.contentDetails?.duration || 'PT0S';
 
-  if (!decryptedVideoUrl) {
-    throw new ApiError(400, "Video URL is required");
-  }
+  // Optional: convert ISO 8601 duration to HH:MM:SS
+  const parseISODuration = (iso) => {
+    const re = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+    const m = iso.match(re) || [];
+    const h = parseInt(m[1] || '0', 10);
+    const min = parseInt(m[2] || '0', 10);
+    const s = parseInt(m[3] || '0', 10);
+    return [h, min, s]
+      .map((v) => String(v).padStart(2, '0'))
+      .join(':');
+  };
+  const videoDuration = parseISODuration(isoDuration);
+
+  console.log('[Video] Final metadata =>', { videoTitle, videoCreator, videoDuration });
 
   const userInstance = await User.findOne({ uid: user.uid });
   if (!userInstance) {
-    throw new ApiError("User not found", 404);
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Prevent duplicate enrollment of same video for user
+  const existing = await Enrollment.findOne({ uid: user.uid, videoLink: rawVideoUrl });
+  if (existing) {
+    return res.status(200).json(new ApiResponse(200, {
+      alreadyEnrolled: true,
+      videoId,
+      title: videoTitle,
+      creator: videoCreator,
+      duration: videoDuration,
+    }, 'Video already enrolled'));
   }
 
   const newVideoEnrollment = new Enrollment({
     userId: userInstance._id,
-    type: "video",
+    type: 'video',
     uid: user.uid,
-    videoLink: videoUrl,
-    videoTitle: videoTitle,
-    videoCreator: videoCreator,
-    videoDuration: videoDuration
+    videoLink: rawVideoUrl,
+    videoTitle,
+    videoCreator,
+    videoDuration,
   });
 
   const savedEnrollment = await newVideoEnrollment.save();
   if (!savedEnrollment) {
-    throw new ApiError("Failed to Enroll Video", 500);
+    throw new ApiError(500, 'Failed to Enroll Video');
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Video Enrolled Successfully"));
+  return res.status(200).json(new ApiResponse(200, {
+    videoId,
+    title: videoTitle,
+    creator: videoCreator,
+    duration: videoDuration,
+  }, 'Video Enrolled Successfully'));
 });
 
 export { LoadVideoController };

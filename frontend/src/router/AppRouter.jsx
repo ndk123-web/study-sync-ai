@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import ErrorFallback from "../components/ErrorFallback.jsx";
 import ProtectedLayout from "../components/ProtectedLayout.jsx";
 import SignIn from "../pages/SignIn.jsx";
 import SignUp from "../pages/SignUp.jsx";
@@ -18,6 +19,7 @@ const AppRouter = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+    errorElement: <ErrorFallback />,
   },
   {
     path: "/features",
@@ -92,6 +94,17 @@ const AppRouter = createBrowserRouter([
         <VideoInteraction />
       </ProtectedLayout>
     ),
+    errorElement: <ErrorFallback />,
+  },
+  // Alias to support previous navigate(`/video-interaction?...`)
+  {
+    path: "/video-interaction",
+    element: (
+      <ProtectedLayout>
+        <VideoInteraction />
+      </ProtectedLayout>
+    ),
+    errorElement: <ErrorFallback />,
   },
   {
     path: "/learn/video",
@@ -100,6 +113,7 @@ const AppRouter = createBrowserRouter([
         <VideoInteraction />
       </ProtectedLayout>
     ),
+    errorElement: <ErrorFallback />,
   },
   {
     path: "/learn/pdf",
