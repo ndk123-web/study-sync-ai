@@ -435,22 +435,11 @@ const EnrolledCoursesSample = () => {
                 href: "/video-learning",
               },
               {
-                id: "notes",
-                label: "My Notes",
-                icon: <FileText className="w-5 h-5" />,
-                emoji: "📝",
-              },
-              {
-                id: "analytics",
-                label: "Analytics",
-                icon: <BarChart3 className="w-5 h-5" />,
-                emoji: "📊",
-              },
-              {
                 id: "help",
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
                 emoji: "❓",
+                href: "/help",
               },
             ].map((item, index) =>
               item.isLink || item.href ? (
