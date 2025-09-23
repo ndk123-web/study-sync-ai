@@ -5,6 +5,7 @@ import SignIn from "../pages/SignIn.jsx";
 import SignUp from "../pages/SignUp.jsx";
 import Home from "../pages/Home.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
+import AdminDashboard from "../pages/AdminDashboard.jsx";
 import Courses from "../pages/Courses.jsx";
 import PdfInteraction from "../pages/PdfInteraction.jsx";
 import VideoInteraction from "../pages/VideoInteraction.jsx";
@@ -70,6 +71,15 @@ const AppRouter = createBrowserRouter([
         </ProtectedLayout>
       </>
     ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedLayout>
+        <AdminDashboard />
+      </ProtectedLayout>
+    ),
+    errorElement: <ErrorFallback />,
   },
   {
     path: "/learn/:courseId",

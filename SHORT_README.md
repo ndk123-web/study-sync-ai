@@ -11,8 +11,10 @@
 
 # Features
 
-- Microservice architecture (ai and auth)
+- Microservice architecture (ai , auth and notification)
 - Use Mongodb aggregation pipeline for dashboard
 - Data Persistance used Zustand 
 - jwt based authentication and authorization 
 - Real Time In App Notification
+- Gamification Points (enroll->+3 , quiz-completion-marks>75 ->+10 , quiz-completion-marks<75 -> +3)
+- Study Streaks 
