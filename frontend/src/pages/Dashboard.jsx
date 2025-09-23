@@ -2222,9 +2222,9 @@ const Dashboard = () => {
                         : "bg-gray-50 hover:bg-gray-100"
                     }`}
                     style={{ animationDelay: `${1.1 + index * 0.1}s` }}
-                    onClick={() => {
-                      navigate(`/learn/${topic.courseId}`);
-                    }}
+                    // onClick={() => {
+                    //   navigate(`/learn/${topic.courseId}`);
+                    // }}
                   >
                     <div className="flex items-start space-x-2 lg:space-x-3">
                       <div
