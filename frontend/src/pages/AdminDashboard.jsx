@@ -177,35 +177,15 @@ const AdminDashboard = () => {
     ],
 
     // User activity over time by year
-    userActivityData: {
-      2024: [
-        { month: "Jan", newUsers: 89, enrollments: 234, completions: 67 },
-        { month: "Feb", newUsers: 124, enrollments: 289, completions: 89 },
-        { month: "Mar", newUsers: 156, enrollments: 367, completions: 123 },
-        { month: "Apr", newUsers: 198, enrollments: 445, completions: 156 },
-        { month: "May", newUsers: 234, enrollments: 512, completions: 198 },
-        { month: "Jun", newUsers: 267, enrollments: 589, completions: 234 },
-        { month: "Jul", newUsers: 289, enrollments: 645, completions: 267 },
-        { month: "Aug", newUsers: 312, enrollments: 712, completions: 298 },
-        { month: "Sep", newUsers: 345, enrollments: 789, completions: 334 },
-        { month: "Oct", newUsers: 378, enrollments: 856, completions: 367 },
-        { month: "Nov", newUsers: 412, enrollments: 923, completions: 398 },
-        { month: "Dec", newUsers: 445, enrollments: 998, completions: 429 },
-      ],
-      2025: [
-        { month: "Jan", newUsers: 156, enrollments: 345, completions: 123 },
-        { month: "Feb", newUsers: 189, enrollments: 412, completions: 156 },
-        { month: "Mar", newUsers: 223, enrollments: 489, completions: 189 },
-        { month: "Apr", newUsers: 267, enrollments: 567, completions: 223 },
-        { month: "May", newUsers: 298, enrollments: 645, completions: 267 },
-        { month: "Jun", newUsers: 334, enrollments: 723, completions: 298 },
-        { month: "Jul", newUsers: 367, enrollments: 801, completions: 334 },
-        { month: "Aug", newUsers: 398, enrollments: 879, completions: 367 },
-        { month: "Sep", newUsers: 429, enrollments: 957, completions: 398 },
-      ],
-    },
+    userActivityData: {},
 
-    availableYears: [2024, 2025],
+    availableYears: (function () {
+      const years = [];
+      for (let year = 2025; year <= new Date().getFullYear(); year++) {
+        years.push(year);
+      }
+      return years;
+    })(),
 
     // Course completion rates
     completionRateData: [
