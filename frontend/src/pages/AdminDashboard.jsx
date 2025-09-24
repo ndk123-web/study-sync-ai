@@ -37,6 +37,7 @@ import {
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
   GetUserActivitiesApi,
+  GetCourseDataApi
 } from "../api/AdminApis";
 
 const AdminDashboard = () => {
@@ -74,68 +75,7 @@ const AdminDashboard = () => {
     },
 
     // Individual course data with user counts
-    courseData: [
-      {
-        id: 1,
-        name: "Complete React Development",
-        category: "Frontend",
-        totalUsers: 456,
-        completedUsers: 312,
-        activeUsers: 144,
-        completionRate: 68,
-        difficulty: "Intermediate",
-      },
-      {
-        id: 2,
-        name: "Python Programming Fundamentals",
-        category: "Programming",
-        totalUsers: 387,
-        completedUsers: 289,
-        activeUsers: 98,
-        completionRate: 75,
-        difficulty: "Beginner",
-      },
-      {
-        id: 3,
-        name: "Data Science & Machine Learning",
-        category: "AI/ML",
-        totalUsers: 324,
-        completedUsers: 145,
-        activeUsers: 179,
-        completionRate: 45,
-        difficulty: "Advanced",
-      },
-      {
-        id: 4,
-        name: "JavaScript ES6+ Complete Guide",
-        category: "Programming",
-        totalUsers: 298,
-        completedUsers: 198,
-        activeUsers: 100,
-        completionRate: 66,
-        difficulty: "Intermediate",
-      },
-      {
-        id: 5,
-        name: "Node.js Backend Development",
-        category: "Backend",
-        totalUsers: 267,
-        completedUsers: 89,
-        activeUsers: 178,
-        completionRate: 33,
-        difficulty: "Intermediate",
-      },
-      {
-        id: 6,
-        name: "Flutter Mobile App Development",
-        category: "Mobile",
-        totalUsers: 234,
-        completedUsers: 156,
-        activeUsers: 78,
-        completionRate: 67,
-        difficulty: "Intermediate",
-      },
-    ],
+    courseData: [],
 
     // Topic-wise enrollments data
     topicWiseData: [
@@ -196,38 +136,7 @@ const AdminDashboard = () => {
     ],
 
     // Recent user activities
-    recentActivity: [
-      {
-        user: "Alice Johnson",
-        action: "enrolled in React Advanced",
-        time: "2 min ago",
-        type: "enrollment",
-      },
-      {
-        user: "Bob Smith",
-        action: "completed Python Basics",
-        time: "5 min ago",
-        type: "completion",
-      },
-      {
-        user: "Carol Davis",
-        action: "started Data Science course",
-        time: "8 min ago",
-        type: "enrollment",
-      },
-      {
-        user: "David Wilson",
-        action: "enrolled in Flutter course",
-        time: "12 min ago",
-        type: "enrollment",
-      },
-      {
-        user: "Emma Brown",
-        action: "completed JS Fundamentals",
-        time: "15 min ago",
-        type: "completion",
-      },
-    ],
+    recentActivity: [],
   });
 
   // Auth check
@@ -331,7 +240,7 @@ const AdminDashboard = () => {
           return;
         }
         console.log("User activities apiResponse: ", apiResponse);
-        
+
         const activities = apiResponse?.activities;
 
         const formattedActivities = activities.map((activity) => ({
@@ -352,6 +261,28 @@ const AdminDashboard = () => {
 
     fetchUserActivities();
   }, []);
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try{
+        const apiResponse = await GetCourseDataApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error in fetching course data: ", apiResponse);
+          return;
+        }
+        console.log("Course data apiResponse: ", apiResponse);
+        setAdminStats((prev) => ({
+          ...prev,
+          courseData: apiResponse?.courseData || [],
+        }));
+      }
+      catch(err){
+        console.log("Err in Getting Course Data: ", err.message);
+      }
+    }
+
+    fetchCourseData();
+  },[])
 
   const handleLogout = () => {
     removeAuth();
@@ -1035,7 +966,7 @@ const AdminDashboard = () => {
                             isDark ? "text-white" : "text-gray-900"
                           } mb-1`}
                         >
-                          {course.name}
+                          {course.title}
                         </h4>
                         <div className="flex items-center space-x-2">
                           <span
@@ -1085,7 +1016,7 @@ const AdminDashboard = () => {
                             isDark ? "text-green-400" : "text-green-600"
                           }`}
                         >
-                          {course.completedUsers}
+                          {course.totalCompletions}
                         </p>
                         <p
                           className={`text-xs ${
@@ -1101,7 +1032,7 @@ const AdminDashboard = () => {
                             isDark ? "text-blue-400" : "text-blue-600"
                           }`}
                         >
-                          {course.activeUsers}
+                          {course.totalUsers- course.totalCompletions}
                         </p>
                         <p
                           className={`text-xs ${

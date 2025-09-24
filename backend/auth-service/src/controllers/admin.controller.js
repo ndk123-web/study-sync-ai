@@ -177,9 +177,49 @@ const GetUserActivitiesController = wrapper(async (req, res) => {
     );
 });
 
+const GetAdminCourseDataController = wrapper(async (req, res) => {
+  const courses = await Course.find({});
+  const courseData = [];
+
+  for (let course of courses) {
+    const enrollments = await Enrollment.find({
+      courseId: course._id,
+      type: "course",
+    });
+    const totalUsers = enrollments.length;
+    let totalCompletions = 0;
+    for (let enrollment of enrollments) {
+      if (enrollment.completed) totalCompletions++;
+    }
+
+    let completionRate = totalUsers
+      ? ((totalCompletions / totalUsers) * 100).toFixed(2)
+      : 0;
+
+    courseData.push({
+      courseId: course._id,
+      title: course.title,
+      totalUsers,
+      totalCompletions,
+      completionRate,
+      category: course.category,    
+      difficulty: course.difficulty || "intermediate",
+    });
+  }
+
+  console.log("courseData", courseData);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { courseData }, "Course data fetched successfully")
+    );
+});
+
 export {
   GetAdminStatsController,
   GetAdminSpecificController,
   GetAdminGraphController,
-  GetUserActivitiesController
+  GetUserActivitiesController,
+  GetAdminCourseDataController
 };

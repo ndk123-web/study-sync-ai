@@ -121,9 +121,38 @@ const GetUserActivitiesApi = async () => {
   }
 };
 
+const GetCourseDataApi = async () => {
+  try {
+    const backendResponse = await axios.get(
+      "http://localhost:5000/api/v1/admin/get-course-data",
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("User Activities backendApiResponse: ", backendResponse.data);
+
+    return {
+      status: backendResponse?.data?.statusCode,
+      courseData: backendResponse?.data?.data?.courseData || [],
+    };
+  } catch (err) {
+    console.log("Err in Getting Course Data Api: ", err.message);
+    return {
+      status: err.response?.status || 500,
+      data: err.response?.data || {},
+      message: err.message,
+    };
+  }
+};
+
 export {
   GetAdminStatsControllerApi,
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
   GetUserActivitiesApi,
+  GetCourseDataApi,
 };
