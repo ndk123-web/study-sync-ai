@@ -35,6 +35,7 @@ import * as Recharts from "recharts";
 import {
   GetAdminStatsControllerApi,
   GetAdminSpecificControllerApi,
+  GetAdminGraphApi,
 } from "../api/AdminApis";
 
 const AdminDashboard = () => {
@@ -309,6 +310,29 @@ const AdminDashboard = () => {
 
     fetchAdminSpecificStats();
   }, []);
+
+  useEffect(() => {
+    const getAdminGraphData = async () => {
+      try {
+        const apiResponse = await GetAdminGraphApi(selectedYear);
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error in fetching admin graph data: ", apiResponse);
+          return;
+        }
+        console.log("Admin graph data apiResponse: ", apiResponse);
+        setAdminStats((prev) => ({
+          ...prev,
+          userActivityData: {
+            ...prev.userActivityData,
+            [selectedYear]: apiResponse?.graphData || [],
+          },
+        }));
+      } catch (err) {
+        console.log("Err in Getting Admin Graph Data: ", err.message);
+      }
+    };
+    getAdminGraphData();
+  }, [selectedYear]);
 
   const handleLogout = () => {
     removeAuth();
