@@ -50,7 +50,7 @@ const AdminDashboard = () => {
     ).toString(CryptoJs.enc.Utf8)
   );
   const setMode = useThemeStore((state) => state.setMode);
-  const { isAuth, removeAuth } = useIsAuth();
+  const { isAuth, removeAuth, removeAdmin } = useIsAuth();
   const { username, logoutUser } = useUserStore();
 
   const isDark = theme === "dark";
@@ -268,8 +268,16 @@ const AdminDashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    removeAuth();
+    removeAdmin(); // This will set both isAuth: false and isAdmin: false
     logoutUser();
+    // Store logout notification for signin page
+    localStorage.setItem(
+      "logoutUser",
+      JSON.stringify({
+        username: "Admin",
+      })
+    );
+    window.location.href = "/signin"; // Force navigation to signin
   };
 
   // Chart tooltip component
