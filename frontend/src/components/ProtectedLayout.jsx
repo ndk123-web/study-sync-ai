@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const ProtectedLayout = ({ children }) => {
   const isAuth = useIsAuth((state) => state.isAuth);
+  const isAdmin = useIsAuth((state) => state.isAdmin);
   const [showLoader, setShowLoader] = useState(true);
   const removeAuth = useIsAuth((state) => state.removeAuth);
   const logoutUser = useUserStore((state) => state.logoutUser);
@@ -26,6 +27,11 @@ const ProtectedLayout = ({ children }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Redirect admin users to admin dashboard
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
   if (showLoader && !isAuth) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
@@ -35,7 +41,9 @@ const ProtectedLayout = ({ children }) => {
     );
   }
 
-  return isAuth ? children : (
+  return isAuth ? (
+    children
+  ) : (
     <>
       {logoutUser()}
       {removeCurrentPlaylist()}

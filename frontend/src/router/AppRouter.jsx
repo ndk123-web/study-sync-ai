@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import ErrorFallback from "../components/ErrorFallback.jsx";
 import ProtectedLayout from "../components/ProtectedLayout.jsx";
+import ProtectedAdminLayout from "../components/ProtectedAdminLayout.jsx";
 import SignIn from "../pages/SignIn.jsx";
 import SignUp from "../pages/SignUp.jsx";
 import Home from "../pages/Home.jsx";
@@ -75,9 +76,9 @@ const AppRouter = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedLayout>
+      <ProtectedAdminLayout>
         <AdminDashboard />
-      </ProtectedLayout>
+      </ProtectedAdminLayout>
     ),
     errorElement: <ErrorFallback />,
   },
