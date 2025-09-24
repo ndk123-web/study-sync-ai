@@ -49,7 +49,8 @@ const GetAdminSpecificControllerApi = async () => {
 
     return {
       status: backendResponse?.data?.statusCode,
-      userSpecificCourses: backendResponse?.data?.data?.userSpecificCourses || 0,
+      userSpecificCourses:
+        backendResponse?.data?.data?.userSpecificCourses || 0,
       userSpecificVideos: backendResponse?.data?.data?.userSpecificVideos || 0,
       userSpecificPdfs: backendResponse?.data?.data?.userSpecificPdfs || 0,
     };
@@ -63,4 +64,37 @@ const GetAdminSpecificControllerApi = async () => {
   }
 };
 
-export { GetAdminStatsControllerApi, GetAdminSpecificControllerApi };
+const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
+  try {
+    const backendResponse = await axios.get(
+      "http://localhost:5000/api/v1/admin/get-admin-graph",
+      {
+        params: { year },
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Graph data backendApiResponse: ", backendResponse.data);
+
+    return {
+      status: backendResponse?.data?.statusCode,
+      graphData: backendResponse?.data?.data?.graphData || [],
+    };
+  } catch (err) {
+    console.log("Err in Getting All Courses Api: ", err.message);
+    return {
+      status: err.response?.status || 500,
+      data: err.response?.data || {},
+      message: err.message,
+    };
+  }
+};
+
+export {
+  GetAdminStatsControllerApi,
+  GetAdminSpecificControllerApi,
+  GetAdminGraphApi,
+};
