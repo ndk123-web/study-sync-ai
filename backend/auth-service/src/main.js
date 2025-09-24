@@ -31,6 +31,7 @@ import notesRouter from './routes/notes.routes.js';
 import chatRouter from './routes/chat.routes.js';
 import dashboardRouter from './routes/dashboard.route.js';
 import videoRouter from './routes/video.routes.js';
+import adminRouter from './routes/admin.routes.js';
 
 // all routes
 app.use('/api/v1/user', userRouter);
@@ -39,6 +40,7 @@ app.use('/api/v1/notes', notesRouter);
 app.use('/api/v1/chat',chatRouter);
 app.use('/api/v1/dashboard', dashboardRouter);  
 app.use('/api/v1/video', videoRouter); 
+app.use("/api/v1/admin", adminRouter);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
