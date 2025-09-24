@@ -93,8 +93,37 @@ const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
   }
 };
 
+const GetUserActivitiesApi = async () => {
+  try {
+    const backendResponse = await axios.get(
+      "http://localhost:5000/api/v1/admin/get-user-activities",
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("User Activities backendApiResponse: ", backendResponse.data);
+
+    return {
+      status: backendResponse?.data?.statusCode,
+      activities: backendResponse?.data?.data?.activities || [],
+    };
+  } catch (err) {
+    console.log("Err in Getting User Activities Api: ", err.message);
+    return {
+      status: err.response?.status || 500,
+      data: err.response?.data || {},
+      message: err.message,
+    };
+  }
+};
+
 export {
   GetAdminStatsControllerApi,
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
+  GetUserActivitiesApi,
 };
