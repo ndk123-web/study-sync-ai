@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, act } from "react";
 import {
   Users,
   BookOpen,
@@ -36,6 +36,7 @@ import {
   GetAdminStatsControllerApi,
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
+  GetUserActivitiesApi,
 } from "../api/AdminApis";
 
 const AdminDashboard = () => {
@@ -313,6 +314,44 @@ const AdminDashboard = () => {
     };
     getAdminGraphData();
   }, [selectedYear]);
+
+  useEffect(() => {
+    //  {
+    //   user: "Alice Johnson",
+    //   action: "enrolled in React Advanced",
+    //   time: "2 min ago",
+    //   type: "enrollment",
+    // },
+
+    const fetchUserActivities = async () => {
+      try {
+        const apiResponse = await GetUserActivitiesApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error in fetching user activities: ", apiResponse);
+          return;
+        }
+        console.log("User activities apiResponse: ", apiResponse);
+        
+        const activities = apiResponse?.activities;
+
+        const formattedActivities = activities.map((activity) => ({
+          user: activity?.userId?.username || "Unknown User",
+          action: activity?.description || "No Description",
+          time: activity?.createdAt?.toLocaleString() || "Unknown Time",
+          type: activity?.type || "Unknown Type",
+        }));
+
+        setAdminStats((prev) => ({
+          ...prev,
+          recentActivity: formattedActivities,
+        }));
+      } catch (err) {
+        console.log("Err in Getting User Activities: ", err.message);
+      }
+    };
+
+    fetchUserActivities();
+  }, []);
 
   const handleLogout = () => {
     removeAuth();

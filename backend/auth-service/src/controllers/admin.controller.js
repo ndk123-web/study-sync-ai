@@ -5,6 +5,7 @@ import wrapper from "../utils/Wrapper.js";
 import User from "../models/user.models.js";
 import Enrollment from "../models/enrollments.models.js";
 import Course from "../models/courses.models.js";
+import Activity from "../models/activity.models.js";
 
 const GetAdminStatsController = wrapper(async (req, res) => {
   const totalUsers = await User.find({}).countDocuments();
@@ -158,8 +159,27 @@ const GetAdminGraphController = wrapper(async (req, res) => {
     );
 });
 
+const GetUserActivitiesController = wrapper(async (req, res) => {
+  const activities = await Activity.find({})
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .populate("userId", "username email");
+  console.log("activities", activities);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { activities },
+        "User activities fetched successfully"
+      )
+    );
+});
+
 export {
   GetAdminStatsController,
   GetAdminSpecificController,
   GetAdminGraphController,
+  GetUserActivitiesController
 };
