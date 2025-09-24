@@ -37,7 +37,8 @@ import {
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
   GetUserActivitiesApi,
-  GetCourseDataApi
+  GetCourseDataApi,
+  GetCategoryWiseDataApi,
 } from "../api/AdminApis";
 
 const AdminDashboard = () => {
@@ -78,44 +79,7 @@ const AdminDashboard = () => {
     courseData: [],
 
     // Topic-wise enrollments data
-    topicWiseData: [
-      {
-        topic: "React Development",
-        enrollments: 856,
-        courses: 3,
-        completions: 421,
-      },
-      {
-        topic: "Python Programming",
-        enrollments: 743,
-        courses: 2,
-        completions: 489,
-      },
-      {
-        topic: "Data Science & AI",
-        enrollments: 612,
-        courses: 2,
-        completions: 145,
-      },
-      {
-        topic: "JavaScript Fundamentals",
-        enrollments: 534,
-        courses: 2,
-        completions: 298,
-      },
-      {
-        topic: "Node.js Backend",
-        enrollments: 423,
-        courses: 1,
-        completions: 89,
-      },
-      {
-        topic: "Flutter Mobile Dev",
-        enrollments: 288,
-        courses: 2,
-        completions: 156,
-      },
-    ],
+    topicWiseData: [],
 
     // User activity over time by year
     userActivityData: {},
@@ -264,7 +228,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchCourseData = async () => {
-      try{
+      try {
         const apiResponse = await GetCourseDataApi();
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error in fetching course data: ", apiResponse);
@@ -275,14 +239,33 @@ const AdminDashboard = () => {
           ...prev,
           courseData: apiResponse?.courseData || [],
         }));
-      }
-      catch(err){
+      } catch (err) {
         console.log("Err in Getting Course Data: ", err.message);
       }
-    }
+    };
 
     fetchCourseData();
-  },[])
+  }, []);
+
+  useEffect(() => {
+    const fetchCategoryWiseData = async () => {
+      try {
+        const apiResponse = await GetCategoryWiseDataApi();
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.log("Error in fetching category wise data: ", apiResponse);
+          return;
+        }
+        console.log("Category wise data apiResponse: ", apiResponse);
+        setAdminStats((prev) => ({
+          ...prev,
+          topicWiseData: apiResponse?.categoryWiseData || [],
+        }));
+      } catch (err) {
+        console.log("Err in Getting Category Wise Data: ", err.message);
+      }
+    };
+    fetchCategoryWiseData();
+  }, []);
 
   const handleLogout = () => {
     removeAuth();
@@ -1032,7 +1015,7 @@ const AdminDashboard = () => {
                             isDark ? "text-blue-400" : "text-blue-600"
                           }`}
                         >
-                          {course.totalUsers- course.totalCompletions}
+                          {course.totalUsers - course.totalCompletions}
                         </p>
                         <p
                           className={`text-xs ${
@@ -1211,7 +1194,7 @@ const AdminDashboard = () => {
                         isDark ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      {item.topic}
+                      {item.category}
                     </h4>
                     <span
                       className={`text-sm px-3 py-1 rounded-full ${
@@ -1220,7 +1203,7 @@ const AdminDashboard = () => {
                           : "bg-blue-100 text-blue-800"
                       }`}
                     >
-                      {item.courses} courses
+                      {item.totalCategoryCourses} courses
                     </span>
                   </div>
 
@@ -1238,7 +1221,7 @@ const AdminDashboard = () => {
                           isDark ? "text-blue-400" : "text-blue-600"
                         }`}
                       >
-                        {item.enrollments.toLocaleString()}
+                        {item.totalEnrollments}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -1254,7 +1237,7 @@ const AdminDashboard = () => {
                           isDark ? "text-green-400" : "text-green-600"
                         }`}
                       >
-                        {item.completions.toLocaleString()}
+                        {item.totalCompletions}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -1270,10 +1253,7 @@ const AdminDashboard = () => {
                           isDark ? "text-purple-400" : "text-purple-600"
                         }`}
                       >
-                        {Math.round(
-                          (item.completions / item.enrollments) * 100
-                        )}
-                        %
+                        {item.completionRate}%
                       </span>
                     </div>
                   </div>
@@ -1288,10 +1268,7 @@ const AdminDashboard = () => {
                       <span
                         className={isDark ? "text-gray-400" : "text-gray-600"}
                       >
-                        {Math.round(
-                          (item.completions / item.enrollments) * 100
-                        )}
-                        %
+                        {item.progress}%
                       </span>
                     </div>
                     <div
@@ -1302,9 +1279,7 @@ const AdminDashboard = () => {
                       <div
                         className="h-3 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full transition-all duration-500"
                         style={{
-                          width: `${
-                            (item.completions / item.enrollments) * 100
-                          }%`,
+                          width: `${item.progress}%`,
                         }}
                       />
                     </div>

@@ -202,7 +202,7 @@ const GetAdminCourseDataController = wrapper(async (req, res) => {
       totalUsers,
       totalCompletions,
       completionRate,
-      category: course.category,    
+      category: course.category,
       difficulty: course.difficulty || "intermediate",
     });
   }
@@ -216,10 +216,67 @@ const GetAdminCourseDataController = wrapper(async (req, res) => {
     );
 });
 
+const GetCategoryWiseCourseDataController = wrapper(async (req, res) => {
+  const categories = await Course.distinct("category");
+  const categoryWiseData = [];
+
+  for (let category of categories) {
+    const courses = await Course.find({ category });
+    let totalCategoryCourses = courses.length;
+    let totalEnrollments = 0;
+    let totalCompletions = 0;
+    let totalProgress = 0;
+
+    for (let course of courses) {
+      const enrollments = await Enrollment.find({
+        courseId: course._id,
+        type: "course",
+      });
+
+      totalEnrollments += enrollments.length;
+
+      for (let enrollment of enrollments) {
+        if (enrollment.completed) totalCompletions++;
+        totalProgress += parseInt(enrollment.progress) || 0; // raw progress %
+      }
+    }
+
+    let completionRate = 0;
+    let avgProgress = 0;
+
+    if (totalEnrollments > 0) {
+      completionRate = (totalCompletions / totalEnrollments) * 100;
+      avgProgress = totalProgress / totalEnrollments; // ✅ average percentage
+    }
+
+    categoryWiseData.push({
+      category,
+      totalCategoryCourses,
+      totalEnrollments,
+      totalCompletions,
+      completionRate: completionRate.toFixed(2),
+      progress: avgProgress.toFixed(2), // ✅ average progress %
+    });
+  }
+
+  console.log("categoryWiseData", categoryWiseData);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { categoryWiseData },
+        "Category-wise course data fetched successfully"
+      )
+    );
+});
+
 export {
   GetAdminStatsController,
   GetAdminSpecificController,
   GetAdminGraphController,
   GetUserActivitiesController,
-  GetAdminCourseDataController
+  GetAdminCourseDataController,
+  GetCategoryWiseCourseDataController,
 };

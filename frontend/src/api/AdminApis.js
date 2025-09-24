@@ -149,10 +149,39 @@ const GetCourseDataApi = async () => {
   }
 };
 
+const GetCategoryWiseDataApi = async () => {
+  try {
+    const backendResponse = await axios.get(
+      "http://localhost:5000/api/v1/admin/get-category-wise-course-data",
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("User Activities backendApiResponse: ", backendResponse.data);
+
+    return {
+      status: backendResponse?.data?.statusCode,
+      categoryWiseData: backendResponse?.data?.data?.categoryWiseData || [],
+    };
+  } catch (err) {
+    console.log("Err in Getting Course Data Api: ", err.message);
+    return {
+      status: err.response?.status || 500,
+      data: err.response?.data || {},
+      message: err.message,
+    };
+  }
+};
+
 export {
   GetAdminStatsControllerApi,
   GetAdminSpecificControllerApi,
   GetAdminGraphApi,
   GetUserActivitiesApi,
   GetCourseDataApi,
+  GetCategoryWiseDataApi
 };
