@@ -49,6 +49,7 @@ import { TrackPlaylistIndexApi } from "../api/TrackPlaylistIndex.js";
 import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
+import { GetRecommendedCoursesApi } from "../api/GetRecommendedCoursesApi.js";
 import { GetSummaryOfCurrentCourse } from "../api/GetSummaryOfCurrentCourse.js";
 import { SendAiChatApi } from "../api/SendAiChatApi.js";
 import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
@@ -760,7 +761,7 @@ const CoursesInterface = () => {
           role: "course",
         });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-          alert("Error fetching user chats");
+          // alert("Error fetching user chats");
           return;
         }
 
@@ -4265,6 +4266,7 @@ const RecommendedCoursesSection = ({ isDark }) => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [recommendationMeta, setRecommendationMeta] = useState(null);
   
   // Import navigate hook properly
   const navigate = useNavigate();
@@ -4348,17 +4350,71 @@ const RecommendedCoursesSection = ({ isDark }) => {
     }
   ];
 
-  // Simulate API call with loading
+  // Fetch real recommendations from TensorFlow model
   useEffect(() => {
     const fetchRecommendedCourses = async () => {
       setIsLoading(true);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For now, use dummy data
-      setRecommendedCourses(dummyRecommendedCourses);
-      setIsLoading(false);
+      try {
+        console.log("🤖 Fetching AI-powered course recommendations...");
+        const apiResponse = await GetRecommendedCoursesApi();
+        console.log("🎯 Recommendation API Response:", apiResponse);
+        
+        if (apiResponse.status === 200 || apiResponse.status === 201) {
+          const recommendations = apiResponse.data.recommendations || [];
+          console.log("✅ Got recommendations:", recommendations.length, "courses");
+          
+          // Store meta information about recommendations
+          setRecommendationMeta({
+            predicted_categories: apiResponse.meta?.predicted_categories || [],
+            total_enrollments: apiResponse.meta?.total_enrollments || 0,
+            model_type: apiResponse.meta?.model_type || "unknown",
+            reason: apiResponse.meta?.reason || apiResponse.data?.reason || ""
+          });
+          
+          // Map backend course data to frontend format
+          const formattedCourses = recommendations.map(course => ({
+            id: course.courseId || course._id,
+            courseId: course.courseId || course._id,
+            title: course.title || course.courseName || "Untitled Course",
+            instructor: course.instructor || course.createdBy || "Expert Instructor",
+            category: course.category || "General",
+            level: course.level || course.difficulty || "Beginner",
+            duration: course.duration || "Varies",
+            students: course.students || course.studentsEnrolled || "0",
+            rating: course.rating || 4.5,
+            price: course.price || "Free",
+            thumbnail: course.thumbnail || course.thumbnailUrl || `https://via.placeholder.com/400x300?text=${encodeURIComponent(course.title || 'Course')}`,
+            lessons: course.lessons || course.totalLessons || course.videoCount || 10,
+            description: course.description || course.shortDescription || "Comprehensive course to enhance your skills"
+          }));
+          
+          setRecommendedCourses(formattedCourses);
+          console.log("📚 Formatted courses:", formattedCourses);
+          
+        } else {
+          console.warn("❌ API returned non-success status:", apiResponse.status);
+          console.warn("📝 API message:", apiResponse.message);
+          
+          // Fallback to dummy data if API fails
+          console.log("🔄 Falling back to dummy data...");
+          setRecommendedCourses(dummyRecommendedCourses);
+          setRecommendationMeta({
+            reason: "Using fallback data due to API error"
+          });
+        }
+      } catch (error) {
+        console.error("💥 Error fetching recommendations:", error);
+        console.log("🔄 Falling back to dummy data due to error...");
+        
+        // Fallback to dummy data on error
+        setRecommendedCourses(dummyRecommendedCourses);
+        setRecommendationMeta({
+          reason: "Using fallback data due to connection error"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchRecommendedCourses();
@@ -4693,7 +4749,14 @@ const RecommendedCoursesSection = ({ isDark }) => {
           <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
             {isLoading 
               ? "AI is analyzing your learning pattern..." 
-              : "Personalized course recommendations based on your learning journey"
+              : (recommendationMeta?.reason 
+                ? recommendationMeta.reason
+                : `Personalized course recommendations using ${recommendationMeta?.model_type || "AI"} model${
+                    recommendationMeta?.predicted_categories?.length > 0 
+                      ? ` • Predicted interests: ${recommendationMeta.predicted_categories.join(", ")}`
+                      : ""
+                  }`
+              )
             }
           </p>
         </div>

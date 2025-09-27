@@ -2,6 +2,7 @@ import joblib
 import numpy as np
 import os
 import tensorflow as tf
+from datetime import datetime
 from app.db.db import db
 from app.utils.ApiResponse import ApiResponse
 from bson import ObjectId
@@ -9,7 +10,7 @@ from bson import ObjectId
 # Collections
 user_collection = db["users"]
 quiz_collection = db["quizzes"]
-enrollment_collection = db["enrollments"]
+enrollment_collection = db["enrollmentcourses"]
 courses_collection = db["courses"]
 
 # Load TensorFlow models once when module is imported
@@ -77,7 +78,23 @@ CATEGORY_TO_COURSES = {
     "DEVOPS": ["DEVOPS2025HINDI"]
 }
 
-def encode_user_interactions(user_enrollments):
+async def map_objectid_to_courseid(course_object_ids):
+    """Map MongoDB ObjectIds to course codes (courseId field)"""
+    try:
+        object_ids = [ObjectId(str(obj_id)) for obj_id in course_object_ids if obj_id]
+        cursor = courses_collection.find({"_id": {"$in": object_ids}}, {"_id": 1, "courseId": 1})
+        
+        object_id_to_course_code = {}
+        async for course in cursor:
+            object_id_to_course_code[str(course["_id"])] = course.get("courseId", "")
+        
+        print(f"🗺️ DEBUG: ObjectId to CourseId mapping: {object_id_to_course_code}")
+        return object_id_to_course_code
+    except Exception as e:
+        print(f"❌ ERROR mapping ObjectIds to courseIds: {e}")
+        return {}
+
+def encode_user_interactions(user_enrollments, object_id_to_course_code=None):
     """Convert user enrollments to feature vector for ML model"""
     NUM_FEATURES_PER_COURSE = 2  # progress, quiz_score
     INPUT_DIM = len(MASTER_COURSES) * NUM_FEATURES_PER_COURSE
@@ -85,16 +102,30 @@ def encode_user_interactions(user_enrollments):
     
     vec = np.zeros(INPUT_DIM, dtype=np.float32)
     
+    print(f"🔍 DEBUG: Processing {len(user_enrollments)} enrollments for ML model")
+    
     for enrollment in user_enrollments:
-        course_id = enrollment.get("courseId", "")
+        enrollment_course_id = enrollment.get("courseId", "")
+        
+        # Map ObjectId to course code if mapping is provided
+        if object_id_to_course_code and str(enrollment_course_id) in object_id_to_course_code:
+            course_id = object_id_to_course_code[str(enrollment_course_id)]
+            print(f"📝 DEBUG: Mapped {enrollment_course_id} -> {course_id}")
+        else:
+            course_id = str(enrollment_course_id)
+            print(f"⚠️ DEBUG: No mapping found for {enrollment_course_id}, using as-is")
+        
+        # Check if course is in our master list
         if course_id not in course_to_index:
+            print(f"❌ DEBUG: Course {course_id} not in MASTER_COURSES list, skipping")
             continue
             
         idx = course_to_index[course_id]
         base = idx * NUM_FEATURES_PER_COURSE
         
         # Progress (0-1)
-        progress = enrollment.get("progress", 0) / 100.0 if enrollment.get("progress", 0) > 1 else enrollment.get("progress", 0)
+        progress_raw = enrollment.get("progress", 0)
+        progress = float(progress_raw) / 100.0 if float(progress_raw) > 1 else float(progress_raw)
         vec[base] = progress
         
         # Quiz score (0-1) - calculate average if multiple quizzes
@@ -103,8 +134,11 @@ def encode_user_interactions(user_enrollments):
             avg_quiz_score = np.mean(quiz_scores) / 100.0 if np.mean(quiz_scores) > 1 else np.mean(quiz_scores)
             vec[base + 1] = avg_quiz_score
         else:
-            vec[base + 1] = 0.0
+            vec[base + 1] = 0.0  # No quiz data available
+        
+        print(f"✅ DEBUG: {course_id} -> progress: {progress:.2f}, quiz: {vec[base + 1]:.2f}")
     
+    print(f"🎯 DEBUG: Feature vector shape: {vec.shape}, non-zero elements: {np.count_nonzero(vec)}")
     return vec.reshape(1, -1)
 
 def predict_categories_tensorflow(feature_vector, threshold=0.3):
@@ -150,13 +184,29 @@ def predict_categories_sklearn(feature_vector):
         print(f"Error in sklearn prediction: {e}")
         return [], np.array([])
 
+def serialize_datetime(obj):
+    """Helper function to serialize datetime objects"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {key: serialize_datetime(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_datetime(item) for item in obj]
+    else:
+        return obj
+
 async def get_course_details(course_ids):
     """Get course details from database"""
     try:
         cursor = courses_collection.find({"courseId": {"$in": course_ids}})
         courses = []
         async for course in cursor:
+            # Convert ObjectId to string
             course["_id"] = str(course["_id"])
+            
+            # Serialize all datetime objects in the course document
+            course = serialize_datetime(course)
+            
             courses.append(course)
         return courses
     except Exception as e:
@@ -170,16 +220,96 @@ async def get_recommendations(userId: str):
         if model is None or mlb_model is None:
             return ApiResponse.send(500, "ML models not available")
         
-        # Find user
-        user = await user_collection.find_one({"uid": userId})
-        if not user:
-            return ApiResponse.send(404, "User not found")
+        # Debug: Log the userId from JWT
+        print(f"🔍 DEBUG: Looking for user with uid: {userId}")
         
-        # Get user enrollments
-        user_enrollments_cursor = enrollment_collection.find({"userId": user["_id"]})
+        # Find user
+        user = await user_collection.find_one({ "uid" : userId })
+        if not user:
+            print(f"❌ DEBUG: User not found with uid: {userId}")
+            return ApiResponse.send(404, {"error": "User not found"}, "User not found")
+        
+        print(f"✅ DEBUG: Found user: {user.get('_id')} with uid: {user.get('uid')}")
+        
+        # Get user enrollments - try multiple query patterns
+        user_object_id = user["_id"]
+        print(f"🔍 DEBUG: Looking for enrollments with userId: {user_object_id}")
+        
+        # Correct enrollment query - use uid field and filter by type: "course"
+        enrollment_query = {
+            "uid": userId,  # Use uid field (not userId)
+            "type": "course"  # Filter for course enrollments only
+        }
+        
+        print(f"🔍 DEBUG: Using correct enrollment query: {enrollment_query}")
+        print(f"🔍 DEBUG: Query details - uid: '{userId}' (type: {type(userId)})")
+        print(f"🔍 DEBUG: Query details - type: 'course' (type: {type('course')})")
+        
+        # Try multiple approaches to ensure we find the enrollments
         user_enrollments = []
-        async for enrollment in user_enrollments_cursor:
-            user_enrollments.append(enrollment)
+        
+        # Approach 1: Direct query with string values
+        try:
+            user_enrollments_cursor = enrollment_collection.find(enrollment_query)
+            async for enrollment in user_enrollments_cursor:
+                user_enrollments.append(enrollment)
+            print(f"✅ DEBUG: Approach 1 - Found {len(user_enrollments)} enrollments with direct query")
+        except Exception as e:
+            print(f"❌ DEBUG: Approach 1 failed: {e}")
+        
+        # If no results, try alternative queries
+        if not user_enrollments:
+            print("🔍 DEBUG: Trying alternative queries...")
+            
+            # Approach 2: Just uid filter (no type filter)
+            try:
+                alt_cursor = enrollment_collection.find({"uid": userId})
+                alt_enrollments = []
+                async for enrollment in alt_cursor:
+                    alt_enrollments.append(enrollment)
+                print(f"✅ DEBUG: Approach 2 - Found {len(alt_enrollments)} enrollments with uid only")
+                
+                # Filter for course type manually
+                for enrollment in alt_enrollments:
+                    if enrollment.get("type") == "course":
+                        user_enrollments.append(enrollment)
+                print(f"✅ DEBUG: After manual filtering: {len(user_enrollments)} course enrollments")
+            except Exception as e:
+                print(f"❌ DEBUG: Approach 2 failed: {e}")
+        
+        print(f"📊 DEBUG: Final enrollment count: {len(user_enrollments)}")
+        
+        print(f"📊 DEBUG: Total enrollments found: {len(user_enrollments)}")
+        
+        # Debug: Show sample enrollment data if found
+        if user_enrollments:
+            sample_enrollment = user_enrollments[0]
+            print(f"📝 DEBUG: Sample enrollment structure: {list(sample_enrollment.keys())}")
+            print(f"📝 DEBUG: Sample courseId: {sample_enrollment.get('courseId', 'NOT_FOUND')}")
+            print(f"📝 DEBUG: Sample progress: {sample_enrollment.get('progress', 'NOT_FOUND')}")
+            print(f"📝 DEBUG: Sample quizScores: {sample_enrollment.get('quizScores', 'NOT_FOUND')}")
+            print(f"📝 DEBUG: Sample uid: {sample_enrollment.get('uid', 'NOT_FOUND')}")
+            print(f"📝 DEBUG: Sample type: {sample_enrollment.get('type', 'NOT_FOUND')}")
+        else:
+            print("❌ DEBUG: Still no enrollments found!")
+            # Let's see if there are ANY documents with this uid at all
+            print("🔍 DEBUG: Checking if ANY documents exist with this uid...")
+            try:
+                any_cursor = enrollment_collection.find({"uid": userId}).limit(1)
+                any_docs = []
+                async for doc in any_cursor:
+                    any_docs.append(doc)
+                
+                if any_docs:
+                    doc = any_docs[0]
+                    print(f"📋 DEBUG: Found document with uid! Fields: {list(doc.keys())}")
+                    print(f"📋 DEBUG: Document uid: '{doc.get('uid')}' (type: {type(doc.get('uid'))})")
+                    print(f"📋 DEBUG: Document type: '{doc.get('type')}' (type: {type(doc.get('type'))})")
+                    print(f"📋 DEBUG: Full document: {doc}")
+                else:
+                    print("❌ DEBUG: No documents found with this uid at all!")
+            except Exception as e:
+                print(f"❌ DEBUG: Error checking for uid documents: {e}")
         
         if not user_enrollments:
             # New user - return popular courses from different categories
@@ -188,13 +318,20 @@ async def get_recommendations(userId: str):
                 "DEVOPS2025HINDI", "PYTHONDATASCIENCE2025ENGLISH"
             ]
             course_details = await get_course_details(default_recommendations)
-            return ApiResponse.send(200, "Default recommendations for new user", {
+            return ApiResponse.send(200, {
                 "recommendations": course_details,
-                "reason": "Popular courses for beginners"
-            })
+                "reason": "Popular courses for beginners",
+                "predicted_categories": [],
+                "total_enrollments": 0,
+                "model_type": "default"
+            }, "Default recommendations for new user")
         
-        # Encode user interactions for ML model
-        feature_vector = encode_user_interactions(user_enrollments)
+        # Get ObjectId to courseId mapping for enrolled courses
+        course_object_ids = [enrollment.get("courseId") for enrollment in user_enrollments if enrollment.get("courseId")]
+        object_id_to_course_code = await map_objectid_to_courseid(course_object_ids)
+        
+        # Encode user interactions for ML model with proper course code mapping
+        feature_vector = encode_user_interactions(user_enrollments, object_id_to_course_code)
         
         # Get ML predictions based on model type
         if MODEL_TYPE == "tensorflow":
@@ -207,16 +344,23 @@ async def get_recommendations(userId: str):
         
         print(f"Predicted categories for user {userId}: {predicted_categories}")
         
-        # Get enrolled course IDs to avoid recommending them again
-        enrolled_course_ids = set(enrollment.get("courseId") for enrollment in user_enrollments)
+        # Get enrolled course IDs (mapped to course codes) for reference (not excluding)
+        enrolled_course_ids = set()
+        for enrollment in user_enrollments:
+            object_id = str(enrollment.get("courseId", ""))
+            if object_id in object_id_to_course_code:
+                enrolled_course_ids.add(object_id_to_course_code[object_id])
         
-        # Generate recommendations based on predicted categories
+        print(f"� DEBUG: User's enrolled courses: {enrolled_course_ids}")
+        
+        # Generate recommendations based on predicted categories (including enrolled courses for demo)
         recommended_courses = []
         for category in predicted_categories:
             if category in CATEGORY_TO_COURSES:
                 for course_id in CATEGORY_TO_COURSES[category]:
-                    if course_id not in enrolled_course_ids and course_id not in recommended_courses:
+                    if course_id not in recommended_courses:  # Only avoid duplicates
                         recommended_courses.append(course_id)
+                        print(f"🎯 DEBUG: Added {course_id} from category {category}")
         
         # If no recommendations from ML, use intelligent fallback logic
         if not recommended_courses:
@@ -225,14 +369,27 @@ async def get_recommendations(userId: str):
             course_performance = {}
             
             for enrollment in user_enrollments:
-                course_id = enrollment.get("courseId", "")
-                progress = enrollment.get("progress", 0)
+                # Map ObjectId to course code
+                object_id = str(enrollment.get("courseId", ""))
+                course_id = object_id_to_course_code.get(object_id, object_id)
+                
+                # Ensure progress and quiz scores are numeric
+                progress_raw = enrollment.get("progress", 0)
+                progress = float(progress_raw) if progress_raw else 0.0
+                
                 quiz_scores = enrollment.get("quizScores", [])
-                avg_quiz = np.mean(quiz_scores) if quiz_scores else 0
+                if quiz_scores:
+                    # Ensure quiz scores are numeric
+                    numeric_quiz_scores = [float(score) for score in quiz_scores if isinstance(score, (int, float, str)) and str(score).replace('.', '').isdigit()]
+                    avg_quiz = np.mean(numeric_quiz_scores) if numeric_quiz_scores else 0.0
+                else:
+                    avg_quiz = 0.0
                 
                 # Calculate overall performance score
                 performance_score = (progress * 0.6) + (avg_quiz * 0.4)
                 course_performance[course_id] = performance_score
+                
+                print(f"📊 DEBUG: {course_id} -> progress: {progress}, quiz_avg: {avg_quiz}, performance: {performance_score:.2f}")
                 
                 if course_id in COURSE_CATEGORY_MAP:
                     category = COURSE_CATEGORY_MAP[course_id]
@@ -254,7 +411,7 @@ async def get_recommendations(userId: str):
                     if strength > 60:  # Only if user is doing well
                         if category in CATEGORY_TO_COURSES:
                             for course_id in CATEGORY_TO_COURSES[category]:
-                                if course_id not in enrolled_course_ids and course_id not in recommended_courses:
+                                if course_id not in recommended_courses:  # Only avoid duplicates
                                     recommended_courses.append(course_id)
                 
                 # 3. Recommend complementary skills
@@ -275,7 +432,7 @@ async def get_recommendations(userId: str):
                             if comp_category not in category_strength:  # User hasn't tried this category
                                 if comp_category in CATEGORY_TO_COURSES:
                                     for course_id in CATEGORY_TO_COURSES[comp_category]:
-                                        if course_id not in enrolled_course_ids and course_id not in recommended_courses:
+                                        if course_id not in recommended_courses:  # Only avoid duplicates
                                             recommended_courses.append(course_id)
                                             break  # Only add one course per complementary category
                 
@@ -292,7 +449,7 @@ async def get_recommendations(userId: str):
                         user_has_prerequisite = any(course in enrolled_course_ids for course in path[:-1])
                         if user_has_prerequisite:
                             next_course = path[-1]
-                            if next_course not in enrolled_course_ids:
+                            if next_course not in recommended_courses:  # Only avoid duplicates
                                 recommended_courses.append(next_course)
                                 break
         
@@ -303,18 +460,21 @@ async def get_recommendations(userId: str):
         course_details = await get_course_details(recommended_courses)
         
         if not course_details:
-            return ApiResponse.send(200, "No new recommendations available", {
+            return ApiResponse.send(200, {
                 "recommendations": [],
-                "reason": "User has enrolled in most relevant courses"
-            })
+                "reason": "User has enrolled in most relevant courses",
+                "predicted_categories": [],
+                "total_enrollments": len(user_enrollments),
+                "model_type": MODEL_TYPE
+            }, "No new recommendations available")
         
-        return ApiResponse.send(200, "Recommendations generated successfully", {
+        return ApiResponse.send(200, {
             "recommendations": course_details,
             "predicted_categories": list(predicted_categories) if predicted_categories else [],
             "total_enrollments": len(user_enrollments),
             "model_type": MODEL_TYPE,
             "prediction_probabilities": prediction_probs.tolist() if len(prediction_probs) > 0 else []
-        })
+        }, "Recommendations generated successfully")
         
     except Exception as e:
         print(f"Error in get_recommendations: {e}")
