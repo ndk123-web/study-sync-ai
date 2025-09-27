@@ -54,6 +54,9 @@ import { SendAiChatApi } from "../api/SendAiChatApi.js";
 import { FetchUserChatsApi } from "../api/fetchUserChatsApi.js";
 import { SendCourseQuizApi } from "../api/sendQuizCourseApi.js";
 import { SendCourseQuizCompletedApi } from "../api/SendCourseCompletedApi.js";
+import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
+import EnrollmentModal from "./EnrollmentModal";
+import SuccessNotification from "./SuccessNotification";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -358,6 +361,63 @@ const CoursesInterface = () => {
   const { courseId } = useParams();
   const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
+
+  // Add shimmer animation styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      @keyframes fadeInUp {
+        0% {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+      .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out;
+      }
+      /* Custom Scrollbar Styles */
+      .scrollbar-thin {
+        scrollbar-width: thin;
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        height: 8px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 10px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #10b981, #14b8a6);
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #059669, #0d9488);
+      }
+      /* Mobile Touch Scrolling */
+      .scrolling-touch {
+        -webkit-overflow-scrolling: touch;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
   const [coursePlaylist, setCoursePlaylist] = useState([]);
   const [progress, setProgress] = useState(0);
   const [notStoreNotes, setNotStoreNotes] = useState("");
@@ -4190,6 +4250,538 @@ const example = 'This is important';
           </div>
         </div>
       </div>
+
+      {/* Recommended Courses Section */}
+      <RecommendedCoursesSection isDark={isDark} />
+    </div>
+  );
+};
+
+// Recommended Courses Component
+const RecommendedCoursesSection = ({ isDark }) => {
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  
+  // Import navigate hook properly
+  const navigate = useNavigate();
+
+  // Dummy recommended courses data
+  const dummyRecommendedCourses = [
+    {
+      id: "REACT2025HINDI",
+      courseId: "REACT2025HINDI",
+      title: "Complete React.js Course - Hindi",
+      instructor: "Chai aur Code",
+      category: "Development",
+      level: "Intermediate",
+      duration: "20 hours",
+      students: "45,234",
+      rating: 4.9,
+      price: "Free",
+      thumbnail: "https://i.ytimg.com/vi/vz1RlUyrc3w/hqdefault.jpg",
+      lessons: 35,
+      description: "Complete React.js course from basics to advanced with real projects"
+    },
+    {
+      id: "PYTHONDATASCIENCE2025ENGLISH",
+      courseId: "PYTHONDATASCIENCE2025ENGLISH", 
+      title: "Python for Data Science - Complete Course",
+      instructor: "NPTEL-NOC IITM",
+      category: "Data Science",
+      level: "Beginner",
+      duration: "15 hours",
+      students: "32,156",
+      rating: 4.8,
+      price: "Free",
+      thumbnail: "https://i.ytimg.com/vi/tA42nHmmEKw/hqdefault.jpg",
+      lessons: 27,
+      description: "Learn Python programming for data analysis and machine learning"
+    },
+    {
+      id: "DEVOPS2025HINDI",
+      courseId: "DEVOPS2025HINDI",
+      title: "Complete DevOps Course - Zero to Hero",
+      instructor: "M Prashant", 
+      category: "DevOps",
+      level: "Advanced",
+      duration: "25 hours",
+      students: "28,923",
+      rating: 4.7,
+      price: "Free",
+      thumbnail: "https://i.ytimg.com/vi/BNTFJJMh2eU/hqdefault.jpg",
+      lessons: 20,
+      description: "Master DevOps with Docker, Kubernetes, Jenkins and more"
+    },
+    {
+      id: "GIT2025HINDI", 
+      courseId: "GIT2025HINDI",
+      title: "Complete Git and GitHub Tutorial Series",
+      instructor: "Engineering Digest",
+      category: "Development",
+      level: "Beginner", 
+      duration: "3 hours",
+      students: "67,891",
+      rating: 4.6,
+      price: "Free",
+      thumbnail: "https://i.ytimg.com/vi/-3SMW-3Z4OM/hqdefault.jpg",
+      lessons: 18,
+      description: "Master Git version control and GitHub collaboration"
+    },
+    {
+      id: "FLUTTER2025EN",
+      courseId: "FLUTTER2025EN",
+      title: "Flutter Mobile Development Course",
+      instructor: "Flutter Team",
+      category: "Mobile",
+      level: "Intermediate",
+      duration: "18 hours", 
+      students: "23,445",
+      rating: 4.5,
+      price: "Free",
+      thumbnail: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400",
+      lessons: 25,
+      description: "Build beautiful cross-platform mobile apps with Flutter"
+    }
+  ];
+
+  // Simulate API call with loading
+  useEffect(() => {
+    const fetchRecommendedCourses = async () => {
+      setIsLoading(true);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // For now, use dummy data
+      setRecommendedCourses(dummyRecommendedCourses);
+      setIsLoading(false);
+    };
+
+    fetchRecommendedCourses();
+  }, []);
+
+  // Handle enrollment modal
+  const handleEnrollClick = (course) => {
+    setSelectedCourse(course);
+    setIsEnrollmentModalOpen(true);
+  };
+
+  const handleEnrollmentConfirm = async (course) => {
+    // Here you can add your enrollment logic
+    console.log('🎓 Enrolling in recommended course:', course);
+    console.log('🔍 Course properties:', Object.keys(course));
+    console.log('🆔 course.id:', course.id);
+    console.log('🆔 course.courseId:', course.courseId);
+
+    try {
+      // Call the enrollment API - use courseId consistently
+      const courseIdToUse = course.courseId || course.id;
+      console.log('📝 Using course ID for API:', courseIdToUse);
+      
+      const apiResponse = await EnrollmentCourseApi(courseIdToUse);
+      console.log('📡 API Response:', apiResponse);
+      console.log('📊 API Status:', apiResponse.status);
+      
+      // Fix the condition logic - should be OR, not AND
+      if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          console.error('❌ API Error:', apiResponse);
+          alert("Error is there: " + apiResponse?.message);
+          return;
+      }
+      
+      console.log('✅ Enrollment successful!');
+      
+      // Close the modal first
+      setIsEnrollmentModalOpen(false);
+      setSelectedCourse(null);
+      
+      // Show success notification
+      setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
+      setShowSuccessNotification(true);
+      
+      // Auto-hide notification after 2 seconds
+      setTimeout(() => {
+        setShowSuccessNotification(false);
+      }, 2000);
+      
+      // Navigate to the course after a short delay
+      setTimeout(() => {
+        const finalCourseId = courseIdToUse;
+        console.log('🚀 Navigating to course with ID:', finalCourseId);
+        console.log('🌐 Navigation URL will be:', `/learn/${finalCourseId}`);
+        console.log('🔄 Current URL before navigation:', window.location.href);
+        
+        // Force page reload to ensure proper navigation
+        window.location.href = `/learn/${finalCourseId}`;
+        
+        // Alternative approach using navigate with replace and reload
+        // navigate(`/learn/${finalCourseId}`, { replace: true });
+        // window.location.reload();
+        
+        // Check if navigation happened
+        setTimeout(() => {
+          console.log('🔍 URL after navigation:', window.location.href);
+        }, 500);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('💥 Enrollment error:', error);
+      alert("Error enrolling in course: " + error.message);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsEnrollmentModalOpen(false);
+    setSelectedCourse(null);
+  };
+
+  const RecommendedCourseCard = ({ course }) => (
+    <div
+      className={`flex-shrink-0 w-72 sm:w-80 md:w-96 ${
+        isDark
+          ? "bg-gradient-to-br from-gray-800 via-gray-850 to-gray-900 border-gray-700/50"
+          : "bg-gradient-to-br from-white via-gray-50 to-white border-gray-200/50"
+      } border-2 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-700 
+      transform hover:-translate-y-3 hover:scale-[1.05] group backdrop-blur-lg
+      ${isDark ? "shadow-xl shadow-gray-900/30" : "shadow-xl shadow-gray-300/20"}
+      hover:border-emerald-500/50 relative`}
+    >
+      {/* Glow Effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-teal-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl"></div>
+      
+      {/* Course Thumbnail */}
+      <div className="relative overflow-hidden">
+        <img
+          src={course.thumbnail}
+          alt={course.title}
+          className="w-full h-44 sm:h-48 object-cover group-hover:scale-115 transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-700"></div>
+
+        {/* Play Button Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl transform scale-75 group-hover:scale-100 transition-all duration-500">
+            <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 5v10l8-5-8-5z"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Level Badge */}
+        <div
+          className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border shadow-lg ${
+            course.level === "Beginner"
+              ? "bg-green-500/90 text-white border-green-400/50"
+              : course.level === "Intermediate"
+              ? "bg-yellow-500/90 text-white border-yellow-400/50"
+              : "bg-red-500/90 text-white border-red-400/50"
+          }`}
+        >
+          🎯 {course.level}
+        </div>
+
+        {/* Price Tag */}
+        <div className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 backdrop-blur-md text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-lg border border-white/20">
+          💎 {course.price}
+        </div>
+
+        {/* Featured Badge */}
+        <div className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium border border-white/20">
+          ⭐ Recommended
+        </div>
+      </div>
+
+      {/* Course Info */}
+      <div className="p-6 relative">
+        <div className="mb-4">
+          <span
+            className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold mb-3 ${
+              isDark
+                ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/40"
+                : "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-300"
+            } shadow-sm`}
+          >
+            📚 {course.category}
+          </span>
+          <h4 className="font-bold text-lg leading-tight mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-emerald-500 group-hover:to-teal-500 group-hover:bg-clip-text transition-all duration-500 line-clamp-2">
+            {course.title}
+          </h4>
+        </div>
+
+        <p
+          className={`text-sm mb-4 line-clamp-2 leading-relaxed ${
+            isDark ? "text-gray-300" : "text-gray-600"
+          }`}
+        >
+          {course.description}
+        </p>
+
+        {/* Instructor */}
+        <div className="flex items-center mb-4 text-sm">
+          <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mr-3 shadow-md">
+            <span className="text-white text-xs">👨‍🏫</span>
+          </div>
+          <div>
+            <p className="font-semibold truncate">{course.instructor}</p>
+            <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Expert Instructor
+            </p>
+          </div>
+        </div>
+
+        {/* Course Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div
+            className={`flex items-center space-x-2 p-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+              isDark ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-50 hover:bg-gray-100"
+            } border ${isDark ? "border-gray-600/50" : "border-gray-200"}`}
+          >
+            <span className="text-emerald-500 text-lg">⏱️</span>
+            <div>
+              <p className="text-xs font-medium">{course.duration}</p>
+              <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
+            </div>
+          </div>
+          <div
+            className={`flex items-center space-x-2 p-3 rounded-xl transition-all duration-300 hover:scale-105 ${
+              isDark ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-50 hover:bg-gray-100"
+            } border ${isDark ? "border-gray-600/50" : "border-gray-200"}`}
+          >
+            <span className="text-emerald-500 text-lg">�</span>
+            <div>
+              <p className="text-xs font-medium">{course.lessons} lessons</p>
+              <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Content</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rating & Students */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <div className="flex space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <span
+                  key={i}
+                  className={`text-sm transition-all duration-200 ${
+                    i < Math.floor(course.rating)
+                      ? "text-yellow-500 scale-110"
+                      : "text-gray-300"
+                  }`}
+                >
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <span className="font-bold text-lg text-yellow-500">{course.rating}</span>
+          </div>
+          <div className="flex items-center space-x-1 text-sm">
+            <span className="text-blue-500">👥</span>
+            <span className="font-semibold">{course.students}</span>
+            <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>students</span>
+          </div>
+        </div>
+
+        {/* Enroll Button */}
+        <button
+          onClick={() => handleEnrollClick(course)}
+          className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 text-white py-4 px-6 rounded-2xl 
+                   hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-600 transition-all duration-500 font-bold text-base
+                   flex items-center justify-center space-x-3 group shadow-xl hover:shadow-2xl transform hover:scale-[1.02]
+                   border border-emerald-400/30 hover:border-emerald-300/50 relative overflow-hidden"
+        >
+          {/* Button Glow Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+          
+          <span className="relative z-10">🚀 Enroll Now</span>
+          <span className="relative z-10 group-hover:translate-x-2 transition-transform duration-300 text-xl">→</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Professional Loader Component
+  const RecommendationLoader = () => (
+    <div className="flex space-x-6 overflow-hidden">
+      {[...Array(5)].map((_, index) => (
+        <div
+          key={index}
+          className={`flex-shrink-0 w-72 sm:w-80 md:w-96 ${
+            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          } border-2 rounded-3xl overflow-hidden shadow-xl animate-pulse`}
+        >
+          {/* Thumbnail Skeleton */}
+          <div className={`h-44 sm:h-48 ${isDark ? "bg-gray-700" : "bg-gray-300"} relative`}>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer"></div>
+            
+            {/* Skeleton badges */}
+            <div className="absolute top-4 left-4 w-20 h-6 bg-gray-500/50 rounded-full"></div>
+            <div className="absolute top-4 right-4 w-16 h-6 bg-gray-500/50 rounded-xl"></div>
+            <div className="absolute bottom-4 left-4 w-24 h-5 bg-gray-500/50 rounded-full"></div>
+          </div>
+          
+          {/* Content Skeleton */}
+          <div className="p-6 space-y-4">
+            {/* Category Badge */}
+            <div className={`h-6 w-28 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-full`}></div>
+            
+            {/* Title */}
+            <div className="space-y-2">
+              <div className={`h-5 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              <div className={`h-5 w-4/5 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+            </div>
+            
+            {/* Description */}
+            <div className="space-y-2">
+              <div className={`h-4 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              <div className={`h-4 w-3/5 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+            </div>
+            
+            {/* Instructor */}
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-full`}></div>
+              <div className="space-y-1">
+                <div className={`h-4 w-32 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+                <div className={`h-3 w-24 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              </div>
+            </div>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`h-16 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-xl`}></div>
+              <div className={`h-16 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-xl`}></div>
+            </div>
+            
+            {/* Rating & Students */}
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-2">
+                <div className={`h-4 w-24 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              </div>
+              <div className={`h-4 w-20 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+            </div>
+            
+            {/* Button */}
+            <div className={`h-14 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-2xl relative overflow-hidden`}>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div
+      className={`w-full ${
+        isDark ? "bg-gray-900" : "bg-gray-50"
+      } border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
+    >
+      <div className="max-w-full px-6 py-8">
+        {/* Section Header */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+              <span className="text-white text-lg">🎯</span>
+            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+              Recommended for You
+            </h2>
+          </div>
+          <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            {isLoading 
+              ? "AI is analyzing your learning pattern..." 
+              : "Personalized course recommendations based on your learning journey"
+            }
+          </p>
+        </div>
+
+        {/* Courses Container */}
+        <div className="relative">
+          {isLoading ? (
+            <div className="overflow-x-hidden">
+              <RecommendationLoader />
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Custom Scrollbar Container */}
+              <div 
+                className={`flex space-x-6 overflow-x-auto pb-6 px-2 scroll-smooth
+                  scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full
+                  ${isDark 
+                    ? "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-700/50 hover:scrollbar-thumb-emerald-400" 
+                    : "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-300/50 hover:scrollbar-thumb-emerald-600"
+                  }
+                  scrollbar-thumb-hover:bg-emerald-400 scrolling-touch`}
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: isDark ? '#10b981 #374151' : '#10b981 #d1d5db'
+                }}
+              >
+                {recommendedCourses.map((course, index) => (
+                  <div
+                    key={course.id}
+                    className="animate-fadeInUp"
+                    style={{
+                      animationDelay: `${index * 150}ms`,
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    <RecommendedCourseCard course={course} />
+                  </div>
+                ))}
+                
+                {/* Scroll Padding */}
+                <div className="flex-shrink-0 w-6"></div>
+              </div>
+              
+              {/* Scroll Indicators */}
+              <div className="flex justify-center mt-4 space-x-2">
+                {recommendedCourses.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      isDark ? "bg-gray-600" : "bg-gray-300"
+                    }`}
+                  ></div>
+                ))}
+              </div>
+              
+              {/* Mobile Scroll Hint */}
+              <div className="md:hidden flex items-center justify-center mt-4 space-x-2 text-sm opacity-70">
+                <span>👈</span>
+                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                  Swipe to explore more courses
+                </span>
+                <span>👉</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Enrollment Modal */}
+      {isEnrollmentModalOpen && selectedCourse && (
+        <EnrollmentModal
+          isOpen={isEnrollmentModalOpen}
+          onClose={handleModalClose}
+          onConfirm={handleEnrollmentConfirm}
+          course={selectedCourse}
+          isDark={isDark}
+        />
+      )}
+
+      {/* Success Notification */}
+      {showSuccessNotification && (
+        <SuccessNotification
+          isVisible={showSuccessNotification}
+          onClose={() => setShowSuccessNotification(false)}
+          message={successMessage}
+          isDark={isDark}
+        />
+      )}
     </div>
   );
 };
