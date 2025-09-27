@@ -4,12 +4,14 @@ from app.db.db import ping_server
 from contextlib import asynccontextmanager
 import asyncio
 import cloudinary
+import joblib 
 
 from app.routes.transcript_router import transcriptRouter
 from app.routes.summary_router import summaryRouter
 from app.routes.chat_router import chatRouter
 from app.routes.pdf_router import pdfRouter
 from app.routes.quiz_router import quizRouter
+from app.routes.recommend_router import recommendRouter
 
 # from api.utils.addMiddlewares import setupMiddlewares
 from app.config.firebase import initialize_firebase , check_firebase_connection
@@ -75,3 +77,4 @@ app.include_router(summaryRouter, prefix='/api/v1/summaries')
 app.include_router(chatRouter, prefix='/api/v1/chat')
 app.include_router(pdfRouter, prefix='/api/v1/pdf')
 app.include_router(quizRouter, prefix='/api/v1/quiz')
+app.include_router(recommendRouter , prefix="/api/v1/recommend")
