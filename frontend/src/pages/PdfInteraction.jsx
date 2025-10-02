@@ -354,7 +354,6 @@ const PdfInteraction = () => {
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "notes", label: "Notes", icon: StickyNote },
     { id: "summary", label: "Summary", icon: BookOpen },
-    { id: "assessment", label: "Assessment", icon: FileCheck },
   ];
 
   useEffect(() => {
