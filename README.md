@@ -2230,7 +2230,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 **Sahil Khilari** | [@sahil-khilari](https://github.com/sahil-khilari)
 - 🎓 Computer Engineering Student
 - 💼 Team Member
-- 📧 Email: sahil.khilari@vit.edu.in
+- 📧 Email: khilarisahil786@gmail.com
 
 **Prathmesh Nitnaware** | [Prathmesh Nitnaware](https://github.com/prathmesh-nitnaware)
 - 🎓 Computer Engineering Student
@@ -2240,7 +2240,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 **Sneha Chavan** | [Sneha Chavan](nitnaware.prathmesh@gmail.com)
 - 🎓 Computer Engineering Student
 - � Team Member
-- 📧 Email: sneha.chavan@vit.edu.in
+- 📧 Email: snehachavan172005@gmail.com
 
 ### Special Thanks
 
