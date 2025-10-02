@@ -590,9 +590,9 @@ const VideoInteraction = () => {
           import.meta.env.VITE_ENCRYPTION_SECRET
         ).toString();
 
-        // Update browser URL with encrypted video parameter
-  // Use canonical path; alias /video-interaction still supported
-  navigate(`/video-learning?v=${encodeURIComponent(encryptedUrl)}`, { replace: true });
+          // Update browser URL with encrypted video parameter
+          // Use canonical path; alias /video-interaction still supported
+        navigate(`/video-learning?v=${encodeURIComponent(encryptedUrl)}`, { replace: true });
 
         const videoData = {
           videoId,
@@ -722,7 +722,6 @@ const VideoInteraction = () => {
     { id: "notes", label: "Notes", icon: StickyNote },
     { id: "transcript", label: "Transcript", icon: FileText },
     { id: "summary", label: "Summary", icon: BookOpen },
-    { id: "assessment", label: "Assessment", icon: FileCheck },
   ];
 
   // // Apply Prism syntax highlighting when chat messages change
