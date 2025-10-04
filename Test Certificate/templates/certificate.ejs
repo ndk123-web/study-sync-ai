@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudySync AI Certificate</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Dancing+Script:wght@600;700&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+    }
+
+    .certificate {
+      border: 8px solid #16a34a;
+      padding: 40px 50px;
+      width: 100%;
+      height: 100vh;
+      box-sizing: border-box;
+      position: relative;
+      background: #fff;
+      max-width: none;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #22c55e;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #16a34a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+
+    .logo img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .title {
+      font-size: 42px;
+      font-weight: 700;
+      color: #14532d;
+      text-transform: uppercase;
+      margin: 0;
+      letter-spacing: 4px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .content {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .recipient-name {
+      font-family: 'Dancing Script', cursive;
+      font-size: 50px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 20px 0;
+    }
+
+    .description {
+      color: #475569;
+      font-size: 17px;
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+
+    .course {
+      color: #16a34a;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 30px 0 40px;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 40px;
+      padding: 0 40px;
+    }
+
+    .signature-block {
+      flex: 1;
+      text-align: center;
+    }
+
+    .date-section {
+      flex: 1;
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .signature-line {
+      width: 180px;
+      height: 2px;
+      background: #14532d;
+      margin: 0 auto 8px;
+    }
+
+    .signature-handwritten {
+      font-family: 'Dancing Script', cursive;
+      font-size: 26px;
+      color: #14532d;
+      margin-bottom: 6px;
+    }
+
+    .signature-label {
+      font-size: 13px;
+      color: #6b7280;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .cert-id {
+      position: absolute;
+      bottom: 20px;
+      right: 40px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate">
+    <div class="header">
+      <div class="logo">
+        <% if (logoBase64) { %>
+          <img src="<%= logoBase64 %>" alt="StudySync AI Logo" />
+        <% } else { %>
+          <span style="color:#16a34a;font-weight:bold;font-size:22px;">SA</span>
+        <% } %>
+      </div>
+      <h1 class="title">Certificate of Completion</h1>
+      <p class="subtitle">Presented by StudySync AI</p>
+    </div>
+
+    <div class="content">
+      <p>This is to certify that</p>
+      <div class="recipient-name"><%= userName || 'Navnath Kadam' %></div>
+      <p class="description">
+        has successfully completed the course and demonstrated outstanding understanding and application of
+        <span class="course"><%= courseName || 'AI & ML' %></span>
+      </p>
+    </div>
+
+    <div class="footer">
+      <div class="signature-block">
+        <div class="signature-handwritten">Navnath Kadam</div>
+        <div class="signature-line"></div>
+        <div class="signature-label">Director</div>
+      </div>
+
+      <div class="date-section">
+        <div style="font-size:14px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Date</div>
+        <div style="font-size:16px;color:#374151;font-weight:600;"><%= date %></div>
+      </div>
+
+      <div class="signature-block">
+        <div class="signature-handwritten">StudySync AI</div>
+        <div class="signature-line"></div>
+        <div class="signature-label">Authorized Platform</div>
+      </div>
+    </div>
+
+    <div class="cert-id">
+      Certificate ID: SA-<%= new Date().getFullYear() %>-<%= Math.random().toString(36).substr(2,6).toUpperCase() %>
+    </div>
+  </div>
+</body>
+</html>

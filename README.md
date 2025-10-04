@@ -2331,7 +2331,7 @@ Become the leading AI-powered learning platform that adapts to each student's un
 
 ---
 
-**Made with ❤️ by [Navnath Devkar](https://github.com/ndk123-web) & [Sahil Khilari](https://github.com/sahil-khilari)**
+**Made with ❤️ by [Navnath Kadam](https://github.com/ndk123-web)**
 
 **If you find this project useful, please consider giving it a ⭐!**
 
