@@ -70,7 +70,15 @@
 - JWT-based API security
 - Role-based access control (Admin/User) (username: admin@gmail.com , password: admin)
 
-### 🎨 **Modern UI/UX**
+### � **Certificate Generation**
+- **Automated Certificate Generation** - PDF certificates upon course completion
+- **Puppeteer-based PDF Creation** - Professional certificate templates with EJS
+- **Cloudinary Integration** - Secure cloud storage and CDN delivery
+- **Dynamic Certificate Content** - User name, course title, completion date
+- **Downloadable Certificates** - Direct download and sharing capabilities
+- **Certificate Management** - List, view, and delete certificates
+
+### �🎨 **Modern UI/UX**
 - Responsive design for all devices
 - Dark/Light theme support
 - Smooth animations with Lucide React
@@ -89,20 +97,20 @@
 │  • Firebase Auth  • Zustand Store  • Axios API  • Socket.io     │
 └────────────────┬────────────────────────────────────────────────┘
                  │
-                 ├──────────────────────────┬─────────────────────┐
-                 │                          │                     │
-      ┌──────────▼──────────┐    ┌──────────▼──────────┐  ┌──────▼──────┐
-      │   AUTH SERVICE      │    │    AI SERVICE       │  │ NOTIFICATION│
-      │   (Express.js)      │    │    (FastAPI)        │  │  SERVICE    │
-      │   Port: 5000        │    │   Port: 8000        │  │  Port: 3001 │
-      │                     │    │                     │  │             │
-      │ • User Management   │    │ • Ollama AI (Local) │  │ • WebSocket │
-      │ • Course CRUD       │    │ • TensorFlow ML     │  │ • Kafka     │
-      │ • Enrollment        │    │ • PDF Processing    │  │ • FCM       │
-      │ • Progress Tracking │    │ • Video Transcript  │  │             │
-      │ • Notes Management  │    │ • Quiz Generation   │  │             │
-      │ • JWT Verification  │    │ • Cloudinary Upload │  │             │
-      └──────────┬──────────┘    └──────────┬──────────┘  └──────┬──────┘
+                 ├──────────────────┬───────────────────┬─────────────────────┐
+                 │                  │                   │                     │
+      ┌──────────▼──────────┐ ┌─────▼─────────┐ ┌──────▼──────────┐  ┌──────▼──────┐
+      │   AUTH SERVICE      │ │ CERTIFICATE   │ │    AI SERVICE   │  │ NOTIFICATION│
+      │   (Express.js)      │ │   SERVICE     │ │    (FastAPI)    │  │  SERVICE    │
+      │   Port: 5000        │ │ (Express.js)  │ │   Port: 8000    │  │  Port: 3001 │
+      │                     │ │  Port: 5001   │ │                 │  │             │
+      │ • User Management   │ │               │ │ • Ollama AI     │  │ • WebSocket │
+      │ • Course CRUD       │ │ • PDF Gen     │ │ • TensorFlow ML │  │ • Kafka     │
+      │ • Enrollment        │ │ • Cloudinary  │ │ • PDF Process   │  │ • FCM       │
+      │ • Progress Tracking │ │ • EJS Render  │ │ • Video Transc  │  │             │
+      │ • Notes Management  │ │ • Puppeteer   │ │ • Quiz Gen      │  │             │
+      │ • JWT Verification  │ │ • Certificate │ │ • Cloudinary    │  │             │
+      └──────────┬──────────┘ └─────┬─────────┘ └──────┬──────────┘  └──────┬──────┘
                  │                          │                     │
                  └───────────┬──────────────┴─────────────────────┘
                              │
@@ -143,6 +151,14 @@
 - **KafkaJS 2.2** - Kafka client
 - **Bcrypt 6.0** - Password hashing
 - **Cookie-parser** - Cookie handling
+
+### Backend - Certificate Service
+- **Node.js 18+** - Runtime
+- **Express.js 5.1** - Web framework
+- **Puppeteer 23.0** - PDF generation
+- **EJS 3.1** - Template engine
+- **Cloudinary 2.7** - PDF storage & CDN
+- **dotenv** - Environment configuration
 
 ### Backend - AI Service
 - **Python 3.11+** - Runtime
@@ -196,6 +212,16 @@ study-sync-ai/
 │   │   ├── kafka/                      # Kafka producer
 │   │   ├── package.json
 │   │   └── .env
+│   │
+│   ├── certificate-service/            # Express.js Certificate Generation
+│   │   ├── server.js                   # Main server file
+│   │   ├── templates/
+│   │   │   └── certificate.ejs         # Certificate HTML template
+│   │   ├── assets/
+│   │   │   └── logo.png               # StudySync logo
+│   │   ├── package.json
+│   │   ├── .env
+│   │   └── TEST_COMMANDS.md           # API testing commands
 │   │
 │   ├── ai-service/                     # FastAPI AI Services
 │   │   ├── app/
@@ -677,7 +703,49 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 # Server should start on: http://localhost:8000
 ```
 
-#### 8.3 Notification Service Configuration
+#### 8.3 Certificate Service Configuration
+
+```bash
+cd backend/certificate-service
+npm install
+```
+
+**Create `.env` file:**
+
+```env
+# Server Configuration
+PORT=5001
+
+# Cloudinary Configuration (For Certificate Storage)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=123456789012345
+CLOUDINARY_API_SECRET=your_cloudinary_secret_key_here
+```
+
+**⚠️ Important Notes:**
+- Replace Cloudinary credentials with your actual values from dashboard
+- Port 5001 is used to avoid conflicts with auth service (5000)
+- Puppeteer will be installed automatically for PDF generation
+- Keep `.env` file secure (already in `.gitignore`)
+
+**Start Certificate Service:**
+
+```bash
+npm start
+# Server should start on: http://localhost:5001
+```
+
+**Test Certificate Generation:**
+
+```bash
+# Test certificate generation endpoint
+curl "http://localhost:5001/generate-certificate?name=John%20Doe&course=React%20Fundamentals"
+
+# List all certificates
+curl "http://localhost:5001/list-certificates"
+```
+
+#### 8.4 Notification Service Configuration
 
 ```bash
 cd backend/notification-service
@@ -777,11 +845,12 @@ start_all.bat
 
 This will automatically start:
 1. Auth Service (Port 5000)
-2. AI Service (Port 8000)
-3. Frontend (Port 5173)
-4. Notification Service (Port 3001)
-5. Kafka + Zookeeper (Docker)
-6. Kafka Consumer
+2. Certificate Service (Port 5001)
+3. AI Service (Port 8000)
+4. Frontend (Port 5173)
+5. Notification Service (Port 3001)
+6. Kafka + Zookeeper (Docker)
+7. Kafka Consumer
 
 **For Linux/Mac Users:**
 
@@ -792,6 +861,9 @@ Create `start_all.sh`:
 
 echo "Starting Auth Service..."
 cd backend/auth-service && npm run start &
+
+echo "Starting Certificate Service..."
+cd backend/certificate-service && npm start &
 
 echo "Starting AI Service..."
 cd backend/ai-service && source myenv/bin/activate && uvicorn main:app --reload &
@@ -823,9 +895,10 @@ chmod +x start_all.sh
 #### Check All Services:
 
 1. **Auth Service:** [http://localhost:5000](http://localhost:5000)
-2. **AI Service:** [http://localhost:8000/docs](http://localhost:8000/docs) (FastAPI docs)
-3. **Frontend:** [http://localhost:5173](http://localhost:5173)
-4. **Notification Service:** [http://localhost:3001](http://localhost:3001)
+2. **Certificate Service:** [http://localhost:5001](http://localhost:5001)
+3. **AI Service:** [http://localhost:8000/docs](http://localhost:8000/docs) (FastAPI docs)
+4. **Frontend:** [http://localhost:5173](http://localhost:5173)
+5. **Notification Service:** [http://localhost:3001](http://localhost:3001)
 
 #### Test Frontend Application:
 
@@ -1197,6 +1270,107 @@ curl -X POST http://localhost:5000/api/v1/notes/save-notes \
 | DELETE | `/admin/delete-course/:courseId` | Delete course | ✅ Admin JWT |
 | GET | `/admin/all-users` | Get all users | ✅ Admin JWT |
 | GET | `/admin/analytics` | Get platform analytics | ✅ Admin JWT |
+
+#### Certificate Management
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/certificate/get-user-certificates` | Get user certificates | ✅ JWT Token |
+
+**Example: Get User Certificates**
+```bash
+curl -X GET http://localhost:5000/api/v1/certificate/get-user-certificates \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Response:**
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "certificates": [
+      {
+        "_id": "68eb82b93c9a70b9558fe3ba",
+        "certificateUrl": "https://res.cloudinary.com/dmijbupsf/raw/upload/v1760264888/study-sync-certificates/certificates/Navnath_Kadam_Python_Full_Course.pdf",
+        "courseName": "Python Full Course - Beginner to Advanced",
+        "issueDate": "12/10/2025",
+        "fileName": "Navnath Kadam_Python Full Course - Beginner to Advanced_certificate.pdf",
+        "publicId": "study-sync-certificates/certificates/Navnath_Kadam_Python_Full_Course.pdf",
+        "certificateLoadType": "done"
+      }
+    ]
+  },
+  "message": "User certificates fetched successfully",
+  "success": true
+}
+```
+
+---
+
+### 🏆 Certificate Service (Port 5001)
+
+Base URL: `http://localhost:5001`
+
+#### Certificate Generation
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/generate-certificate` | Generate and upload certificate | ❌ |
+| GET | `/get-certificate/:publicId` | Get certificate by public ID | ❌ |
+| GET | `/list-certificates` | List all certificates | ❌ |
+| DELETE | `/delete-certificate/:publicId` | Delete certificate | ❌ |
+
+**Example: Generate Certificate**
+```bash
+curl "http://localhost:5001/generate-certificate?name=John%20Doe&course=React%20Fundamentals"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Certificate generated and uploaded successfully",
+  "certificateUrl": "https://res.cloudinary.com/dmijbupsf/raw/upload/v1760264888/study-sync-certificates/certificates/John_Doe_React_Fundamentals_1760264886811.pdf",
+  "publicId": "study-sync-certificates/certificates/John_Doe_React_Fundamentals_1760264886811.pdf",
+  "courseName": "React Fundamentals",
+  "studentName": "John Doe",
+  "issueDate": "12/10/2025",
+  "fileName": "John Doe_React Fundamentals_certificate.pdf"
+}
+```
+
+**Example: List All Certificates**
+```bash
+curl "http://localhost:5001/list-certificates"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 3,
+  "certificates": [
+    {
+      "publicId": "study-sync-certificates/certificates/John_Doe_React_Fundamentals_1760264886811.pdf",
+      "url": "https://res.cloudinary.com/dmijbupsf/raw/upload/v1760264888/study-sync-certificates/certificates/John_Doe_React_Fundamentals_1760264886811.pdf",
+      "fileName": "John_Doe_React_Fundamentals_1760264886811.pdf",
+      "uploadedAt": "2025-01-15T10:30:00.000Z",
+      "fileSize": 125648
+    }
+  ]
+}
+```
+
+**Example: Get Certificate by Public ID**
+```bash
+curl "http://localhost:5001/get-certificate/certificates/John_Doe_React_Fundamentals_1760264886811"
+```
+
+**Example: Delete Certificate**
+```bash
+curl -X DELETE "http://localhost:5001/delete-certificate/certificates/John_Doe_React_Fundamentals_1760264886811"
+```
 
 ---
 

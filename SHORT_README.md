@@ -7,7 +7,8 @@
 5. 3rd party api -> google v3 (for yt videos metadata)
 6. Pinecone Vector database for Storing Content of PDF namespace wise 
 7. Kafka + zookeeper -> To Produce and Consume Notifications on Topic (Enrollment) 
-8. Web Socket -> To Send the message From Consumer to User in Real Time using Web Socket 
+8. Web Socket -> To Send the message From Consumer to User in Real Time using Web Socket
+9. added Certificate-Service using ejs template generating dynamic html content and using puppeter converted html,css to pdf and that pdf is stored in cloudinary and cloudinary returns the address of pdf and user can download that  
 
 # Features
 
