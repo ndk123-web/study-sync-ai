@@ -27,6 +27,7 @@ import { useUserStore } from "../store/slices/useUserStore";
 import { useNotifications } from "../store/slices/useNotifications.js";
 import Header from "../components/Header";
 import CryptoJs from "crypto-js";
+import { GetUserCertificatesApi } from "../api/GetUserCertificates.js";
 
 const MyCertificates = () => {
   // Zustand store hooks
@@ -42,9 +43,13 @@ const MyCertificates = () => {
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
   const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
-  const clearNotifications = useNotifications((state) => state.clearNotifications);
+  const clearNotifications = useNotifications(
+    (state) => state.clearNotifications
+  );
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userCertificates, setUserCertificates] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const isDark = theme === "dark";
 
@@ -66,6 +71,31 @@ const MyCertificates = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Fetch user certificates from backend
+    const GetUserCertificates = async () => {
+      try {
+        setIsLoading(true);
+        const apiResponse = await GetUserCertificatesApi();
+        console.log("GetUserCertificates apiResponse: ", apiResponse?.data?.certificates);
+        
+        if (apiResponse?.status === 200 && apiResponse?.data?.certificates) {
+          setUserCertificates(apiResponse.data.certificates);
+        } else {
+          console.log("No certificates found or API error");
+          setUserCertificates([]);
+        }
+      } catch (error) {
+        console.error("Error fetching certificates:", error);
+        setUserCertificates([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    GetUserCertificates();
+  }, []);
+
   const handleLogout = () => {
     removeAuth();
     logoutUser();
@@ -73,8 +103,22 @@ const MyCertificates = () => {
     setIsSidebarOpen(false);
   };
 
-  // Demo Certificates Data
-  const certificates = [
+  // Use real certificates if available, otherwise demo data
+  const certificates = userCertificates.length > 0 ? userCertificates.map(cert => ({
+    id: cert._id,
+    title: cert.courseName,
+    issueDate: cert.issueDate,
+    courseId: cert.courseName, // Using courseName as courseId since not available
+    instructor: "StudySync AI",
+    thumbnail: "🏆", // Default certificate icon
+    grade: "A+", // Default grade
+    skills: [], // No skills data in backend response
+    certificateUrl: cert.certificateUrl,
+    fileName: cert.fileName,
+    publicId: cert.publicId,
+    certificateLoadType: cert.certificateLoadType
+  })) : [
+    // Demo Certificates Data (fallback)
     {
       id: 1,
       title: "React Fundamentals",
@@ -84,7 +128,7 @@ const MyCertificates = () => {
       thumbnail: "⚛️",
       grade: "A+",
       skills: ["React", "JSX", "Components", "Props"],
-      certificateUrl: "/certificates/react-fundamentals.pdf"
+      certificateUrl: "/certificates/react-fundamentals.pdf",
     },
     {
       id: 2,
@@ -95,7 +139,7 @@ const MyCertificates = () => {
       thumbnail: "🟨",
       grade: "A",
       skills: ["ES6", "Async/Await", "Promises", "Modules"],
-      certificateUrl: "/certificates/javascript-es6.pdf"
+      certificateUrl: "/certificates/javascript-es6.pdf",
     },
     {
       id: 3,
@@ -106,7 +150,7 @@ const MyCertificates = () => {
       thumbnail: "🔧",
       grade: "A+",
       skills: ["Git", "GitHub", "Version Control", "Collaboration"],
-      certificateUrl: "/certificates/git-github.pdf"
+      certificateUrl: "/certificates/git-github.pdf",
     },
     {
       id: 4,
@@ -117,7 +161,7 @@ const MyCertificates = () => {
       thumbnail: "🐍",
       grade: "A",
       skills: ["Python", "Pandas", "NumPy", "Data Analysis"],
-      certificateUrl: "/certificates/python-data-science.pdf"
+      certificateUrl: "/certificates/python-data-science.pdf",
     },
     {
       id: 5,
@@ -128,7 +172,7 @@ const MyCertificates = () => {
       thumbnail: "🚀",
       grade: "A+",
       skills: ["Docker", "CI/CD", "AWS", "Kubernetes"],
-      certificateUrl: "/certificates/devops-fundamentals.pdf"
+      certificateUrl: "/certificates/devops-fundamentals.pdf",
     },
     {
       id: 6,
@@ -139,8 +183,8 @@ const MyCertificates = () => {
       thumbnail: "💚",
       grade: "A",
       skills: ["Node.js", "Express", "MongoDB", "REST APIs"],
-      certificateUrl: "/certificates/nodejs-backend.pdf"
-    }
+      certificateUrl: "/certificates/nodejs-backend.pdf",
+    },
   ];
 
   // Mobile Sidebar
@@ -451,7 +495,7 @@ const MyCertificates = () => {
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
                 emoji: "❓",
-                href: "/help"
+                href: "/help",
               },
             ].map((item, index) => (
               <a
@@ -470,9 +514,7 @@ const MyCertificates = () => {
               >
                 <span className="text-lg">{item.emoji}</span>
                 <span className="font-medium">{item.label}</span>
-                {item.active && (
-                  <ChevronRight className="w-4 h-4 ml-auto" />
-                )}
+                {item.active && <ChevronRight className="w-4 h-4 ml-auto" />}
               </a>
             ))}
           </nav>
@@ -576,9 +618,32 @@ const MyCertificates = () => {
             </div>
           </div>
 
-          {/* Certificates Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {certificates.map((certificate, index) => (
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <div
+                  key={item}
+                  className={`p-6 rounded-xl border animate-pulse ${
+                    isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+                    <div className="w-16 h-6 bg-gray-300 rounded-full"></div>
+                  </div>
+                  <div className="w-3/4 h-6 bg-gray-300 rounded mb-2"></div>
+                  <div className="w-full h-4 bg-gray-300 rounded mb-2"></div>
+                  <div className="w-2/3 h-4 bg-gray-300 rounded mb-4"></div>
+                  <div className="w-full h-10 bg-gray-300 rounded"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Certificates Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {certificates.map((certificate, index) => (
               <div
                 key={certificate.id}
                 className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in relative overflow-hidden ${
@@ -590,7 +655,7 @@ const MyCertificates = () => {
               >
                 {/* Certificate Background Pattern */}
                 <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
-                
+
                 {/* Certificate Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-4xl">{certificate.thumbnail}</div>
@@ -652,10 +717,14 @@ const MyCertificates = () => {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => {
-                      // Demo download functionality
-                      const link = document.createElement('a');
+                      // Real certificate download functionality
+                      const link = document.createElement("a");
                       link.href = certificate.certificateUrl;
-                      link.download = `${certificate.title.replace(/\s+/g, '-')}-Certificate.pdf`;
+                      link.download = certificate.fileName || `${certificate.title.replace(
+                        /\s+/g,
+                        "-"
+                      )}-Certificate.pdf`;
+                      link.target = "_blank"; // Open in new tab for cloud URLs
                       link.click();
                     }}
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-4 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center justify-center space-x-2 text-sm font-medium"
@@ -690,9 +759,9 @@ const MyCertificates = () => {
               </div>
             ))}
           </div>
-
+          
           {/* Empty State (if needed in future) */}
-          {certificates.length === 0 && (
+          {certificates.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3
@@ -717,6 +786,8 @@ const MyCertificates = () => {
                 <span>Browse Courses</span>
               </a>
             </div>
+          )}
+            </>
           )}
         </div>
       </main>

@@ -59,6 +59,20 @@ const userSchema = mongoose.Schema(
       type: Date,
       default: null,
     },
+    certificates: [
+      {
+        certificateUrl: String,
+        courseName: String,
+        issueDate: String,
+        fileName: String,
+        publicId: String,
+        certificateLoadType: {
+          type: String,
+          enum: ["processing", "done", "failed"],
+          default: "done",
+        },
+      },
+    ],
   },
   {
     timestamps: true,

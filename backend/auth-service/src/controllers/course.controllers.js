@@ -6,7 +6,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import coursesRouter from "../routes/course.routes.js";
 import Activity from "../models/activity.models.js";
-import kafka from '../../kafka/client.js'
+import kafka from "../../kafka/client.js";
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
@@ -101,7 +101,7 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
     event: "student_enrolled",
     userId: getCurrentUser.uid,
     courseId: getCurrentCourse.courseId,
-    message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`
+    message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`,
   };
 
   await producer.send({
@@ -214,12 +214,29 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
         { new: true }
       );
 
-      if (!updateUserEnrollmentCourseProgress) {
-        throw new ApiError("404", "Enrollment not found");
-      }
-      
-      // if lastVideo and it means user completed the course now we need to generate certificate 
+    if (!updateUserEnrollmentCourseProgress) {
+      throw new ApiError("404", "Enrollment not found");
+    }
 
+    // if lastVideo and it means user completed the course now we need to generate certificate
+    const data = await fetch(
+      `http://localhost:5001/generate-certificate?name=${getCurrentUser.username}&&course=${getCurrentCourse.title}`
+    );
+    const json = await data.json();
+    if (!json.success) {
+      throw new ApiError("500", "Certificate Generation Failed");
+    }
+
+    getCurrentUser.certificates.push({
+      courseName: json.courseName,
+      certificateUrl: json.certificateUrl,
+      issueDate: json.issueDate,
+      fileName: json.fileName,
+      publicId: json.publicId,
+    });
+
+    await getCurrentUser.save();
+    console.log("Certificate Generated and added to user profile");
   }
 
   const updateUserEnrollmentCourseProgress = await Enrollment.findOneAndUpdate(
