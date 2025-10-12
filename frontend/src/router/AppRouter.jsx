@@ -16,6 +16,7 @@ import Contact from "../components/Contact.jsx";
 import CoursesInterface from "../components/CoursesInterface";
 import EnrolledCourses from "../components/EnrolledCourses";
 import HelpSupport from "../pages/HelpSupport.jsx";
+import MyCertificates from "../pages/MyCertificates.jsx";
 
 const AppRouter = createBrowserRouter([
   {
@@ -60,6 +61,14 @@ const AppRouter = createBrowserRouter([
     element: (
       <ProtectedLayout>
         <EnrolledCourses />
+      </ProtectedLayout>
+    ),
+  },
+  {
+    path: "/my-certificates",
+    element: (
+      <ProtectedLayout>
+        <MyCertificates />
       </ProtectedLayout>
     ),
   },

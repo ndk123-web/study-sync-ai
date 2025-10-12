@@ -213,9 +213,13 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
         },
         { new: true }
       );
-    if (!updateUserEnrollmentCourseProgress) {
-      throw new ApiError("404", "Enrollment not found");
-    }
+
+      if (!updateUserEnrollmentCourseProgress) {
+        throw new ApiError("404", "Enrollment not found");
+      }
+      
+      // if lastVideo and it means user completed the course now we need to generate certificate 
+
   }
 
   const updateUserEnrollmentCourseProgress = await Enrollment.findOneAndUpdate(

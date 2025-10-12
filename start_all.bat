@@ -19,6 +19,9 @@ start cmd /k "docker-compose up"
 echo Starting Notification Kafka Consumer...
 start cmd /k "cd backend\notification-service && node kafka/notification_consumer.js"
 
+echo Starting Certificate Service...
+start cmd /k "cd backend\certificate-service && node server.js"
+
 echo All Services Started.
 
 :: it waits for user input before closing the command prompt windows 

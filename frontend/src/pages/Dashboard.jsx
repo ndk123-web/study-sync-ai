@@ -1594,6 +1594,13 @@ const Dashboard = () => {
                     icon: <FileText className="w-5 h-5" />,
                     emoji: "📝",
                   },
+                  {
+                    id: "certificates",
+                    label: "My Certificates",
+                    icon: <Award className="w-5 h-5" />,
+                    emoji: "🏆",
+                    href: "/my-certificates",
+                  },
                 ].map((item, index) =>
                   item.isLink || item.href ? (
                     <a
@@ -1746,6 +1753,13 @@ const Dashboard = () => {
                 emoji: "🎥",
                 isLink: true,
                 href: "/video-learning",
+              },
+              {
+                id: "certificates",
+                label: "My Certificates",
+                icon: <Award className="w-5 h-5" />,
+                emoji: "🏆",
+                href: "/my-certificates",
               },
               {
                 id: "help",
