@@ -435,6 +435,14 @@ const EnrolledCoursesSample = () => {
                 href: "/video-learning",
               },
               {
+                id: "certificate",
+                label: "My Certificates",
+                icon: <Award className="w-5 h-5" />,
+                emoji: "🏆",
+                isLink: true,
+                href: "/my-certificates",
+              },
+              {
                 id: "help",
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
@@ -841,7 +849,7 @@ const EnrolledCoursesSample = () => {
               },
               {
                 title: "Certificates",
-                value: "0",
+                value: completedCount,
                 icon: <Award className="w-5 h-5" />,
                 color: "from-purple-500 to-purple-600",
                 bgColor: "bg-purple-50 dark:bg-purple-900/20",
@@ -878,17 +886,7 @@ const EnrolledCoursesSample = () => {
                     isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  {stat.title === "Certificates" ? (
-                    <p
-                      className={`text-xs font-semibold italic mt-2 ${
-                        isDark ? "text-yellow-400" : "text-yellow-600"
-                      }`}
-                    >
-                      Feature coming soon 🚀
-                    </p>
-                  ) : (
-                    stat.value
-                  )}
+                  {stat.value}
                 </p>
               </div>
             ))}
