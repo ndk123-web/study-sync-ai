@@ -32,6 +32,7 @@ import chatRouter from './routes/chat.routes.js';
 import dashboardRouter from './routes/dashboard.route.js';
 import videoRouter from './routes/video.routes.js';
 import adminRouter from './routes/admin.routes.js';
+import certificateRouter from './routes/certificate.routes.js';
 
 // all routes
 app.use('/api/v1/user', userRouter);
@@ -41,6 +42,7 @@ app.use('/api/v1/chat',chatRouter);
 app.use('/api/v1/dashboard', dashboardRouter);  
 app.use('/api/v1/video', videoRouter); 
 app.use("/api/v1/admin", adminRouter);
+app.use('/api/v1/certificate', certificateRouter);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
