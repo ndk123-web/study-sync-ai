@@ -1,4 +1,5 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 import { getAuthConfig } from "./authUtils.js";
 import CryptoJS from "crypto-js";
 
@@ -14,7 +15,7 @@ const EnrollmentVideoApi = async (videoUrl) => {
     ).toString();
 
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/video/enroll-video",
+      `${BaseUrl}/api/v1/video/enroll-video`,
       {
         videoUrl: encryptedVideoUrl,
       },

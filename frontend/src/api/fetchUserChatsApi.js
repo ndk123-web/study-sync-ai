@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const FetchUserChatsApi = async ({ courseId , role  }) => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:8000/api/v1/chat/fetch-chats",
+      `${BaseUrl}/api/v1/chat/fetch-chats`,
       {
         params: { courseId , role },
         withCredentials: true,

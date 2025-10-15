@@ -1,4 +1,5 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
   try {
@@ -9,7 +10,7 @@ const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
     console.log("📝 Encoded courseId:", encodedCourseId);
     
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/notes/get-notes/${encodedCourseId}?type=${type}`,
+      `${BaseUrl}/api/v1/notes/get-notes/${encodedCourseId}?type=${type}`,
       {
         withCredentials: true,
         headers: {

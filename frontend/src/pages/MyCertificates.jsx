@@ -117,75 +117,7 @@ const MyCertificates = () => {
     fileName: cert.fileName,
     publicId: cert.publicId,
     certificateLoadType: cert.certificateLoadType
-  })) : [
-    // Demo Certificates Data (fallback)
-    {
-      id: 1,
-      title: "React Fundamentals",
-      issueDate: "March 15, 2024",
-      courseId: "REACT2025HINDI",
-      instructor: "StudySync AI",
-      thumbnail: "⚛️",
-      grade: "A+",
-      skills: ["React", "JSX", "Components", "Props"],
-      certificateUrl: "/certificates/react-fundamentals.pdf",
-    },
-    {
-      id: 2,
-      title: "JavaScript ES6+",
-      issueDate: "February 28, 2024",
-      courseId: "JS2025ENG",
-      instructor: "StudySync AI",
-      thumbnail: "🟨",
-      grade: "A",
-      skills: ["ES6", "Async/Await", "Promises", "Modules"],
-      certificateUrl: "/certificates/javascript-es6.pdf",
-    },
-    {
-      id: 3,
-      title: "Git & GitHub Mastery",
-      issueDate: "January 20, 2024",
-      courseId: "GIT2025HINDI",
-      instructor: "StudySync AI",
-      thumbnail: "🔧",
-      grade: "A+",
-      skills: ["Git", "GitHub", "Version Control", "Collaboration"],
-      certificateUrl: "/certificates/git-github.pdf",
-    },
-    {
-      id: 4,
-      title: "Python Data Science",
-      issueDate: "April 10, 2024",
-      courseId: "PYTHONDATASCIENCE2025ENGLISH",
-      instructor: "StudySync AI",
-      thumbnail: "🐍",
-      grade: "A",
-      skills: ["Python", "Pandas", "NumPy", "Data Analysis"],
-      certificateUrl: "/certificates/python-data-science.pdf",
-    },
-    {
-      id: 5,
-      title: "DevOps Fundamentals",
-      issueDate: "May 5, 2024",
-      courseId: "DEVOPS2025HINDI",
-      instructor: "StudySync AI",
-      thumbnail: "🚀",
-      grade: "A+",
-      skills: ["Docker", "CI/CD", "AWS", "Kubernetes"],
-      certificateUrl: "/certificates/devops-fundamentals.pdf",
-    },
-    {
-      id: 6,
-      title: "Node.js Backend Development",
-      issueDate: "June 18, 2024",
-      courseId: "NODEJS2025HINDI",
-      instructor: "StudySync AI",
-      thumbnail: "💚",
-      grade: "A",
-      skills: ["Node.js", "Express", "MongoDB", "REST APIs"],
-      certificateUrl: "/certificates/nodejs-backend.pdf",
-    },
-  ];
+  })) : []
 
   // Mobile Sidebar
   const MobileSidebar = () => (

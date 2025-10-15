@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetAdminStatsControllerApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-admin-stats",
+      `${BaseUrl}/api/v1/admin/get-admin-stats`,
       {
         withCredentials: true,
         headers: {
@@ -36,7 +37,7 @@ const GetAdminStatsControllerApi = async () => {
 const GetAdminSpecificControllerApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-admin-specific",
+      `${BaseUrl}/api/v1/admin/get-admin-specific`,
       {
         withCredentials: true,
         headers: {
@@ -67,7 +68,7 @@ const GetAdminSpecificControllerApi = async () => {
 const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-admin-graph",
+      `${BaseUrl}/api/v1/admin/get-admin-graph`,
       {
         params: { year },
         withCredentials: true,
@@ -96,7 +97,7 @@ const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
 const GetUserActivitiesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-user-activities",
+      `${BaseUrl}/api/v1/admin/get-user-activities`,
       {
         withCredentials: true,
         headers: {
@@ -124,7 +125,7 @@ const GetUserActivitiesApi = async () => {
 const GetCourseDataApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-course-data",
+      `${BaseUrl}/api/v1/admin/get-course-data`,
       {
         withCredentials: true,
         headers: {
@@ -152,7 +153,7 @@ const GetCourseDataApi = async () => {
 const GetCategoryWiseDataApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:5000/api/v1/admin/get-category-wise-course-data",
+      `${BaseUrl}/api/v1/admin/get-category-wise-course-data`,
       {
         withCredentials: true,
         headers: {
@@ -183,5 +184,5 @@ export {
   GetAdminGraphApi,
   GetUserActivitiesApi,
   GetCourseDataApi,
-  GetCategoryWiseDataApi
+  GetCategoryWiseDataApi,
 };
