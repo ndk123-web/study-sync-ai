@@ -221,7 +221,7 @@ const SignUp = () => {
         username:
           firebaseResponse.user.displayName ||
           firebaseResponse.user.email.split("@")[0],
-        token,
+         token,
       });
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {

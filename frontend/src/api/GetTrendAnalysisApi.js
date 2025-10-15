@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetTrendAnalysisApi = async ({ year }) => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/dashboard/get-trend-analysis`,
+      `${BaseUrl}/api/v1/dashboard/get-trend-analysis`,
       {
         params: { year },
         withCredentials: true,

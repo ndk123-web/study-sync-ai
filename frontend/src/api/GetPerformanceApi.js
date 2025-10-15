@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetPerformanceApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/dashboard/get-performance-data/`,
+      `${BaseUrl}/api/v1/dashboard/get-performance-data/`,
       {
         withCredentials: true,
         headers: {

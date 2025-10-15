@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetSummaryOfCurrentCourse = async ({ courseId, videoId }) => {
   try {
     const backendResponse = await axios.post(
-      `http://localhost:8000/api/v1/summaries/get-summary`,
+      `${BaseUrl}/api/v1/summaries/get-summary`,
       {
         courseId,
         videoId

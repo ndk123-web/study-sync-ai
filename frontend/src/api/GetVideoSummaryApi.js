@@ -1,11 +1,12 @@
 import axios from "axios";
 import { AES } from "crypto-js";
 import CryptoJS from "crypto-js";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetVideoSummaryApi = async ({ courseId, videoId }) => {
   try {
     const backendResponse = await axios.post(
-      `http://localhost:8000/api/v1/summaries/get-video-summary`,
+      `${BaseUrl}/api/v1/summaries/get-video-summary`,
       {
         videoId: CryptoJS.AES.decrypt(
           videoId,

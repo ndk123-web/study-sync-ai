@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetUserActivitiesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/dashboard/get-user-activities/`,
+      `${BaseUrl}/api/v1/dashboard/get-user-activities/`,
       {
         withCredentials: true,
         headers: {

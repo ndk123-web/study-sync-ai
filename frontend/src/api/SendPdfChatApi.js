@@ -1,20 +1,21 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const SendPdfChatApi = async ({ pdfId , question }) => {
   try {
-    const backendResponse = await axios.post(
-      "http://localhost:8000/api/v1/pdf/rag-chat",
-      {
-        pdfId,
-        question
-      },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
+      const backendResponse = await axios.post(
+        `${BaseUrl}/api/v1/pdf/rag-chat`,
+        {
+          pdfId,
+          question
         },
-      }
-    );
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
     console.log("backendApiResponse for SendPdfChatApi: ", backendResponse);
 
