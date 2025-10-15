@@ -1,12 +1,13 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
-const SendCourseQuizCompletedApi = async ({ score , quizId }) => {
+const SendCourseQuizCompletedApi = async ({ score, quizId }) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:8000/api/v1/quiz/complete-quiz",
+      `${BaseUrl}/api/v1/quiz/complete-quiz`,
       {
         score: score,
-        quizId: quizId
+        quizId: quizId,
       },
       {
         withCredentials: true,
@@ -16,7 +17,10 @@ const SendCourseQuizCompletedApi = async ({ score , quizId }) => {
       }
     );
 
-    console.log("backendApiResponse for SendCourseQuizCompletedApi: ", backendResponse);
+    console.log(
+      "backendApiResponse for SendCourseQuizCompletedApi: ",
+      backendResponse
+    );
 
     return {
       status: backendResponse.status,

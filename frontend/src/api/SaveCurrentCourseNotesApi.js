@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const SaveCourseNotesApi = async ({ courseId , notes , type  }) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/notes/save-notes",
+      `${BaseUrl}/api/v1/notes/save-notes`,
       {
         type: type,
         courseId: courseId,

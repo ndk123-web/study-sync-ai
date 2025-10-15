@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const TrackPlaylistIndexApi = async (courseId) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/courses/track-playlist-index",
+      `${BaseUrl}/api/v1/courses/track-playlist-index`,
       {
         courseId: courseId,
       },

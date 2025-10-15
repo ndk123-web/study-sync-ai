@@ -1,11 +1,12 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetPdfChats = async ({ pdfId }) => {
   try {
     console.log("📄 Fetching PDF metadata for ID:", pdfId);
 
     const backendResponse = await axios.get(
-      "http://localhost:8000/api/v1/pdf/get-pdf-chats",
+      `${BaseUrl}/api/v1/pdf/get-pdf-chats`,
       {
         withCredentials: true,
         headers: {

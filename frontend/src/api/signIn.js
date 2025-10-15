@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const signInApi = async ({ token }) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/user/login-user",
+      `${BaseUrl}/api/v1/user/login-user`,
       {},
       {
         withCredentials: true,

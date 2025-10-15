@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetPDFSummaryApi = async ({ pdfId }) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:8000/api/v1/pdf/get-pdf-summary",
+      `${BaseUrl}/api/v1/pdf/get-pdf-summary`,
       {
         pdfId,
       },

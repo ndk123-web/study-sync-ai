@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const SendCourseQuizApi = async ({ level, courseId }) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:8000/api/v1/quiz/generate-quiz",
+      `${BaseUrl}/api/v1/quiz/generate-quiz`,
       {
         level,
         courseId,

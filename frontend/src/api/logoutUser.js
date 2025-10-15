@@ -1,10 +1,10 @@
 import axios from "axios";
-import { use } from "react";
+import BaseUrl from "./BaseApiUrl.js";
 
 const logoutUserApi = async () => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/user/logout-user",
+      `${BaseUrl}/api/v1/user/logout-user`,
       {},
       {
         withCredentials: true,

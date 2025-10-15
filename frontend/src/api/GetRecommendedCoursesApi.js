@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetRecommendedCoursesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      "http://localhost:8000/api/v1/recommend/recommend-courses",
+      `${BaseUrl}/api/v1/recommend/recommend-courses`,
       {
         withCredentials: true,
         headers: {

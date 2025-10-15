@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetTopicsWiseProgressApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/dashboard/get-topics-wise-progress/`,
+      `${BaseUrl}/api/v1/dashboard/get-topics-wise-progress/`,
       {
         withCredentials: true,
         headers: {

@@ -1,4 +1,5 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const LoadPdfFileApi = async ({ pdfFile }) => {
   try {
@@ -8,16 +9,16 @@ const LoadPdfFileApi = async ({ pdfFile }) => {
 
     console.log("📄 Sending PDF file:", pdfFile.name, "Size:", pdfFile.size);
 
-    const backendResponse = await axios.post(
-      "http://localhost:8000/api/v1/pdf/load-pdf",
-      formData,
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+      const backendResponse = await axios.post(
+        `${BaseUrl}/api/v1/pdf/load-pdf`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
     console.log("backendApiResponse for LoadPdfFileApi: ", backendResponse);
 

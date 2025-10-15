@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetUserCertificatesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/certificate/get-user-certificates/`,
+      `${BaseUrl}/api/v1/certificate/get-user-certificates/`,
       {
         withCredentials: true,
         headers: {

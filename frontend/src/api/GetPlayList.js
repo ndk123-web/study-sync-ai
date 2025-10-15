@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetPlayListApi = async (courseId) => {
   try {
     const backendResponse = await axios.get(
-      `http://localhost:5000/api/v1/courses/${courseId}`,
+      `${BaseUrl}/api/v1/courses/${courseId}`,
       {
         withCredentials: true,
         headers: {

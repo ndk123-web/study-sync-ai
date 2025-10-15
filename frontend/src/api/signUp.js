@@ -1,30 +1,27 @@
 import axios from "axios";
-import { use } from "react";
+import BaseUrl from "./BaseApiUrl.js";
 
-const signUpApi = async ({ username , token }) => {
+// ✅ Correct version
+const signUpApi = async ({ username, token }) => {
   try {
-
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/user/create-user",
-      {
-        username: username
-      },
+      `${BaseUrl}/api/v1/user/create-user`,
+      { username }, // only send username in body
       {
         withCredentials: true,
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ include Firebase token
         },
       }
     );
 
-    console.log("backendApiResponse: ",backendResponse)
+    console.log("backendApiResponse: ", backendResponse);
 
     return {
       status: backendResponse.status,
       data: backendResponse.data.data,
     };
-
   } catch (err) {
     console.log("Err in SignUp Api: ", err.message);
     return {
