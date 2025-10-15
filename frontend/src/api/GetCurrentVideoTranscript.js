@@ -1,4 +1,5 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const extractVideoId = (urlOrId) => {
   const regex =
@@ -13,7 +14,7 @@ const GetCurrentVideoTranscriptApi = async ({ currentVideoId }) => {
     const properVideoId = extractVideoId(currentVideoId);
 
     const backendResponse = await axios.post(
-      `http://localhost:8000/api/v1/transcripts/get-transcript`,
+      `${BaseUrl}/api/v1/transcripts/get-transcript`,
       {
         videoId: properVideoId, // ✅ Ab backend ko sirf ID bhej raha hai
       },

@@ -1,9 +1,10 @@
 import axios from "axios";
+import BaseUrl from "./BaseApiUrl.js";
 
 const GetCurrentCourseProgressApi = async (courseId) => {
   try {
     const backendResponse = await axios.post(
-      "http://localhost:5000/api/v1/courses/get-current-course-progress",
+      `${BaseUrl}/api/v1/courses/get-current-course-progress`,
       {
         courseId: courseId,
       },
