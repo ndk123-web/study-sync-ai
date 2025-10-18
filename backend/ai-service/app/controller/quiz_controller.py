@@ -1,9 +1,10 @@
 from datetime import datetime
-import ollama
+from google import genai
 from ..db.db import db
 import asyncio
 from ..utils.ApiResponse import ApiResponse
 from ..utils.ApiError import ApiError
+import os
 
 quizzes_collection = db['quizzes']
 courses_collection = db['courses']
@@ -11,7 +12,6 @@ users_collection = db['users']
 activity_collection = db['activities']
 
 import json
-import ollama
 from ..db.db import db
 import asyncio
 from ..utils.ApiResponse import ApiResponse
@@ -44,16 +44,15 @@ async def generate_quiz_controller(courseId: str , level: str, uid: str):
         
         print("AI Prompt:", prompt)
         
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=prompt
         )
 
         # Extract raw content string
-        raw_content = ai_response["message"]["content"]
+        raw_content = ai_response.text if hasattr(ai_response, 'text') else ''
         print("AI Raw Response:", raw_content)
 
         # Clean and parse JSON string -> Python list

@@ -1,4 +1,4 @@
-import ollama 
+from google import genai
 from pydantic import BaseModel
 from ..utils.ApiResponse import ApiResponse
 from ..utils.ApiError import ApiError
@@ -8,6 +8,7 @@ from fastapi import Query
 from urllib.parse import unquote
 import re
 from bson import ObjectId
+import os
 
 class ChatRequest(BaseModel):
     courseId: str
@@ -159,21 +160,36 @@ if user asks anything other than course related queries then politely refuse and
         ]
 
     try:
+        # Initialize Gemini client
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+        
+        # Format messages for Gemini API
+        if chatRequest.role == "video":
+            content = user_message
+        else:
+            # For course chat, combine system and user message
+            systemPrompt = f"""You are StudySync AI assistant. Help with course content, explain concepts, and guide learning about the courseId {chatRequest.courseId}.
+
+Format responses with:
+- **bold** for key terms
+- ## for headings
+- `code` for code
+- - for lists
+
+Keep responses clear and short, if the user asks other things instead of learning then kindly reply user
+if user asks anything other than course related queries then politely refuse and say"""
+            content = f"{systemPrompt}\n\nUser Question: {user_message}"
+        
         ai_response = await asyncio.to_thread(
-                ollama.chat,
-                model="mistral",
-                messages=previousChats,
-                options={
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "num_predict": 512  # Limit response length for faster processing
-                }
-            )
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=content
+        )
 
         print("AI Response for chat: ", ai_response)
         
-        # Extract only the message content from the Ollama response
-        response_text = ai_response.get('message', {}).get('content', 'No response generated')
+        # Extract text from Gemini response
+        response_text = ai_response.text if hasattr(ai_response, 'text') else 'No response generated'
 
         print("uid: ", chatRequest.userData["uid"])
         print("courseId: ", chatRequest.courseId)

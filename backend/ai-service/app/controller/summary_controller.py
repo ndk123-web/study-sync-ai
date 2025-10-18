@@ -1,12 +1,13 @@
 import asyncio
 import json
 import re
-import ollama 
+from google import genai
 from app.db import db 
 from pydantic import BaseModel
 from bson import ObjectId
 from ..utils.ApiResponse import ApiResponse
 from ..utils.ApiError import ApiError
+import os
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import (
     TranscriptsDisabled,
@@ -71,19 +72,18 @@ Summary should be:
 - Clear and informative
 - Focus on key points and main topics discussed"""
 
-        # Run ollama.chat in a separate thread since it's blocking
+        # Initialize Gemini client and generate response
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=[
-                {"role": "user", "content": prompt_text}
-            ]
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=prompt_text
         )
 
         print("AI Response:", ai_response)
 
-        # Extract the actual message content from ollama response
-        summary_text = ai_response.get('message', {}).get('content', 'Summary generation failed')
+        # Extract text from Gemini response
+        summary_text = ai_response.text if hasattr(ai_response, 'text') else 'Summary generation failed'
 
         return ApiResponse.send(
             200,
@@ -133,15 +133,14 @@ async def get_video_summary_controller(payload: videoSummaryRequest):
         - Clear and informative
         - Focus on key points and main topics discussed"""
         
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=[
-                {"role": "user", "content": prompt_text}
-            ]
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=prompt_text
         )
         
-        summary_text = ai_response.get('message', {}).get('content', 'Summary generation failed')
+        summary_text = ai_response.text if hasattr(ai_response, 'text') else 'Summary generation failed'
     
         return ApiResponse.send(
             200,
