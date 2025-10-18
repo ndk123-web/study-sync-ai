@@ -176,7 +176,7 @@ Format responses with:
 - `code` for code
 - - for lists
 
-Keep responses clear and short, if the user asks other things instead of learning then kindly reply user
+Keep responses clear and short, reply user if the topic is related ok but if the user asks other things instead of learning then kindly reply user
 if user asks anything other than course related queries then politely refuse and say"""
             content = f"{systemPrompt}\n\nUser Question: {user_message}"
         
