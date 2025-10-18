@@ -9,7 +9,11 @@ import Activity from "../models/activity.models.js";
 import kafka from "../../kafka/client.js";
 
 // Use environment variable instead of importing from frontend
-const CERTIFICATE_SERVICE_URL = process.env.CERTIFICATE_SERVICE_URL || "http://localhost:5001";
+const CERTIFICATE_SERVICE_URL =
+  process.env.CERTIFICATE_SERVICE_URL || "http://localhost:5001";
+
+const NOTIFICATION_SERVICE_URL =
+  process.env.NOTIFICATION_SERVICE_URL || "http://localhost:4000";
 
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
@@ -94,27 +98,57 @@ const EnrollCurrentCourseController = wrapper(async (req, res) => {
 
   console.log("Enrollment Created");
 
-  // Kafka producer produce the event to the topic
-  const producer = kafka.producer();
+  // Before Flow
+  // // Kafka producer produce the event to the topic
+  // const producer = kafka.producer();
 
-  await producer.connect();
-  console.log("Producer connected to Kafka");
+  // await producer.connect();
+  // console.log("Producer connected to Kafka");
 
-  const event = {
-    event: "student_enrolled",
-    userId: getCurrentUser.uid,
-    courseId: getCurrentCourse.courseId,
-    message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`,
-  };
+  // const event = {
+  //   event: "student_enrolled",
+  //   userId: getCurrentUser.uid,
+  //   courseId: getCurrentCourse.courseId,
+  //   message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`,
+  // };
 
-  await producer.send({
-    topic: "enrolled-events", // topic name
-    messages: [{ value: JSON.stringify(event) }],
-  });
+  // await producer.send({
+  //   topic: "enrolled-events", // topic name
+  //   messages: [{ value: JSON.stringify(event) }],
+  // });
 
-  console.log("✅ Event sent:", event);
+  // console.log("✅ Event sent:", event);
 
-  await producer.disconnect();
+  // await producer.disconnect();
+
+  // For Simplicity
+  try {
+    const response = await fetch(
+      `${NOTIFICATION_SERVICE_URL}/notify/${encodeURIComponent(
+        getCurrentUser.uid
+      )}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: {
+            event: "student_enrolled",
+            userId: getCurrentUser.uid,
+            courseId: getCurrentCourse.courseId,
+            message: `You have successfully enrolled in the course: ${getCurrentCourse.title}`,
+          },
+        }),
+      }
+    );
+    if (!response.ok) {
+      console.error("❌ Failed to deliver notification", response.status);
+    } else {
+      const resJson = await response.json().catch(() => ({}));
+      console.log("📨 Notification POST result:", resJson);
+    }
+  } catch (err) {
+    console.error("❌ Error calling notification service:", err.message);
+  }
 
   return res
     .status(201)
