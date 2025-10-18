@@ -14,7 +14,7 @@ from bson import ObjectId , json_util
 import json
 from pinecone import Pinecone, ServerlessSpec
 import os 
-import ollama
+from google import genai
 import asyncio
 from langchain_pinecone import PineconeVectorStore
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -285,7 +285,7 @@ async def rag_chat_controller(userId: str, pdfId: str, question: str):
 
         context = "\n\n".join(context_chunks) if context_chunks else ""
 
-        # Build prompt for Ollama
+        # Build prompt for Gemini
         user_prompt = f"""
 You are a helpful assistant for StudySync. Use ONLY the following PDF context to answer the question concisely. If the context doesn't contain the answer, say you don't have enough information.
 
@@ -318,20 +318,14 @@ Question: {question}
 Answer (use the markdown formatting above):
 """
 
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=[
-                {"role": "user", "content": user_prompt}
-            ],
-            options={
-                "temperature": 0.3,
-                "top_p": 0.9,
-                "num_predict": 512
-            }
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=user_prompt
         )
 
-        answer = ai_response.get('message', {}).get('content', 'No response generated')
+        answer = ai_response.text if hasattr(ai_response, 'text') else 'No response generated'
         
         await chats_collection.insert_one({
             "userId": userId,
@@ -425,18 +419,14 @@ PDF Content:
 Summary:
 """
 
+        client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
-            ollama.chat,
-            model="mistral",
-            messages=[{"role": "user", "content": prompt}],
-            options={
-                "temperature": 0.4,
-                "top_p": 0.9,
-                "num_predict": 700
-            }
+            client.models.generate_content,
+            model="gemini-2.0-flash-exp",
+            contents=prompt
         )
 
-        summary_text = ai_response.get('message', {}).get('content', 'Summary generation failed')
+        summary_text = ai_response.text if hasattr(ai_response, 'text') else 'Summary generation failed'
         return ApiResponse.send(200, {"summary": summary_text}, "PDF summary generated successfully")
 
     except Exception as e:
