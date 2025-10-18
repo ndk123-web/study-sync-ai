@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 
 const FetchUserChatsApi = async ({ courseId , role  }) => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/chat/fetch-chats`,
+      `${AI_SERVICE_URL}/api/v1/chat/fetch-chats`,
       {
         params: { courseId , role },
         withCredentials: true,

@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const TrackPlaylistIndexApi = async (courseId) => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/courses/track-playlist-index`,
+      `${AUTH_SERVICE_URL}/api/v1/courses/track-playlist-index`,
       {
         courseId: courseId,
       },

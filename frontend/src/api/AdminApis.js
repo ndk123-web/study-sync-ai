@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const GetAdminStatsControllerApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-admin-stats`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-admin-stats`,
       {
         withCredentials: true,
         headers: {
@@ -37,7 +37,7 @@ const GetAdminStatsControllerApi = async () => {
 const GetAdminSpecificControllerApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-admin-specific`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-admin-specific`,
       {
         withCredentials: true,
         headers: {
@@ -68,7 +68,7 @@ const GetAdminSpecificControllerApi = async () => {
 const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-admin-graph`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-admin-graph`,
       {
         params: { year },
         withCredentials: true,
@@ -97,7 +97,7 @@ const GetAdminGraphApi = async (year = new Date().getFullYear()) => {
 const GetUserActivitiesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-user-activities`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-user-activities`,
       {
         withCredentials: true,
         headers: {
@@ -125,7 +125,7 @@ const GetUserActivitiesApi = async () => {
 const GetCourseDataApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-course-data`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-course-data`,
       {
         withCredentials: true,
         headers: {
@@ -153,7 +153,7 @@ const GetCourseDataApi = async () => {
 const GetCategoryWiseDataApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/admin/get-category-wise-course-data`,
+      `${AUTH_SERVICE_URL}/api/v1/admin/get-category-wise-course-data`,
       {
         withCredentials: true,
         headers: {

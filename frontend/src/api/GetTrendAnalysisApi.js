@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const GetTrendAnalysisApi = async ({ year }) => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/dashboard/get-trend-analysis`,
+      `${AUTH_SERVICE_URL}/api/v1/dashboard/get-trend-analysis`,
       {
         params: { year },
         withCredentials: true,

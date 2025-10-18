@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const SaveCourseNotesApi = async ({ courseId , notes , type  }) => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/notes/save-notes`,
+      `${AUTH_SERVICE_URL}/api/v1/notes/save-notes`,
       {
         type: type,
         courseId: courseId,

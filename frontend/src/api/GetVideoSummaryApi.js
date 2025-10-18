@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AES } from "crypto-js";
 import CryptoJS from "crypto-js";
-import BaseUrl from "./BaseApiUrl.js";
+import { AI_SERVICE_URL as BaseUrl } from "./BaseApiUrl.js";
 
 const GetVideoSummaryApi = async ({ courseId, videoId }) => {
   try {

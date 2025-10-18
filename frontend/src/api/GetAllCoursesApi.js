@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const getAllCoursesApi = async () => {
   try {
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/courses/`,
+      `${AUTH_SERVICE_URL}/api/v1/courses/`,
       {
         withCredentials: true,
         headers: {
