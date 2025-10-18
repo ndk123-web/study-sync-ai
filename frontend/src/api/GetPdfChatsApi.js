@@ -1,12 +1,12 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 
 const GetPdfChats = async ({ pdfId }) => {
   try {
     console.log("📄 Fetching PDF metadata for ID:", pdfId);
 
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/pdf/get-pdf-chats`,
+      `${AI_SERVICE_URL}/api/v1/pdf/get-pdf-chats`,
       {
         withCredentials: true,
         headers: {

@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const logoutUserApi = async () => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/user/logout-user`,
+      `${AUTH_SERVICE_URL}/api/v1/user/logout-user`,
       {},
       {
         withCredentials: true,

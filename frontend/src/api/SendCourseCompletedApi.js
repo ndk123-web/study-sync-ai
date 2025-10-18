@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 
 const SendCourseQuizCompletedApi = async ({ score, quizId }) => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/quiz/complete-quiz`,
+      `${AI_SERVICE_URL}/api/v1/quiz/complete-quiz`,
       {
         score: score,
         quizId: quizId,

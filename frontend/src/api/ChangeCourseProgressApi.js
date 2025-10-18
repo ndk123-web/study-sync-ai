@@ -1,10 +1,10 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const ChangeCourseProgressApi = async (courseId, currentIndex) => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/courses/change-course-progress`,
+      `${AUTH_SERVICE_URL}/api/v1/courses/change-course-progress`,
       {
         courseId: courseId,
         currentIndex: currentIndex,

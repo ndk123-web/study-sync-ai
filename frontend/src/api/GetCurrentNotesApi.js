@@ -1,5 +1,5 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
   try {
@@ -10,7 +10,7 @@ const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
     console.log("📝 Encoded courseId:", encodedCourseId);
     
     const backendResponse = await axios.get(
-      `${BaseUrl}/api/v1/notes/get-notes/${encodedCourseId}?type=${type}`,
+      `${AUTH_SERVICE_URL}/api/v1/notes/get-notes/${encodedCourseId}?type=${type}`,
       {
         withCredentials: true,
         headers: {

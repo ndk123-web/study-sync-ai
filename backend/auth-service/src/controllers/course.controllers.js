@@ -8,6 +8,9 @@ import coursesRouter from "../routes/course.routes.js";
 import Activity from "../models/activity.models.js";
 import kafka from "../../kafka/client.js";
 
+// Use environment variable instead of importing from frontend
+const CERTIFICATE_SERVICE_URL = process.env.CERTIFICATE_SERVICE_URL || "http://localhost:5001";
+
 const GetAllCoursesController = wrapper(async (req, res) => {
   const courses = await Course.find();
   const user = req.user;
@@ -220,7 +223,7 @@ const ChangeCourseProgressController = wrapper(async (req, res) => {
 
     // if lastVideo and it means user completed the course now we need to generate certificate
     const data = await fetch(
-      `http://localhost:5001/generate-certificate?name=${getCurrentUser.username}&&course=${getCurrentCourse.title}`
+      `${CERTIFICATE_SERVICE_URL}/generate-certificate?name=${getCurrentUser.username}&&course=${getCurrentCourse.title}`
     );
     const json = await data.json();
     if (!json.success) {

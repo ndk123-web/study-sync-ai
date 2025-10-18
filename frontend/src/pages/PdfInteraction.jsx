@@ -356,6 +356,13 @@ const PdfInteraction = () => {
     { id: "summary", label: "Summary", icon: BookOpen },
   ];
 
+  // On Page Load Unset All loaders 
+  useEffect(() => {
+    unsetSummaryLoader();
+    unsetChatLoader();
+    unsetNotesLoader();
+  }, [])
+
   useEffect(() => {
     const fetchPdfMetadata = async () => {
       try {
@@ -677,6 +684,10 @@ const PdfInteraction = () => {
         ]);
 
         console.log("✅ PDF uploaded successfully!");
+
+        // 5 seconds delay to ensure backend processing
+        // await new Promise((resolve) => setTimeout(resolve, 5000));
+
         navigate("?pdf=" + apiResponse?.data?.enrollmentId);
       } catch (error) {
         console.error("💥 Error during PDF upload:", error);
@@ -911,7 +922,11 @@ const PdfInteraction = () => {
                           isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        PDF Document • {uploadedPdf?.size?.toFixed(2)}MB
+                        PDF Document •{" "}
+                        {typeof uploadedPdf?.size === "number"
+                          ? uploadedPdf.size.toFixed(2) + "MB"
+                          : "Loading..."}
+                        MB
                       </p>
                     </div>
                   </div>

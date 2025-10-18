@@ -29,6 +29,7 @@ import { Link, useLocation } from "react-router-dom";
 import { logoutUserApi } from "../api/logoutUser";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useNotifications } from "../store/slices/useNotifications.js";
+import { NOTIFICATION_SERVICE_URL } from "../api/BaseApiUrl.js";
 
 const Header = () => {
   const theme = useThemeStore((state) =>
@@ -104,7 +105,7 @@ const Header = () => {
 
     if (!isAuth) return;
     // withCredentials: true ensures cookies are sent with the WS handshake
-    const socket = io("http://localhost:4000", {
+    const socket = io(`${NOTIFICATION_SERVICE_URL}`, {
       withCredentials: true,
     });
 

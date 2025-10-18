@@ -1,11 +1,11 @@
 import axios from "axios";
-import BaseUrl from "./BaseApiUrl.js";
+import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
 // ✅ Correct version
 const signUpApi = async ({ username, token }) => {
   try {
     const backendResponse = await axios.post(
-      `${BaseUrl}/api/v1/user/create-user`,
+      `${AUTH_SERVICE_URL}/api/v1/user/create-user`,
       { username }, // only send username in body
       {
         withCredentials: true,

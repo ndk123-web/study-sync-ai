@@ -1,5 +1,8 @@
 import { Kafka } from "kafkajs";
 
+// Use environment variable instead of importing from frontend
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:4000";
+
 // Node18+ has global fetch; if older Node, uncomment below
 // import fetch from 'node-fetch';
 
@@ -24,7 +27,7 @@ async function runConsumer() {
       // Send as POST with JSON body; service will normalize and surface message
       try {
         const response = await fetch(
-          `http://localhost:4000/notify/${encodeURIComponent(event.userId)}`,
+          `${NOTIFICATION_SERVICE_URL}/notify/${encodeURIComponent(event.userId)}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
