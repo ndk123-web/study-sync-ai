@@ -1,0 +1,34 @@
+# Pruned minimal requirements for runtime (API server) — excludes heavy ML packages
+fastapi==0.115.12
+uvicorn==0.34.3
+pydantic==2.11.5
+python-dotenv==1.1.0
+python-multipart==0.0.20
+
+# Database
+motor==3.7.1
+pymongo==4.13.0
+
+# Firebase
+firebase-admin==6.9.0
+
+# HTTP clients / async
+requests==2.32.5
+aiohttp==3.12.15
+
+# Cloud storage
+cloudinary==1.44.0
+
+# Utilities
+joblib==1.5.2
+python-dateutil==2.9.0.post0
+
+# YouTube transcript helper
+youtube-transcript-api==1.2.2
+
+# Google Gemini / genai client (if used)
+google-genai==1.19.0
+
+# Note: heavy ML packages like tensorflow, transformers, langchain, sentence-transformers
+# and other large libraries are intentionally excluded. Install them separately using
+# `requirements-ml.txt` when you need model training or inference.

@@ -49,7 +49,7 @@ const signUpController = wrapper(async (req, res) => {
         httpOnly: true,
         sameSite: "None", // prevent by CSRF Attack
         secure: true,
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        maxAge: 30 * 24 * 60 * 60 * 1000,  // 1 month
       })
       .json(new ApiResponse(201, newUser));
   } catch (err) {
@@ -94,7 +94,7 @@ const signInController = wrapper(async (req, res) => {
           httpOnly: true,
           sameSite: "None", // prevent by CSRF Attack
           secure: true,
-          maxAge: 24 * 60 * 60 * 1000, // 1 day
+          maxAge: 30 * 24 * 60 * 60 * 1000,  // 1 month
         })
         .json(new ApiResponse(200, existingUser));
     } else {
