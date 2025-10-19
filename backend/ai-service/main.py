@@ -79,6 +79,61 @@ app.add_middleware(
 )
 
 
+# Request/Response logging middleware (temporary, controlled by CORS_DEBUG)
+@app.middleware("http")
+async def request_response_logger(request: Request, call_next):
+    debug = os.getenv("CORS_DEBUG") == "true"
+    if not debug:
+        return await call_next(request)
+
+    origin = request.headers.get("origin")
+    method = request.method
+    path = request.url.path
+
+    # Truncate helper
+    def trunc(s, n=1000):
+        if s is None:
+            return None
+        return s if len(s) <= n else s[:n] + "...[truncated]"
+
+    # Read body safely (may be empty for GET/OPTIONS)
+    try:
+        body_bytes = await request.body()
+        body_text = body_bytes.decode("utf-8", errors="ignore")
+    except Exception:
+        body_text = None
+
+    # Mask Authorization header content
+    headers = dict(request.headers)
+    if "authorization" in headers:
+        headers["authorization"] = "[REDACTED]"
+
+    print("[REQ]", {"method": method, "path": path, "origin": origin, "headers": headers, "body": trunc(body_text, 1000)})
+
+    response = await call_next(request)
+
+    # Read and truncate response body if possible
+    try:
+        resp_body = b""
+        async for chunk in response.body_iterator:
+            resp_body += chunk
+    except Exception:
+        resp_body = b""
+
+    resp_text = None
+    try:
+        resp_text = resp_body.decode("utf-8", errors="ignore")
+    except Exception:
+        resp_text = None
+
+    # Replace the original body iterator so response still returns properly
+    response.body_iterator = iter([resp_body])
+
+    print("[RES]", {"status": response.status_code, "headers": dict(response.headers), "body": trunc(resp_text, 1000)})
+
+    return response
+
+
 @app.middleware("http")
 async def cors_preflight_middleware(request: Request, call_next):
     """Explicit preflight handling + response header reflection.
