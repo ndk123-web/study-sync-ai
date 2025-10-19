@@ -1,13 +1,16 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
-import { getAuthConfig } from "./authUtils.js";
 
 const GetEnrolledCourseApi = async () => {
   try {
-    const authConfig = await getAuthConfig();
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/courses/get-enrolled-courses`,
-      authConfig
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     console.log("backendApiResponse: ", backendResponse);
@@ -17,7 +20,7 @@ const GetEnrolledCourseApi = async () => {
       data: backendResponse.data.data,
     };
   } catch (err) {
-    console.log("Err in GetEnrolledCourseApi: ", err.message);
+    console.log("Err in SignUp Api: ", err.message);
     return {
       status: err.response?.status || 500,
       data: err.response?.data || {},
