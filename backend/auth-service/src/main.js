@@ -10,12 +10,15 @@ const app = express();
 // all middlewares will be here
 app.use(
     cors({
-        origin: ['https://study-sync-ai.vercel.app/'],
+        origin: ['https://study-sync-ai.vercel.app'],
         credentials: true,
         optionsSuccessStatus: 200,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     }),
 );
+
+// ✅ Must also allow preflight (OPTIONS)
+app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: '30kb' })); // it means 30kb data will be allowed
 app.use(express.urlencoded({ limit: '30kb', extended: true }));
