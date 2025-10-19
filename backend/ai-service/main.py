@@ -109,11 +109,48 @@ async def cors_preflight_middleware(request: Request, call_next):
                 print("[CORS] preflight rejected for", origin, "path", request.url.path)
             return JSONResponse({"success": False, "message": "CORS origin not allowed"}, status_code=403)
 
-    # For non-preflight requests, call next and attach CORS headers if origin allowed
-    response = await call_next(request)
+    # For non-preflight requests, wrap to catch exceptions and ensure CORS headers always present
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        # If an unhandled exception occurs, return 500 with CORS headers
+        print(f"[CORS Middleware] Caught unhandled exception: {str(e)}")
+        response = JSONResponse({"error": "Internal Server Error"}, status_code=500)
+    
+    # ALWAYS add CORS headers to the response (even on errors)
     if origin and origin in allowed_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
+        if debug:
+            print(f"[CORS] Added headers to response for origin: {origin}")
+    
+    return response
+
+# Setup DB CONNECTION
+
+# Global exception handler to ensure all errors return with proper formatting
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch any unhandled exceptions and return JSON error with CORS headers."""
+    print(f"[ERROR] Unhandled exception: {str(exc)}")
+    import traceback
+    traceback.print_exc()
+    
+    origin = request.headers.get("origin")
+    debug = os.getenv("CORS_DEBUG") == "true"
+    
+    response = JSONResponse(
+        {"success": False, "error": str(exc), "message": "Internal Server Error"},
+        status_code=500
+    )
+    
+    # Add CORS headers to error response
+    if origin and origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        if debug:
+            print(f"[CORS] Added error response headers for origin: {origin}")
+    
     return response
 
 # Setup DB CONNECTION
