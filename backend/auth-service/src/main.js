@@ -9,17 +9,26 @@ const app = express();
 
 // all middlewares will be here
 // Explicit CORS preflight middleware to ensure headers are present
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://localhost:5173",
-  "http://localhost:3000",
-  "https://localhost:3000",
-  "https://study-sync-ai.vercel.app",
-  "http://study-sync-ai.vercel.app",
-];
+// Allow list can be provided via environment variable (comma-separated) for deployments.
+// Example: ALLOWED_ORIGINS="https://study-sync-ai.vercel.app,https://localhost:5173"
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
+  : [
+      "http://localhost:5173",
+      "https://localhost:5173",
+      "http://localhost:3000",
+      "https://localhost:3000",
+      "https://study-sync-ai.vercel.app",
+      "http://study-sync-ai.vercel.app",
+    ];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  // Lightweight debug logging for CORS preflight - helps in deployed environments
+  // Remove or guard behind a DEBUG env var in production if verbose logs are unwanted.
+  if (process.env.CORS_DEBUG === "true") {
+    console.log("[CORS] incoming request", { method: req.method, origin, url: req.url });
+  }
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
