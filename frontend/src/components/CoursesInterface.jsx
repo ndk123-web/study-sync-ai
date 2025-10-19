@@ -366,7 +366,7 @@ const CoursesInterface = () => {
 
   // Add shimmer animation styles
   useEffect(() => {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes shimmer {
         0% {
@@ -500,9 +500,82 @@ const CoursesInterface = () => {
   const [isQuizGenerated, setIsQuizGenerated] = useState(false);
   const [userAnswers, setUserAnswers] = useState({}); // Store user selected answers
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false); // Track if quiz is submitted
+
+  // Dynamic course title state
+  const [dynamicCourseTitle, setDynamicCourseTitle] = useState("");
+
+  // Dynamic course title mapping
+  const getCourseTitle = (courseId) => {
+    const courseTitleMap = {
+      PYTHON2025ENG: "Complete Python Programming Course 2025",
+      PYTHON2025HINDI: "Complete Python Programming Course - Hindi",
+      REACT2025HINDI: "Complete React.js Course - Hindi",
+      NODEJS2025HINDI: "Complete Node.js Course - Hindi",
+      FLUTTER2025EN: "Flutter Mobile Development Course",
+      GIT2025ENG: "Complete Git & GitHub Tutorial",
+      GIT2025HINDI: "Complete Git और GitHub Tutorial - Hindi",
+      AIML2025ENG: "Artificial Intelligence & Machine Learning Course",
+      UIUXHINDI: "Complete UI/UX Design Course - Hindi",
+      PYTHONDATASCIENCE2025ENGLISH: "Python for Data Science - Complete Course",
+      DEVOPS2025HINDI: "Complete DevOps Course - Zero to Hero",
+    };
+
+    return courseTitleMap[courseId] || courseId || "Course";
+  };
+
+  // Dynamic instructor mapping
+  const getCourseInstructor = (courseId) => {
+    const instructorMap = {
+      PYTHON2025ENG: "Code With Harry",
+      PYTHON2025HINDI: "Code With Harry",
+      REACT2025HINDI: "Chai aur Code",
+      NODEJS2025HINDI: "Thapa Technical",
+      FLUTTER2025EN: "Flutter Team",
+      GIT2025ENG: "Programming with Mosh",
+      GIT2025HINDI: "Engineering Digest",
+      AIML2025ENG: "Andrew Ng",
+      UIUXHINDI: "Design Course",
+      PYTHONDATASCIENCE2025ENGLISH: "NPTEL-NOC IITM",
+      DEVOPS2025HINDI: "M Prashant",
+    };
+
+    return instructorMap[courseId] || "Expert Instructor";
+  };
+
+  // Set dynamic title based on courseId
+  useEffect(() => {
+    if (courseId) {
+      const title = getCourseTitle(courseId);
+      setDynamicCourseTitle(title);
+
+      // Update document title (tab name)
+      document.title = `${title} | StudySync AI`;
+      console.log("📝 Dynamic title set:", title);
+    }
+  }, [courseId]);
+
+  // Handle dynamic title update from recommendations
+  const handleRecommendationTitleUpdate = (newCourseId, newCourseTitle) => {
+    console.log(
+      "🔄 Updating title from recommendation:",
+      newCourseId,
+      newCourseTitle
+    );
+
+    const title = getCourseTitle(newCourseId);
+    setDynamicCourseTitle(title);
+
+    // Update document title (tab name)
+    document.title = `${title} | StudySync AI`;
+    console.log(
+      "📝 Document title updated from recommendation:",
+      document.title
+    );
+  };
+
   const currentCourse = {
-    title: "Complete React Hooks Guide",
-    instructor: "React Developer Pro",
+    title: dynamicCourseTitle || "Complete React Hooks Guide",
+    instructor: getCourseInstructor(courseId) || "Expert Instructor",
     duration: "8 hours",
     level: "Intermediate",
     students: "45,234",
@@ -1215,8 +1288,11 @@ const CoursesInterface = () => {
       });
 
       console.log("Api Response for Quiz: ", apiResponse);
-      console.log("Full API Response structure:", JSON.stringify(apiResponse, null, 2));
-      
+      console.log(
+        "Full API Response structure:",
+        JSON.stringify(apiResponse, null, 2)
+      );
+
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         alert(
           "Error generating quiz: " + (apiResponse?.message || "Unknown error")
@@ -1225,26 +1301,37 @@ const CoursesInterface = () => {
         return;
       }
 
-      const questionsFromApi = apiResponse?.data?.data?.questions?.questions || [];
+      const questionsFromApi =
+        apiResponse?.data?.data?.questions?.questions || [];
       const generatedQuizId = apiResponse?.data?.data?.id;
-      
+
       console.log("Generated Quiz ID:", generatedQuizId);
       console.log("Generated Quiz ID type:", typeof generatedQuizId);
       console.log("Raw _id object:", apiResponse?.data?.data?.questions?._id);
-      
+
       // Validate that we have a valid quizId
-      if (!generatedQuizId || typeof generatedQuizId !== 'string' || generatedQuizId.trim() === '') {
+      if (
+        !generatedQuizId ||
+        typeof generatedQuizId !== "string" ||
+        generatedQuizId.trim() === ""
+      ) {
         console.error("❌ Invalid quiz ID received:", generatedQuizId);
-        console.error("❌ Raw _id object:", apiResponse?.data?.data?.questions?._id);
-        console.error("❌ Full API response structure:", JSON.stringify(apiResponse, null, 2));
+        console.error(
+          "❌ Raw _id object:",
+          apiResponse?.data?.data?.questions?._id
+        );
+        console.error(
+          "❌ Full API response structure:",
+          JSON.stringify(apiResponse, null, 2)
+        );
         alert("Error: Invalid quiz ID received from server. Please try again.");
         unsetQuizLoader();
         return;
       }
-      
+
       console.log("Questions from API:", questionsFromApi);
       console.log("Questions from API type:", typeof questionsFromApi);
-      
+
       setQuizId(generatedQuizId); // this is important for fetching the quiz later
 
       if (questionsFromApi.length === 0) {
@@ -1285,35 +1372,62 @@ const CoursesInterface = () => {
 
     try {
       const score = calculateScore();
-      console.log("📊 Quiz Submitted. Score:", score, "Total Questions:", quizQuestions.length, "Quiz ID:", quizId);
-      console.log("📊 Data Types - Score type:", typeof score, "QuizId type:", typeof quizId);
-      console.log("📊 Data Values - Score value:", score, "QuizId value:", quizId);
-      
+      console.log(
+        "📊 Quiz Submitted. Score:",
+        score,
+        "Total Questions:",
+        quizQuestions.length,
+        "Quiz ID:",
+        quizId
+      );
+      console.log(
+        "📊 Data Types - Score type:",
+        typeof score,
+        "QuizId type:",
+        typeof quizId
+      );
+      console.log(
+        "📊 Data Values - Score value:",
+        score,
+        "QuizId value:",
+        quizId
+      );
+
       // Ensure score is an integer and quizId is a string
       const payload = {
         score: parseInt(score),
-        quizId: String(quizId)
+        quizId: String(quizId),
       };
-      
+
       console.log("📊 Final payload to send:", payload);
-      console.log("📊 Payload types - score:", typeof payload.score, "quizId:", typeof payload.quizId);
-      
+      console.log(
+        "📊 Payload types - score:",
+        typeof payload.score,
+        "quizId:",
+        typeof payload.quizId
+      );
+
       const apiResponse = await SendCourseQuizCompletedApi(payload);
-      
+
       console.log("✅ Quiz completion API response:", apiResponse);
-      
+
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         console.error("❌ API Error:", apiResponse);
         alert(
           "Error submitting quiz results: " +
-            (apiResponse?.message || apiResponse?.data?.message || "Unknown error")
+            (apiResponse?.message ||
+              apiResponse?.data?.message ||
+              "Unknown error")
         );
         return;
       }
-      
+
       setIsQuizSubmitted(true);
-      console.log(`🎉 Quiz completed successfully! Score: ${score}/${quizQuestions.length} (${Math.round((score/quizQuestions.length)*100)}%)`);
-      
+      console.log(
+        `🎉 Quiz completed successfully! Score: ${score}/${
+          quizQuestions.length
+        } (${Math.round((score / quizQuestions.length) * 100)}%)`
+      );
     } catch (err) {
       console.error("💥 Error in submitting quiz:", err);
       alert("Error in submitting quiz: " + (err.message || "Unknown error"));
@@ -1347,14 +1461,13 @@ const CoursesInterface = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
-
-            <Helmet>
-              <title>{`${currentCourse.title} | StudySyncAI`}</title>
-              <meta
-                name="description"
-                content="Explore the course content, engage with interactive quizzes, and enhance your learning experience with StudySync AI."
-              />
-            </Helmet>
+      <Helmet>
+        <title>{`${currentCourse.title} | StudySyncAI`}</title>
+        <meta
+          name="description"
+          content="Explore the course content, engage with interactive quizzes, and enhance your learning experience with StudySync AI."
+        />
+      </Helmet>
 
       {/* Include Header Component */}
       <Header />
@@ -1386,13 +1499,6 @@ const CoursesInterface = () => {
                   {currentCourse.title}
                 </h1>
                 <div className="flex items-center space-x-4 mt-1">
-                  <span
-                    className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    by {currentCourse.instructor}
-                  </span>
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 text-yellow-500 fill-current" />
                     <span className="text-sm font-medium">
@@ -4263,13 +4369,16 @@ const example = 'This is important';
       </div>
 
       {/* Recommended Courses Section */}
-      <RecommendedCoursesSection isDark={isDark} />
+      <RecommendedCoursesSection
+        isDark={isDark}
+        onTitleUpdate={handleRecommendationTitleUpdate}
+      />
     </div>
   );
 };
 
 // Recommended Courses Component
-const RecommendedCoursesSection = ({ isDark }) => {
+const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
@@ -4277,7 +4386,7 @@ const RecommendedCoursesSection = ({ isDark }) => {
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [recommendationMeta, setRecommendationMeta] = useState(null);
-  
+
   // Import navigate hook properly
   const navigate = useNavigate();
 
@@ -4296,11 +4405,12 @@ const RecommendedCoursesSection = ({ isDark }) => {
       price: "Free",
       thumbnail: "https://i.ytimg.com/vi/vz1RlUyrc3w/hqdefault.jpg",
       lessons: 35,
-      description: "Complete React.js course from basics to advanced with real projects"
+      description:
+        "Complete React.js course from basics to advanced with real projects",
     },
     {
       id: "PYTHONDATASCIENCE2025ENGLISH",
-      courseId: "PYTHONDATASCIENCE2025ENGLISH", 
+      courseId: "PYTHONDATASCIENCE2025ENGLISH",
       title: "Python for Data Science - Complete Course",
       instructor: "NPTEL-NOC IITM",
       category: "Data Science",
@@ -4311,13 +4421,14 @@ const RecommendedCoursesSection = ({ isDark }) => {
       price: "Free",
       thumbnail: "https://i.ytimg.com/vi/tA42nHmmEKw/hqdefault.jpg",
       lessons: 27,
-      description: "Learn Python programming for data analysis and machine learning"
+      description:
+        "Learn Python programming for data analysis and machine learning",
     },
     {
       id: "DEVOPS2025HINDI",
       courseId: "DEVOPS2025HINDI",
       title: "Complete DevOps Course - Zero to Hero",
-      instructor: "M Prashant", 
+      instructor: "M Prashant",
       category: "DevOps",
       level: "Advanced",
       duration: "25 hours",
@@ -4326,22 +4437,22 @@ const RecommendedCoursesSection = ({ isDark }) => {
       price: "Free",
       thumbnail: "https://i.ytimg.com/vi/BNTFJJMh2eU/hqdefault.jpg",
       lessons: 20,
-      description: "Master DevOps with Docker, Kubernetes, Jenkins and more"
+      description: "Master DevOps with Docker, Kubernetes, Jenkins and more",
     },
     {
-      id: "GIT2025HINDI", 
+      id: "GIT2025HINDI",
       courseId: "GIT2025HINDI",
       title: "Complete Git and GitHub Tutorial Series",
       instructor: "Engineering Digest",
       category: "Development",
-      level: "Beginner", 
+      level: "Beginner",
       duration: "3 hours",
       students: "67,891",
       rating: 4.6,
       price: "Free",
       thumbnail: "https://i.ytimg.com/vi/-3SMW-3Z4OM/hqdefault.jpg",
       lessons: 18,
-      description: "Master Git version control and GitHub collaboration"
+      description: "Master Git version control and GitHub collaboration",
     },
     {
       id: "FLUTTER2025EN",
@@ -4350,77 +4461,94 @@ const RecommendedCoursesSection = ({ isDark }) => {
       instructor: "Flutter Team",
       category: "Mobile",
       level: "Intermediate",
-      duration: "18 hours", 
+      duration: "18 hours",
       students: "23,445",
       rating: 4.5,
       price: "Free",
-      thumbnail: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400",
+      thumbnail:
+        "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400",
       lessons: 25,
-      description: "Build beautiful cross-platform mobile apps with Flutter"
-    }
+      description: "Build beautiful cross-platform mobile apps with Flutter",
+    },
   ];
 
   // Fetch real recommendations from TensorFlow model
   useEffect(() => {
     const fetchRecommendedCourses = async () => {
       setIsLoading(true);
-      
+
       try {
         console.log("🤖 Fetching AI-powered course recommendations...");
         const apiResponse = await GetRecommendedCoursesApi();
         console.log("🎯 Recommendation API Response:", apiResponse);
-        
+
         if (apiResponse.status === 200 || apiResponse.status === 201) {
           const recommendations = apiResponse.data.recommendations || [];
-          console.log("✅ Got recommendations:", recommendations.length, "courses");
-          
+          console.log(
+            "✅ Got recommendations:",
+            recommendations.length,
+            "courses"
+          );
+
           // Store meta information about recommendations
           setRecommendationMeta({
             predicted_categories: apiResponse.meta?.predicted_categories || [],
             total_enrollments: apiResponse.meta?.total_enrollments || 0,
             model_type: apiResponse.meta?.model_type || "unknown",
-            reason: apiResponse.meta?.reason || apiResponse.data?.reason || ""
+            reason: apiResponse.meta?.reason || apiResponse.data?.reason || "",
           });
-          
+
           // Map backend course data to frontend format
-          const formattedCourses = recommendations.map(course => ({
+          const formattedCourses = recommendations.map((course) => ({
             id: course.courseId || course._id,
             courseId: course.courseId || course._id,
             title: course.title || course.courseName || "Untitled Course",
-            instructor: course.instructor || course.createdBy || "Expert Instructor",
+            instructor:
+              course.instructor || course.createdBy || "Expert Instructor",
             category: course.category || "General",
             level: course.level || course.difficulty || "Beginner",
             duration: course.duration || "Varies",
             students: course.students || course.studentsEnrolled || "0",
             rating: course.rating || 4.5,
             price: course.price || "Free",
-            thumbnail: course.thumbnail || course.thumbnailUrl || `https://via.placeholder.com/400x300?text=${encodeURIComponent(course.title || 'Course')}`,
-            lessons: course.lessons || course.totalLessons || course.videoCount || 10,
-            description: course.description || course.shortDescription || "Comprehensive course to enhance your skills"
+            thumbnail:
+              course.thumbnail ||
+              course.thumbnailUrl ||
+              `https://via.placeholder.com/400x300?text=${encodeURIComponent(
+                course.title || "Course"
+              )}`,
+            lessons:
+              course.lessons || course.totalLessons || course.videoCount || 10,
+            description:
+              course.description ||
+              course.shortDescription ||
+              "Comprehensive course to enhance your skills",
           }));
-          
+
           setRecommendedCourses(formattedCourses);
           console.log("📚 Formatted courses:", formattedCourses);
-          
         } else {
-          console.warn("❌ API returned non-success status:", apiResponse.status);
+          console.warn(
+            "❌ API returned non-success status:",
+            apiResponse.status
+          );
           console.warn("📝 API message:", apiResponse.message);
-          
+
           // Fallback to dummy data if API fails
           console.log("🔄 Falling back to dummy data...");
           setRecommendedCourses(dummyRecommendedCourses);
           setRecommendationMeta({
-            reason: "Using fallback data due to API error"
+            reason: "Using fallback data due to API error",
           });
         }
       } catch (error) {
         console.error("💥 Error fetching recommendations:", error);
         console.log("🔄 Falling back to dummy data due to error...");
-        
+
         // Fallback to dummy data on error
         setRecommendedCourses(dummyRecommendedCourses);
         setRecommendationMeta({
-          reason: "Using fallback data due to connection error"
+          reason: "Using fallback data due to connection error",
         });
       } finally {
         setIsLoading(false);
@@ -4438,64 +4566,74 @@ const RecommendedCoursesSection = ({ isDark }) => {
 
   const handleEnrollmentConfirm = async (course) => {
     // Here you can add your enrollment logic
-    console.log('🎓 Enrolling in recommended course:', course);
-    console.log('🔍 Course properties:', Object.keys(course));
-    console.log('🆔 course.id:', course.id);
-    console.log('🆔 course.courseId:', course.courseId);
+    console.log("🎓 Enrolling in recommended course:", course);
+    console.log("🔍 Course properties:", Object.keys(course));
+    console.log("🆔 course.id:", course.id);
+    console.log("🆔 course.courseId:", course.courseId);
 
     try {
       // Call the enrollment API - use courseId consistently
       const courseIdToUse = course.courseId || course.id;
-      console.log('📝 Using course ID for API:', courseIdToUse);
-      
+      console.log("📝 Using course ID for API:", courseIdToUse);
+
       const apiResponse = await EnrollmentCourseApi(courseIdToUse);
-      console.log('📡 API Response:', apiResponse);
-      console.log('📊 API Status:', apiResponse.status);
-      
+      console.log("📡 API Response:", apiResponse);
+      console.log("📊 API Status:", apiResponse.status);
+
       // Fix the condition logic - should be OR, not AND
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-          console.error('❌ API Error:', apiResponse);
-          alert("Error is there: " + apiResponse?.message);
-          return;
+        console.error("❌ API Error:", apiResponse);
+        alert("Error is there: " + apiResponse?.message);
+        return;
       }
-      
-      console.log('✅ Enrollment successful!');
-      
+
+      console.log("✅ Enrollment successful!");
+
+      // Use the shared getCourseTitle function
+      const dynamicTitle = getCourseTitle(
+        courseIdToUse,
+        apiResponse?.data?.title || course.title
+      );
+
+      console.log("🎯 Dynamic course title set:", dynamicTitle);
+      console.log("📝 Course ID used:", courseIdToUse);
+
       // Close the modal first
       setIsEnrollmentModalOpen(false);
       setSelectedCourse(null);
-      
+
       // Show success notification
-      setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
+      setSuccessMessage(
+        `Successfully enrolled in "${course.title}"! Redirecting to course...`
+      );
       setShowSuccessNotification(true);
-      
+
       // Auto-hide notification after 2 seconds
       setTimeout(() => {
         setShowSuccessNotification(false);
       }, 2000);
-      
+
       // Navigate to the course after a short delay
       setTimeout(() => {
         const finalCourseId = courseIdToUse;
-        console.log('🚀 Navigating to course with ID:', finalCourseId);
-        console.log('🌐 Navigation URL will be:', `/learn/${finalCourseId}`);
-        console.log('🔄 Current URL before navigation:', window.location.href);
-        
+        console.log("🚀 Navigating to course with ID:", finalCourseId);
+        console.log("🌐 Navigation URL will be:", `/learn/${finalCourseId}`);
+        console.log("🔄 Current URL before navigation:", window.location.href);
+
         // Force page reload to ensure proper navigation
         window.location.href = `/learn/${finalCourseId}`;
-        
+
         // Alternative approach using navigate with replace and reload
         // navigate(`/learn/${finalCourseId}`, { replace: true });
         // window.location.reload();
-        
+
         // Check if navigation happened
         setTimeout(() => {
-          console.log('🔍 URL after navigation:', window.location.href);
+          console.log("🔍 URL after navigation:", window.location.href);
         }, 500);
       }, 1500);
-      
     } catch (error) {
-      console.error('💥 Enrollment error:', error);
+      console.error("💥 Enrollment error:", error);
       alert("Error enrolling in course: " + error.message);
     }
   };
@@ -4503,6 +4641,40 @@ const RecommendedCoursesSection = ({ isDark }) => {
   const handleModalClose = () => {
     setIsEnrollmentModalOpen(false);
     setSelectedCourse(null);
+  };
+
+  // Handle dynamic title change
+  const handleTitleChange = (courseId, courseTitle) => {
+    console.log("🔄 Title change requested for:", courseId, courseTitle);
+
+    // Call parent callback if available
+    if (onTitleUpdate) {
+      onTitleUpdate(courseId, courseTitle);
+    } else {
+      // Fallback: Update document title directly
+      const dynamicTitle = getCourseTitle(courseId, courseTitle);
+      document.title = `${dynamicTitle} | StudySync AI`;
+      console.log("📝 Document title updated to:", document.title);
+    }
+  };
+
+  // Course title mapping function (shared)
+  const getCourseTitle = (courseId, fallbackTitle) => {
+    const courseTitleMap = {
+      PYTHON2025ENG: "Complete Python Programming Course 2025",
+      PYTHON2025HINDI: "Complete Python Programming Course - Hindi",
+      REACT2025HINDI: "Complete React.js Course - Hindi",
+      NODEJS2025HINDI: "Complete Node.js Course - Hindi",
+      FLUTTER2025EN: "Flutter Mobile Development Course",
+      GIT2025ENG: "Complete Git & GitHub Tutorial",
+      GIT2025HINDI: "Complete Git और GitHub Tutorial - Hindi",
+      AIML2025ENG: "Artificial Intelligence & Machine Learning Course",
+      UIUXHINDI: "Complete UI/UX Design Course - Hindi",
+      PYTHONDATASCIENCE2025ENGLISH: "Python for Data Science - Complete Course",
+      DEVOPS2025HINDI: "Complete DevOps Course - Zero to Hero",
+    };
+
+    return courseTitleMap[courseId] || fallbackTitle || courseId || "Course";
   };
 
   const RecommendedCourseCard = ({ course }) => (
@@ -4513,12 +4685,14 @@ const RecommendedCoursesSection = ({ isDark }) => {
           : "bg-gradient-to-br from-white via-gray-50 to-white border-gray-200/50"
       } border-2 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-700 
       transform hover:-translate-y-3 hover:scale-[1.05] group backdrop-blur-lg
-      ${isDark ? "shadow-xl shadow-gray-900/30" : "shadow-xl shadow-gray-300/20"}
+      ${
+        isDark ? "shadow-xl shadow-gray-900/30" : "shadow-xl shadow-gray-300/20"
+      }
       hover:border-emerald-500/50 relative`}
     >
       {/* Glow Effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-teal-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl"></div>
-      
+
       {/* Course Thumbnail */}
       <div className="relative overflow-hidden">
         <img
@@ -4531,8 +4705,12 @@ const RecommendedCoursesSection = ({ isDark }) => {
         {/* Play Button Overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
           <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl transform scale-75 group-hover:scale-100 transition-all duration-500">
-            <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8 5v10l8-5-8-5z"/>
+            <svg
+              className="w-6 h-6 text-white ml-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M8 5v10l8-5-8-5z" />
             </svg>
           </div>
         </div>
@@ -4593,7 +4771,11 @@ const RecommendedCoursesSection = ({ isDark }) => {
           </div>
           <div>
             <p className="font-semibold truncate">{course.instructor}</p>
-            <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            <p
+              className={`text-xs ${
+                isDark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               Expert Instructor
             </p>
           </div>
@@ -4603,24 +4785,40 @@ const RecommendedCoursesSection = ({ isDark }) => {
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div
             className={`flex items-center space-x-2 p-3 rounded-xl transition-all duration-300 hover:scale-105 ${
-              isDark ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-50 hover:bg-gray-100"
+              isDark
+                ? "bg-gray-700/50 hover:bg-gray-700/70"
+                : "bg-gray-50 hover:bg-gray-100"
             } border ${isDark ? "border-gray-600/50" : "border-gray-200"}`}
           >
             <span className="text-emerald-500 text-lg">⏱️</span>
             <div>
               <p className="text-xs font-medium">{course.duration}</p>
-              <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
+              <p
+                className={`text-xs ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Duration
+              </p>
             </div>
           </div>
           <div
             className={`flex items-center space-x-2 p-3 rounded-xl transition-all duration-300 hover:scale-105 ${
-              isDark ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-50 hover:bg-gray-100"
+              isDark
+                ? "bg-gray-700/50 hover:bg-gray-700/70"
+                : "bg-gray-50 hover:bg-gray-100"
             } border ${isDark ? "border-gray-600/50" : "border-gray-200"}`}
           >
             <span className="text-emerald-500 text-lg">�</span>
             <div>
               <p className="text-xs font-medium">{course.lessons} lessons</p>
-              <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>Content</p>
+              <p
+                className={`text-xs ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Content
+              </p>
             </div>
           </div>
         </div>
@@ -4642,12 +4840,20 @@ const RecommendedCoursesSection = ({ isDark }) => {
                 </span>
               ))}
             </div>
-            <span className="font-bold text-lg text-yellow-500">{course.rating}</span>
+            <span className="font-bold text-lg text-yellow-500">
+              {course.rating}
+            </span>
           </div>
           <div className="flex items-center space-x-1 text-sm">
             <span className="text-blue-500">👥</span>
             <span className="font-semibold">{course.students}</span>
-            <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>students</span>
+            <span
+              className={`text-xs ${
+                isDark ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              students
+            </span>
           </div>
         </div>
 
@@ -4661,9 +4867,11 @@ const RecommendedCoursesSection = ({ isDark }) => {
         >
           {/* Button Glow Effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-          
+
           <span className="relative z-10">🚀 Enroll Now</span>
-          <span className="relative z-10 group-hover:translate-x-2 transition-transform duration-300 text-xl">→</span>
+          <span className="relative z-10 group-hover:translate-x-2 transition-transform duration-300 text-xl">
+            →
+          </span>
         </button>
       </div>
     </div>
@@ -4680,57 +4888,113 @@ const RecommendedCoursesSection = ({ isDark }) => {
           } border-2 rounded-3xl overflow-hidden shadow-xl animate-pulse`}
         >
           {/* Thumbnail Skeleton */}
-          <div className={`h-44 sm:h-48 ${isDark ? "bg-gray-700" : "bg-gray-300"} relative`}>
+          <div
+            className={`h-44 sm:h-48 ${
+              isDark ? "bg-gray-700" : "bg-gray-300"
+            } relative`}
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer"></div>
-            
+
             {/* Skeleton badges */}
             <div className="absolute top-4 left-4 w-20 h-6 bg-gray-500/50 rounded-full"></div>
             <div className="absolute top-4 right-4 w-16 h-6 bg-gray-500/50 rounded-xl"></div>
             <div className="absolute bottom-4 left-4 w-24 h-5 bg-gray-500/50 rounded-full"></div>
           </div>
-          
+
           {/* Content Skeleton */}
           <div className="p-6 space-y-4">
             {/* Category Badge */}
-            <div className={`h-6 w-28 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-full`}></div>
-            
+            <div
+              className={`h-6 w-28 ${
+                isDark ? "bg-gray-700" : "bg-gray-300"
+              } rounded-full`}
+            ></div>
+
             {/* Title */}
             <div className="space-y-2">
-              <div className={`h-5 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
-              <div className={`h-5 w-4/5 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              <div
+                className={`h-5 w-full ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded`}
+              ></div>
+              <div
+                className={`h-5 w-4/5 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded`}
+              ></div>
             </div>
-            
+
             {/* Description */}
             <div className="space-y-2">
-              <div className={`h-4 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
-              <div className={`h-4 w-3/5 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              <div
+                className={`h-4 w-full ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded`}
+              ></div>
+              <div
+                className={`h-4 w-3/5 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded`}
+              ></div>
             </div>
-            
+
             {/* Instructor */}
             <div className="flex items-center space-x-3">
-              <div className={`w-8 h-8 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-full`}></div>
+              <div
+                className={`w-8 h-8 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded-full`}
+              ></div>
               <div className="space-y-1">
-                <div className={`h-4 w-32 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
-                <div className={`h-3 w-24 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+                <div
+                  className={`h-4 w-32 ${
+                    isDark ? "bg-gray-700" : "bg-gray-300"
+                  } rounded`}
+                ></div>
+                <div
+                  className={`h-3 w-24 ${
+                    isDark ? "bg-gray-700" : "bg-gray-300"
+                  } rounded`}
+                ></div>
               </div>
             </div>
-            
+
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className={`h-16 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-xl`}></div>
-              <div className={`h-16 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-xl`}></div>
+              <div
+                className={`h-16 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded-xl`}
+              ></div>
+              <div
+                className={`h-16 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded-xl`}
+              ></div>
             </div>
-            
+
             {/* Rating & Students */}
             <div className="flex justify-between items-center">
               <div className="flex space-x-2">
-                <div className={`h-4 w-24 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+                <div
+                  className={`h-4 w-24 ${
+                    isDark ? "bg-gray-700" : "bg-gray-300"
+                  } rounded`}
+                ></div>
               </div>
-              <div className={`h-4 w-20 ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded`}></div>
+              <div
+                className={`h-4 w-20 ${
+                  isDark ? "bg-gray-700" : "bg-gray-300"
+                } rounded`}
+              ></div>
             </div>
-            
+
             {/* Button */}
-            <div className={`h-14 w-full ${isDark ? "bg-gray-700" : "bg-gray-300"} rounded-2xl relative overflow-hidden`}>
+            <div
+              className={`h-14 w-full ${
+                isDark ? "bg-gray-700" : "bg-gray-300"
+              } rounded-2xl relative overflow-hidden`}
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer"></div>
             </div>
           </div>
@@ -4741,9 +5005,9 @@ const RecommendedCoursesSection = ({ isDark }) => {
 
   return (
     <div
-      className={`w-full ${
-        isDark ? "bg-gray-900" : "bg-gray-50"
-      } border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
+      className={`w-full ${isDark ? "bg-gray-900" : "bg-gray-50"} border-t ${
+        isDark ? "border-gray-700" : "border-gray-200"
+      }`}
     >
       <div className="max-w-full px-6 py-8">
         {/* Section Header */}
@@ -4756,18 +5020,22 @@ const RecommendedCoursesSection = ({ isDark }) => {
               Recommended for You
             </h2>
           </div>
-          <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-            {isLoading 
-              ? "AI is analyzing your learning pattern..." 
-              : (recommendationMeta?.reason 
-                ? recommendationMeta.reason
-                : `Personalized course recommendations using ${recommendationMeta?.model_type || "AI"} model${
-                    recommendationMeta?.predicted_categories?.length > 0 
-                      ? ` • Predicted interests: ${recommendationMeta.predicted_categories.join(", ")}`
-                      : ""
-                  }`
-              )
-            }
+          <p
+            className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+          >
+            {isLoading
+              ? "AI is analyzing your learning pattern..."
+              : recommendationMeta?.reason
+              ? recommendationMeta.reason
+              : `Personalized course recommendations using ${
+                  recommendationMeta?.model_type || "AI"
+                } model${
+                  recommendationMeta?.predicted_categories?.length > 0
+                    ? ` • Predicted interests: ${recommendationMeta.predicted_categories.join(
+                        ", "
+                      )}`
+                    : ""
+                }`}
           </p>
         </div>
 
@@ -4780,17 +5048,20 @@ const RecommendedCoursesSection = ({ isDark }) => {
           ) : (
             <div className="relative">
               {/* Custom Scrollbar Container */}
-              <div 
+              <div
                 className={`flex space-x-6 overflow-x-auto pb-6 px-2 scroll-smooth
                   scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full
-                  ${isDark 
-                    ? "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-700/50 hover:scrollbar-thumb-emerald-400" 
-                    : "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-300/50 hover:scrollbar-thumb-emerald-600"
+                  ${
+                    isDark
+                      ? "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-700/50 hover:scrollbar-thumb-emerald-400"
+                      : "scrollbar-thumb-emerald-500/70 scrollbar-track-gray-300/50 hover:scrollbar-thumb-emerald-600"
                   }
                   scrollbar-thumb-hover:bg-emerald-400 scrolling-touch`}
                 style={{
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: isDark ? '#10b981 #374151' : '#10b981 #d1d5db'
+                  scrollbarWidth: "thin",
+                  scrollbarColor: isDark
+                    ? "#10b981 #374151"
+                    : "#10b981 #d1d5db",
                 }}
               >
                 {recommendedCourses.map((course, index) => (
@@ -4799,17 +5070,17 @@ const RecommendedCoursesSection = ({ isDark }) => {
                     className="animate-fadeInUp"
                     style={{
                       animationDelay: `${index * 150}ms`,
-                      animationFillMode: 'both'
+                      animationFillMode: "both",
                     }}
                   >
                     <RecommendedCourseCard course={course} />
                   </div>
                 ))}
-                
+
                 {/* Scroll Padding */}
                 <div className="flex-shrink-0 w-6"></div>
               </div>
-              
+
               {/* Scroll Indicators */}
               <div className="flex justify-center mt-4 space-x-2">
                 {recommendedCourses.map((_, index) => (
@@ -4821,7 +5092,7 @@ const RecommendedCoursesSection = ({ isDark }) => {
                   ></div>
                 ))}
               </div>
-              
+
               {/* Mobile Scroll Hint */}
               <div className="md:hidden flex items-center justify-center mt-4 space-x-2 text-sm opacity-70">
                 <span>👈</span>
@@ -4843,6 +5114,7 @@ const RecommendedCoursesSection = ({ isDark }) => {
           onConfirm={handleEnrollmentConfirm}
           course={selectedCourse}
           isDark={isDark}
+          onTitleChange={handleTitleChange}
         />
       )}
 

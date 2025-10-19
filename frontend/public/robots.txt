@@ -1,0 +1,38 @@
+# StudySync AI - Robots.txt for SEO Optimization
+User-agent: *
+
+# Allow all public pages for indexing
+Allow: /
+Allow: /courses
+Allow: /about
+Allow: /contact
+Allow: /features
+Allow: /signin
+Allow: /signup
+Allow: /help-support
+
+# Disallow private/sensitive areas
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /courseInterface
+Disallow: /pdf-interaction
+Disallow: /video-interaction
+Disallow: /my-certificates
+Disallow: /api/
+Disallow: /src/
+Disallow: /*.json$
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /node_modules/
+
+# Allow search engines to crawl important assets
+Allow: /*.css$
+Allow: /*.js$
+Allow: /assets/
+Allow: /certificates/
+
+# Crawl delay to be respectful to server
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://studysyncai.com/sitemap.xml

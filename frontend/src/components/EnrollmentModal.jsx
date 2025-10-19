@@ -6,11 +6,18 @@ const EnrollmentModal = ({
   onClose, 
   onConfirm, 
   course, 
-  isDark 
+  isDark,
+  onTitleChange // New prop for dynamic title update
 }) => {
   if (!isOpen || !course) return null;
 
   const handleConfirm = () => {
+    // Trigger title change if callback provided
+    if (onTitleChange && course) {
+      const courseIdToUse = course.courseId || course.id;
+      onTitleChange(courseIdToUse, course.title);
+    }
+    
     onConfirm(course);
     onClose();
   };
