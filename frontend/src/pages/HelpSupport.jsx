@@ -59,6 +59,7 @@ import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJs from "crypto-js";
 import { Link as RouterLink } from "react-router-dom";
 import Header from "../components/Header";
+import { Helmet } from "react-helmet";
 
 const HelpSupport = () => {
   const theme = useThemeStore((state) =>
@@ -293,6 +294,14 @@ const HelpSupport = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       } transition-colors duration-300`}
     >
+      <Helmet>
+        <title>Help & Support | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Get in touch with StudySync AI for any inquiries, support, or feedback. We're here to help you on your learning journey."
+        />
+      </Helmet>
+
       <Header />
       {/* Hero Section */}
       <div

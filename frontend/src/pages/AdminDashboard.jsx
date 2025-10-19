@@ -40,6 +40,7 @@ import {
   GetCourseDataApi,
   GetCategoryWiseDataApi,
 } from "../api/AdminApis";
+import { Helmet } from "react-helmet";
 
 const AdminDashboard = () => {
   // Theme and auth
@@ -321,6 +322,14 @@ const AdminDashboard = () => {
         isDark ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
+      <Helmet>
+        <title>Admin | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Manage your StudySync AI platform efficiently with the Admin Dashboard."
+        />
+      </Helmet>
+
       {/* Use existing Header component */}
       <Header />
 

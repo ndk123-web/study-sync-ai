@@ -64,6 +64,7 @@ import { GetQuizPerformanceApi } from "../api/GetQuizPerformanceApi.js";
 import { GetPerformanceApi } from "../api/GetPerformanceApi.js";
 import { GetUserActivitiesApi } from "../api/GetUserActivities.js";
 import { io } from "socket.io-client";
+import { Helmet } from "react-helmet";
 
 const Dashboard = () => {
   // Zustand store hooks
@@ -79,7 +80,9 @@ const Dashboard = () => {
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
   const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
-  const clearNotifications = useNotifications((state) => state.clearNotifications);
+  const clearNotifications = useNotifications(
+    (state) => state.clearNotifications
+  );
 
   const [signInNotification, setSignInNotification] = useState(false);
   const [availableUserYears, setAvailableUserYears] = useState([]);
@@ -142,8 +145,8 @@ const Dashboard = () => {
           <div className="h-4 w-1/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const [statsCards, setStatCards] = useState([
     {
@@ -1766,7 +1769,7 @@ const Dashboard = () => {
                 label: "Help & Support",
                 icon: <MessageCircle className="w-5 h-5" />,
                 emoji: "❓",
-                href: "/help"
+                href: "/help",
               },
             ].map((item, index) =>
               item.isLink || item.href ? (
@@ -1862,6 +1865,13 @@ const Dashboard = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Helmet>
+        <title>Dashboard | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Your personalized dashboard to track learning progress, access courses, and manage your StudySyncAI account."
+        />
+      </Helmet>
       {/* Use the existing Header component */}
       <Header />
 

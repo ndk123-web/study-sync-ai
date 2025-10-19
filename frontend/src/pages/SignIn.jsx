@@ -19,6 +19,7 @@ import {
 import { signInApi } from "../api/signIn.js";
 import SuccessNotification from "../components/SuccessNotification.jsx";
 import ErrorNotification from "../components/ErrorNotification.jsx";
+import { Helmet } from "react-helmet";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -394,6 +395,14 @@ const SignIn = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Sign In | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Sign in to your StudySyncAI account and continue your learning journey."
+        />
+      </Helmet>
+
       <Header />
       <div
         className={`min-h-screen transition-all duration-500 ${

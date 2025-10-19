@@ -83,6 +83,7 @@ const Header = () => {
     removeCurrentPlaylist();
     removeCurrentVideoId();
     removeCourseId();
+    clearNotifications();
     try {
       const isRemoveCookie = await logoutUserApi();
       if (isRemoveCookie.status === 200 || isRemoveCookie.status === 201) {

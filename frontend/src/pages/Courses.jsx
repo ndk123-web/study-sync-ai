@@ -30,6 +30,7 @@ import { useUserStore } from "../store/slices/useUserStore.js";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
 import { useNavigate } from "react-router-dom";
 import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
+import { Helmet } from "react-helmet";
 
 const Courses = () => {
   const theme = useThemeStore((state) =>
@@ -45,11 +46,11 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+
   // Modal state
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  
+
   // Success notification state
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -198,26 +199,26 @@ const Courses = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-
       try {
         // setCourses(sample_courses);
 
-      // Check if there's a current playlist then use it from localstorage
-      // if (currentPlaylist.length > 0){
-      //   setCourses(currentPlaylist);
-      //   return; 
-      // }
+        // Check if there's a current playlist then use it from localstorage
+        // if (currentPlaylist.length > 0){
+        //   setCourses(currentPlaylist);
+        //   return;
+        // }
 
         const apiResponse = await getAllCoursesApi();
         console.log("apiResponse: ", apiResponse);
-        if (apiResponse.status !== 200 && apiResponse.status !== 201) {  // if JWT fails  
+        if (apiResponse.status !== 200 && apiResponse.status !== 201) {
+          // if JWT fails
           alert("Failed to fetch courses: " + apiResponse.message);
           removeAuth();
         }
         console.log(apiResponse.data);
         setCourses(() => [...apiResponse.data]);
       } catch (err) {
-        // if JWT fails or error came  
+        // if JWT fails or error came
         alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
         removeAuth();
       }
@@ -230,7 +231,7 @@ const Courses = () => {
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "All" || course.category === selectedCategory;
@@ -245,59 +246,60 @@ const Courses = () => {
 
   const handleEnrollmentConfirm = async (course) => {
     // Here you can add your enrollment logic
-    console.log('🎓 Enrolling in course:', course);
-    console.log('🔍 Course properties:', Object.keys(course));
-    console.log('🆔 course.id:', course.id);
-    console.log('🆔 course.courseId:', course.courseId);
+    console.log("🎓 Enrolling in course:", course);
+    console.log("🔍 Course properties:", Object.keys(course));
+    console.log("🆔 course.id:", course.id);
+    console.log("🆔 course.courseId:", course.courseId);
 
     try {
       // Call the enrollment API - use courseId consistently
       const courseIdToUse = course.courseId || course.id;
-      console.log('📝 Using course ID for API:', courseIdToUse);
-      
+      console.log("📝 Using course ID for API:", courseIdToUse);
+
       const apiResponse = await EnrollmentCourseApi(courseIdToUse);
-      console.log('📡 API Response:', apiResponse);
-      console.log('📊 API Status:', apiResponse.status);
-      
+      console.log("📡 API Response:", apiResponse);
+      console.log("📊 API Status:", apiResponse.status);
+
       // Fix the condition logic - should be OR, not AND
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
-          console.error('❌ API Error:', apiResponse);
-          alert("Error is there: " + apiResponse?.message);
-          return;
+        console.error("❌ API Error:", apiResponse);
+        alert("Error is there: " + apiResponse?.message);
+        return;
       }
-      
-      console.log('✅ Enrollment successful!');
-      
+
+      console.log("✅ Enrollment successful!");
+
       // Close the modal first
       setIsEnrollmentModalOpen(false);
       setSelectedCourse(null);
-      
+
       // Show success notification
-      setSuccessMessage(`Successfully enrolled in "${course.title}"! Redirecting to course...`);
+      setSuccessMessage(
+        `Successfully enrolled in "${course.title}"! Redirecting to course...`
+      );
       setShowSuccessNotification(true);
-      
+
       // Auto-hide notification after 2 seconds
       setTimeout(() => {
         setShowSuccessNotification(false);
       }, 2000);
-      
+
       // Navigate to the course after a short delay
       setTimeout(() => {
         const finalCourseId = courseIdToUse;
-        console.log('🚀 Navigating to course with ID:', finalCourseId);
-        console.log('🌐 Navigation URL will be:', `/learn/${finalCourseId}`);
-        console.log('🔄 Current URL before navigation:', window.location.href);
-        
+        console.log("🚀 Navigating to course with ID:", finalCourseId);
+        console.log("🌐 Navigation URL will be:", `/learn/${finalCourseId}`);
+        console.log("🔄 Current URL before navigation:", window.location.href);
+
         navigate(`/learn/${finalCourseId}`);
-        
+
         // Check if navigation happened
         setTimeout(() => {
-          console.log('🔍 URL after navigation:', window.location.href);
+          console.log("🔍 URL after navigation:", window.location.href);
         }, 500);
       }, 1500);
-      
     } catch (error) {
-      console.error('💥 Enrollment error:', error);
+      console.error("💥 Enrollment error:", error);
       alert("Error enrolling in course: " + error.message);
     }
   };
@@ -582,6 +584,14 @@ const Courses = () => {
         ></div>
         <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-10"></div>
       </div>
+
+      <Helmet>
+        <title>All Courses | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Explore a wide range of courses on StudySyncAI. Find the perfect course to enhance your skills and knowledge with our expert instructors."
+        />
+      </Helmet>
 
       {/* Header */}
       <Header />

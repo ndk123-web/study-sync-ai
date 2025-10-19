@@ -58,6 +58,7 @@ import { SendCourseQuizCompletedApi } from "../api/SendCourseCompletedApi.js";
 import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
 import EnrollmentModal from "./EnrollmentModal";
 import SuccessNotification from "./SuccessNotification";
+import { Helmet } from "react-helmet";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -1346,6 +1347,15 @@ const CoursesInterface = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+
+            <Helmet>
+              <title>{`${currentCourse.title} | StudySyncAI`}</title>
+              <meta
+                name="description"
+                content="Explore the course content, engage with interactive quizzes, and enhance your learning experience with StudySync AI."
+              />
+            </Helmet>
+
       {/* Include Header Component */}
       <Header />
 

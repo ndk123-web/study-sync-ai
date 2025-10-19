@@ -29,6 +29,7 @@ import { SendPdfChatApi } from "../api/SendPdfChatApi.js";
 import { GetPdfChats } from "../api/GetPdfChatsApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
+import { Helmet } from "react-helmet";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -356,12 +357,12 @@ const PdfInteraction = () => {
     { id: "summary", label: "Summary", icon: BookOpen },
   ];
 
-  // On Page Load Unset All loaders 
+  // On Page Load Unset All loaders
   useEffect(() => {
     unsetSummaryLoader();
     unsetChatLoader();
     unsetNotesLoader();
-  }, [])
+  }, []);
 
   useEffect(() => {
     const fetchPdfMetadata = async () => {
@@ -809,6 +810,14 @@ const PdfInteraction = () => {
           : "bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900"
       }`}
     >
+      <Helmet>
+        <title>PDF Interaction | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Interact with your PDF documents using StudySync AI's advanced features."
+        />
+      </Helmet>
+
       <Header />
 
       <div className="pt-20">

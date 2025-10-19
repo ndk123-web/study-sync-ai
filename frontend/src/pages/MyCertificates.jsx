@@ -28,6 +28,7 @@ import { useNotifications } from "../store/slices/useNotifications.js";
 import Header from "../components/Header";
 import CryptoJs from "crypto-js";
 import { GetUserCertificatesApi } from "../api/GetUserCertificates.js";
+import { Helmet } from "react-helmet";
 
 const MyCertificates = () => {
   // Zustand store hooks
@@ -77,8 +78,11 @@ const MyCertificates = () => {
       try {
         setIsLoading(true);
         const apiResponse = await GetUserCertificatesApi();
-        console.log("GetUserCertificates apiResponse: ", apiResponse?.data?.certificates);
-        
+        console.log(
+          "GetUserCertificates apiResponse: ",
+          apiResponse?.data?.certificates
+        );
+
         if (apiResponse?.status === 200 && apiResponse?.data?.certificates) {
           setUserCertificates(apiResponse.data.certificates);
         } else {
@@ -91,7 +95,7 @@ const MyCertificates = () => {
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
     GetUserCertificates();
   }, []);
@@ -104,20 +108,23 @@ const MyCertificates = () => {
   };
 
   // Use real certificates if available, otherwise demo data
-  const certificates = userCertificates.length > 0 ? userCertificates.map(cert => ({
-    id: cert._id,
-    title: cert.courseName,
-    issueDate: cert.issueDate,
-    courseId: cert.courseName, // Using courseName as courseId since not available
-    instructor: "StudySync AI",
-    thumbnail: "🏆", // Default certificate icon
-    grade: "A+", // Default grade
-    skills: [], // No skills data in backend response
-    certificateUrl: cert.certificateUrl,
-    fileName: cert.fileName,
-    publicId: cert.publicId,
-    certificateLoadType: cert.certificateLoadType
-  })) : []
+  const certificates =
+    userCertificates.length > 0
+      ? userCertificates.map((cert) => ({
+          id: cert._id,
+          title: cert.courseName,
+          issueDate: cert.issueDate,
+          courseId: cert.courseName, // Using courseName as courseId since not available
+          instructor: "StudySync AI",
+          thumbnail: "🏆", // Default certificate icon
+          grade: "A+", // Default grade
+          skills: [], // No skills data in backend response
+          certificateUrl: cert.certificateUrl,
+          fileName: cert.fileName,
+          publicId: cert.publicId,
+          certificateLoadType: cert.certificateLoadType,
+        }))
+      : [];
 
   // Mobile Sidebar
   const MobileSidebar = () => (
@@ -504,6 +511,13 @@ const MyCertificates = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Helmet>
+        <title>My Certificates | StudySyncAI</title>
+        <meta
+          name="description"
+          content="View and download your earned certificates on StudySync AI."
+        />
+      </Helmet>
       {/* Use the existing Header component */}
       <Header />
 
@@ -557,7 +571,9 @@ const MyCertificates = () => {
                 <div
                   key={item}
                   className={`p-6 rounded-xl border animate-pulse ${
-                    isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                    isDark
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-200"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -576,149 +592,151 @@ const MyCertificates = () => {
               {/* Certificates Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {certificates.map((certificate, index) => (
-              <div
-                key={certificate.id}
-                className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in relative overflow-hidden ${
-                  isDark
-                    ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
-                    : "bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:shadow-xl"
-                }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Certificate Background Pattern */}
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
-
-                {/* Certificate Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-4xl">{certificate.thumbnail}</div>
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      {certificate.grade}
-                    </div>
-                    <Trophy className="w-5 h-5 text-yellow-500" />
-                  </div>
-                </div>
-
-                {/* Certificate Title */}
-                <h3
-                  className={`font-bold text-lg mb-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {certificate.title}
-                </h3>
-
-                {/* Certificate Details */}
-                <div className="space-y-2 mb-4">
-                  <p
-                    className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    <strong>Issued:</strong> {certificate.issueDate}
-                  </p>
-                  <p
-                    className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    <strong>Instructor:</strong> {certificate.instructor}
-                  </p>
-                  <p
-                    className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    <strong>Course ID:</strong> {certificate.courseId}
-                  </p>
-                </div>
-
-                {/* Skills Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {certificate.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 text-xs rounded-full font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {
-                      // Real certificate download functionality
-                      const link = document.createElement("a");
-                      link.href = certificate.certificateUrl;
-                      link.download = certificate.fileName || `${certificate.title.replace(
-                        /\s+/g,
-                        "-"
-                      )}-Certificate.pdf`;
-                      link.target = "_blank"; // Open in new tab for cloud URLs
-                      link.click();
-                    }}
-                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-4 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center justify-center space-x-2 text-sm font-medium"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download PDF</span>
-                  </button>
-                  <button
-                    className={`p-2 rounded-lg transition-colors ${
+                  <div
+                    key={certificate.id}
+                    className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-lg transform hover:scale-105 cursor-pointer animate-fade-in relative overflow-hidden ${
                       isDark
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                        ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                        : "bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:shadow-xl"
                     }`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
+                    {/* Certificate Background Pattern */}
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
 
-                {/* Verification Badge */}
-                <div className="flex items-center justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span
-                      className={`text-xs font-medium ${
-                        isDark ? "text-gray-400" : "text-gray-600"
+                    {/* Certificate Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-4xl">{certificate.thumbnail}</div>
+                      <div className="flex items-center space-x-2">
+                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                          {certificate.grade}
+                        </div>
+                        <Trophy className="w-5 h-5 text-yellow-500" />
+                      </div>
+                    </div>
+
+                    {/* Certificate Title */}
+                    <h3
+                      className={`font-bold text-lg mb-2 ${
+                        isDark ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      Verified Certificate
-                    </span>
+                      {certificate.title}
+                    </h3>
+
+                    {/* Certificate Details */}
+                    <div className="space-y-2 mb-4">
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        <strong>Issued:</strong> {certificate.issueDate}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        <strong>Instructor:</strong> {certificate.instructor}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        <strong>Course ID:</strong> {certificate.courseId}
+                      </p>
+                    </div>
+
+                    {/* Skills Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {certificate.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-2 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 text-xs rounded-full font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          // Real certificate download functionality
+                          const link = document.createElement("a");
+                          link.href = certificate.certificateUrl;
+                          link.download =
+                            certificate.fileName ||
+                            `${certificate.title.replace(
+                              /\s+/g,
+                              "-"
+                            )}-Certificate.pdf`;
+                          link.target = "_blank"; // Open in new tab for cloud URLs
+                          link.click();
+                        }}
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-4 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center justify-center space-x-2 text-sm font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download PDF</span>
+                      </button>
+                      <button
+                        className={`p-2 rounded-lg transition-colors ${
+                          isDark
+                            ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Verification Badge */}
+                    <div className="flex items-center justify-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span
+                          className={`text-xs font-medium ${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          Verified Certificate
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          
-          {/* Empty State (if needed in future) */}
-          {certificates.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3
-                className={`text-xl font-semibold mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                No Certificates Yet
-              </h3>
-              <p
-                className={`text-sm mb-6 ${
-                  isDark ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Complete courses and quizzes to earn your first certificate!
-              </p>
-              <a
-                href="/courses"
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto inline-flex"
-              >
-                <BookOpen className="w-5 h-5" />
-                <span>Browse Courses</span>
-              </a>
-            </div>
-          )}
+
+              {/* Empty State (if needed in future) */}
+              {certificates.length === 0 && !isLoading && (
+                <div className="text-center py-12">
+                  <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3
+                    className={`text-xl font-semibold mb-2 ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    No Certificates Yet
+                  </h3>
+                  <p
+                    className={`text-sm mb-6 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    Complete courses and quizzes to earn your first certificate!
+                  </p>
+                  <a
+                    href="/courses"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all transform hover:scale-105 flex items-center space-x-2 mx-auto inline-flex"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    <span>Browse Courses</span>
+                  </a>
+                </div>
+              )}
             </>
           )}
         </div>

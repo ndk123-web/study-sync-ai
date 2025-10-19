@@ -31,11 +31,12 @@ import {
 } from "firebase/auth";
 import { signUpApi } from "../api/signUp.js";
 import ErrorNotification from "../components/ErrorNotification.jsx";
+import { Helmet } from "react-helmet";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Error notification state
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -173,13 +174,16 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signup'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signup",
+        })
+      );
+
       navigate("/dashboard");
     } catch (err) {
       console.log("Error in Form Validation", err);
@@ -221,7 +225,7 @@ const SignUp = () => {
         username:
           firebaseResponse.user.displayName ||
           firebaseResponse.user.email.split("@")[0],
-         token,
+        token,
       });
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -238,13 +242,16 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard (Google)
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signup'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signup",
+        })
+      );
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Google signup error:", err);
@@ -277,7 +284,7 @@ const SignUp = () => {
   const signUpWithGithub = async () => {
     let firebaseResponse = null;
     try {
-      unsetGithubLoader()
+      unsetGithubLoader();
       setGithubLoader();
 
       // Create GoogleAuthProvider with custom parameters to ensure popup stays open
@@ -316,13 +323,16 @@ const SignUp = () => {
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
       });
-      
+
       // Set welcome message for dashboard (GitHub)
-      localStorage.setItem('welcomeUser', JSON.stringify({
-        username: apiResponse.data.username,
-        type: 'signup'
-      }));
-      
+      localStorage.setItem(
+        "welcomeUser",
+        JSON.stringify({
+          username: apiResponse.data.username,
+          type: "signup",
+        })
+      );
+
       navigate("/dashboard");
       // unsetGithubLoader();
     } catch (err) {
@@ -357,6 +367,13 @@ const SignUp = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Sign Up | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Create your StudySyncAI account and unlock personalized learning experiences."
+        />
+      </Helmet>
       <Header />
       <div
         className={`min-h-screen transition-all duration-500 ${

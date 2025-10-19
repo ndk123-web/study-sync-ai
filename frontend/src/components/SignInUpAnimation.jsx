@@ -1,5 +1,6 @@
 import { useThemeStore } from "../store/slices/useThemeStore";
 import CryptoJs from "crypto-js";
+import { Helmet } from "react-helmet";
 
 const SignInSignUpAnimation = () => {
   const theme = useThemeStore((state) =>

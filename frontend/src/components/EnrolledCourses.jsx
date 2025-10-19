@@ -45,6 +45,7 @@ import { useUserStore } from "../store/slices/useUserStore";
 import Header from "../components/Header";
 import CryptoJs from "crypto-js";
 import { GetEnrolledCourseApi } from "../api/GetEnrolledCourseApi";
+import { Helmet } from "react-helmet";
 
 const EnrolledCoursesSample = () => {
   // Zustand store hooks
@@ -776,6 +777,13 @@ const EnrolledCoursesSample = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Helmet>
+        <title>My Enrolled Courses | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Explore your enrolled courses, track your progress, and enhance your learning experience with StudySync AI."
+        />
+      </Helmet>
       {/* Header */}
       <Header />
 

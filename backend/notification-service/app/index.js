@@ -90,7 +90,7 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:4000"],
+    origin: ["http://localhost:5173", "http://localhost:4000", "https://studysync.ndkdev.me"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,

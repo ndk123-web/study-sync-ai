@@ -30,6 +30,7 @@ import { GetVideoSummaryApi } from "../api/GetVideoSummaryApi.js";
 import { GetCurrentVideoTranscriptApi } from "../api/GetCurrentVideoTranscript.js";
 import { SaveCourseNotesApi } from "../api/SaveCurrentCourseNotesApi.js";
 import { GetCurrentNotesApi } from "../api/GetCurrentNotesApi.js";
+import { Helmet } from "react-helmet";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -590,9 +591,11 @@ const VideoInteraction = () => {
           import.meta.env.VITE_ENCRYPTION_SECRET
         ).toString();
 
-          // Update browser URL with encrypted video parameter
-          // Use canonical path; alias /video-interaction still supported
-        navigate(`/video-learning?v=${encodeURIComponent(encryptedUrl)}`, { replace: true });
+        // Update browser URL with encrypted video parameter
+        // Use canonical path; alias /video-interaction still supported
+        navigate(`/video-learning?v=${encodeURIComponent(encryptedUrl)}`, {
+          replace: true,
+        });
 
         const videoData = {
           videoId,
@@ -852,6 +855,14 @@ const VideoInteraction = () => {
         isDark ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Helmet>
+        <title>Video Interaction | StudySyncAI</title>
+        <meta
+          name="description"
+          content="Engage with your video content like never before."
+        />
+      </Helmet>
+
       <Header />
 
       <div className="pt-20">
