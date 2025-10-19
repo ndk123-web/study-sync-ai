@@ -7,15 +7,28 @@ import ApiError from './utils/ApiError.js';
 
 const app = express();
 
-// all middlewares will be here
-app.use(
-    cors({
-        origin: ['https://study-sync-ai.vercel.app'],
-        credentials: true,
-        optionsSuccessStatus: 200,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    }),
-);
+const allowedOrigins = [
+  "https://study-sync-ai.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ Blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
+// ✅ Must be before routes
+app.use(cors(corsOptions));
 
 // ✅ Must also allow preflight (OPTIONS)
 app.options("*", cors(corsOptions));
