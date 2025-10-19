@@ -7,11 +7,19 @@ import jwt from "jsonwebtoken";
 import cookie from "cookie"; // npm install cookie
 import admin from "../config/firebase-config.js"; // Firebase Admin SDK setup
 
+// Allowed origins can be provided via env var (comma separated), otherwise fallback to dev + prod
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS;
+const allowedOrigins = ALLOWED_ORIGINS
+  ? ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
+  : ["http://localhost:5173", "http://localhost:4000", "https://studysync.ndkdev.me"];
+
+const debugCors = process.env.CORS_DEBUG === "true";
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:4000"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true, // important to allow cookies
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -90,7 +98,7 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:4000", "https://studysync.ndkdev.me"],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -98,6 +106,30 @@ app.use(
 );
 
 app.use(bodyParser.json());
+
+// Explicit CORS preflight middleware to ensure headers are present and OPTIONS are handled
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (debugCors) console.log('[CORS] incoming', { method: req.method, origin, path: req.path });
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  }
+
+  if (req.method === 'OPTIONS') {
+    if (origin && allowedOrigins.includes(origin)) {
+      if (debugCors) console.log('[CORS] preflight accepted for', origin, 'path', req.path);
+      return res.sendStatus(204);
+    }
+    if (debugCors) console.warn('[CORS] preflight rejected for', origin, 'path', req.path);
+    return res.status(403).json({ success: false, message: 'CORS origin not allowed' });
+  }
+
+  next();
+});
 
 app.get("/", (req, res) => {
   res.json({ status: "ok", service: "notification-service" });
