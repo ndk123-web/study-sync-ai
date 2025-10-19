@@ -47,8 +47,8 @@ const signUpController = wrapper(async (req, res) => {
       .status(201)
       .cookie("token", firebaseSignUpUser.token, {
         httpOnly: true,
-        sameSite: "Strict", // prevent by CSRF Attack
-        secure: true,
+        sameSite: "Lax", // prevent by CSRF Attack
+        secure: false,
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json(new ApiResponse(201, newUser));

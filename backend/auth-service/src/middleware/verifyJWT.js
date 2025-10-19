@@ -5,8 +5,10 @@ import ApiError from '../utils/ApiError.js';
 const verifyJWT = wrapper(async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
     console.log('token: ',token)
+    console.log('Authorization header:', req.headers.authorization);
+    console.log('Request path:', req.path);
     if (!token) {
-        throw new ApiError(401, 'Unauthorized');
+        throw new ApiError(401, 'Unauthorized - No token provided in Authorization header or cookies');
     }
 
     try {

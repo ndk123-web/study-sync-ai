@@ -10,7 +10,7 @@ export const getAuthHeaders = async () => {
   const user = auth.currentUser;
   
   if (!user) {
-    throw new Error("User not authenticated");
+    throw new Error("User not authenticated - Please sign in again");
   }
   
   // Get fresh ID token (force refresh to ensure it's not expired)
