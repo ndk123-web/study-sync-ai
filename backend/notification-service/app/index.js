@@ -10,8 +10,16 @@ import admin from "../config/firebase-config.js"; // Firebase Admin SDK setup
 // Allowed origins can be provided via env var (comma separated), otherwise fallback to dev + prod
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS;
 const allowedOrigins = ALLOWED_ORIGINS
-  ? ALLOWED_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
-  : ["http://localhost:5173", "http://localhost:4000", "https://studysync.ndkdev.me"];
+  ? ALLOWED_ORIGINS.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : [
+      "http://localhost:5173",
+      "http://localhost:4000",
+      "https://studysync.ndkdev.me",
+      "https://study-sync-ai.vercel.app",
+      "https://study-sync-ai-auth-service.onrender.com",
+    ];
 
 const debugCors = process.env.CORS_DEBUG === "true";
 
@@ -81,15 +89,17 @@ io.on("connection", (socket) => {
   console.log(`✅ User ${socket.userId} connected (socket ${socket.id})`);
   addUserSocket(socket.userId, socket);
   console.log(
-    `[Connection] Active sockets for ${socket.userId}: ${[...userSockets[socket.userId]].map(
-      (s) => s.id
-    )}`
+    `[Connection] Active sockets for ${socket.userId}: ${[
+      ...userSockets[socket.userId],
+    ].map((s) => s.id)}`
   );
 
   socket.on("disconnect", (reason) => {
     removeUserSocket(socket.userId, socket);
     console.log(
-      `🔌 Disconnected socket ${socket.id} for user ${socket.userId}. Reason: ${reason}. Remaining: ${
+      `🔌 Disconnected socket ${socket.id} for user ${
+        socket.userId
+      }. Reason: ${reason}. Remaining: ${
         userSockets[socket.userId] ? userSockets[socket.userId].size : 0
       }`
     );
@@ -110,22 +120,37 @@ app.use(bodyParser.json());
 // Explicit CORS preflight middleware to ensure headers are present and OPTIONS are handled
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (debugCors) console.log('[CORS] incoming', { method: req.method, origin, path: req.path });
+  if (debugCors)
+    console.log("[CORS] incoming", {
+      method: req.method,
+      origin,
+      path: req.path,
+    });
 
   if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,DELETE,OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
   }
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     if (origin && allowedOrigins.includes(origin)) {
-      if (debugCors) console.log('[CORS] preflight accepted for', origin, 'path', req.path);
+      if (debugCors)
+        console.log("[CORS] preflight accepted for", origin, "path", req.path);
       return res.sendStatus(204);
     }
-    if (debugCors) console.warn('[CORS] preflight rejected for', origin, 'path', req.path);
-    return res.status(403).json({ success: false, message: 'CORS origin not allowed' });
+    if (debugCors)
+      console.warn("[CORS] preflight rejected for", origin, "path", req.path);
+    return res
+      .status(403)
+      .json({ success: false, message: "CORS origin not allowed" });
   }
 
   next();
@@ -148,18 +173,23 @@ app.all("/notify/:userId", (req, res) => {
     let candidate = body.event || body || query.message || body.message || null;
     let eventObject = null;
     if (candidate) {
-      if (typeof candidate === 'string') {
-        try { eventObject = JSON.parse(candidate); } catch { /* keep null */ }
-      } else if (typeof candidate === 'object') {
+      if (typeof candidate === "string") {
+        try {
+          eventObject = JSON.parse(candidate);
+        } catch {
+          /* keep null */
+        }
+      } else if (typeof candidate === "object") {
         eventObject = candidate;
       }
     }
 
     // Normalized fields
-    const finalMessage = (eventObject && (eventObject.message || eventObject.msg))
-      || body.message
-      || query.message
-      || "You have a new notification";
+    const finalMessage =
+      (eventObject && (eventObject.message || eventObject.msg)) ||
+      body.message ||
+      query.message ||
+      "You have a new notification";
 
     const payload = {
       type: eventObject?.event || "notification",
@@ -185,7 +215,9 @@ app.all("/notify/:userId", (req, res) => {
 });
 
 server.listen(4000, () => {
-  console.log("🚀 Notification WebSocket Service running on http://localhost:4000");
+  console.log(
+    "🚀 Notification WebSocket Service running on http://localhost:4000"
+  );
 });
 
 // Export for potential test usage
