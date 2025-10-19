@@ -44,8 +44,19 @@ app.use((req, res, next) => {
 
   // Handle preflight
   if (req.method === "OPTIONS") {
-    // Some clients expect 204 No Content for preflight
-    return res.sendStatus(204);
+    // Only respond with 204 if Origin is allowed and headers were set above
+    if (origin && allowedOrigins.includes(origin)) {
+      if (process.env.CORS_DEBUG === "true") {
+        console.log('[CORS] preflight accepted for origin', origin, 'path', req.url);
+      }
+      return res.sendStatus(204);
+    }
+
+    // Preflight from an unknown origin - return 403 and log (browser will block)
+    if (process.env.CORS_DEBUG === "true") {
+      console.warn('[CORS] preflight rejected for origin', origin, 'path', req.url);
+    }
+    return res.status(403).json({ success: false, message: 'CORS origin not allowed' });
   }
 
   next();
