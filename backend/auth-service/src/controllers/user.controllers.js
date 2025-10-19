@@ -47,8 +47,8 @@ const signUpController = wrapper(async (req, res) => {
       .status(201)
       .cookie("token", firebaseSignUpUser.token, {
         httpOnly: true,
-        sameSite: "Lax", // prevent by CSRF Attack
-        secure: false,
+        sameSite: "None", // prevent by CSRF Attack
+        secure: true,
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json(new ApiResponse(201, newUser));
@@ -92,7 +92,7 @@ const signInController = wrapper(async (req, res) => {
         .status(200)
         .cookie("token", firebaseSignUpUser.token, {
           httpOnly: true,
-          sameSite: "Strict", // prevent by CSRF Attack
+          sameSite: "None", // prevent by CSRF Attack
           secure: true,
           maxAge: 24 * 60 * 60 * 1000, // 1 day
         })
@@ -115,7 +115,7 @@ const logOutController = wrapper(async (req, res) => {
   res
     .clearCookie("token", {
       httpOnly: true,
-      sameSite: "Strict",
+      sameSite: "None",
       secure: true,
     })
     .json(new ApiResponse(200, "User logged out successfully"));
