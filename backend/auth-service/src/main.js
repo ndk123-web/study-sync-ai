@@ -20,6 +20,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "https://localhost:3000",
       "https://study-sync-ai.vercel.app",
       "http://study-sync-ai.vercel.app",
+      "https://studysync.ndkdev.me",
     ];
 
 app.use((req, res, next) => {
@@ -27,7 +28,11 @@ app.use((req, res, next) => {
   // Lightweight debug logging for CORS preflight - helps in deployed environments
   // Remove or guard behind a DEBUG env var in production if verbose logs are unwanted.
   if (process.env.CORS_DEBUG === "true") {
-    console.log("[CORS] incoming request", { method: req.method, origin, url: req.url });
+    console.log("[CORS] incoming request", {
+      method: req.method,
+      origin,
+      url: req.url,
+    });
   }
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -47,16 +52,28 @@ app.use((req, res, next) => {
     // Only respond with 204 if Origin is allowed and headers were set above
     if (origin && allowedOrigins.includes(origin)) {
       if (process.env.CORS_DEBUG === "true") {
-        console.log('[CORS] preflight accepted for origin', origin, 'path', req.url);
+        console.log(
+          "[CORS] preflight accepted for origin",
+          origin,
+          "path",
+          req.url
+        );
       }
       return res.sendStatus(204);
     }
 
     // Preflight from an unknown origin - return 403 and log (browser will block)
     if (process.env.CORS_DEBUG === "true") {
-      console.warn('[CORS] preflight rejected for origin', origin, 'path', req.url);
+      console.warn(
+        "[CORS] preflight rejected for origin",
+        origin,
+        "path",
+        req.url
+      );
     }
-    return res.status(403).json({ success: false, message: 'CORS origin not allowed' });
+    return res
+      .status(403)
+      .json({ success: false, message: "CORS origin not allowed" });
   }
 
   next();

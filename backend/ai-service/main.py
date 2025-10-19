@@ -66,6 +66,7 @@ else:
         "http://127.0.0.1:5173",
         "http://192.168.0.103:5173",
         "https://study-sync-ai.vercel.app",
+        "https://studysync.ndkdev.me"
     ]
 
 # Add FastAPI's CORSMiddleware to handle most CORS behavior
