@@ -14,7 +14,11 @@ async def initialize_firebase():
         print(f"🔍 Debug - FIREBASE_CLIENT_EMAIL: {os.getenv('FIREBASE_CLIENT_EMAIL')}")
         private_key = os.getenv("FIREBASE_PRIVATE_KEY", "")
         print(f"🔍 Debug - Private key length: {len(private_key)}")
-        print(f"🔍 Debug - Private key starts with: {private_key[:50]}...")
+        if private_key:
+            print(f"🔍 Debug - Private key starts with: {private_key[:50]}...")
+            print(f"🔍 Debug - Private key ends with: ...{private_key[-50:]}")
+        else:
+            print("❌ Private key is empty!")
         
         # Try to use environment variables first
         if os.getenv("FIREBASE_PROJECT_ID") and os.getenv("FIREBASE_PRIVATE_KEY") and os.getenv("FIREBASE_CLIENT_EMAIL"):
