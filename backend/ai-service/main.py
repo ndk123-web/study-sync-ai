@@ -69,6 +69,8 @@ else:
         "https://studysync.ndkdev.me"
     ]
 
+print("Allowed origins:", allowed_origins)
+
 # Add FastAPI's CORSMiddleware to handle most CORS behavior
 app.add_middleware(
     CORSMiddleware,
@@ -94,7 +96,8 @@ async def cors_preflight_middleware(request: Request, call_next):
 
     # Preflight
     if request.method == "OPTIONS":
-        if origin and origin in allowed_origins:
+        # Allow if origin matches allowed list or wildcard is present
+        if origin and ("*" in allowed_origins or origin in allowed_origins):
             headers = {
                 "Access-Control-Allow-Origin": origin,
                 "Access-Control-Allow-Credentials": "true",
@@ -118,7 +121,8 @@ async def cors_preflight_middleware(request: Request, call_next):
         response = JSONResponse({"error": "Internal Server Error"}, status_code=500)
     
     # ALWAYS add CORS headers to the response (even on errors)
-    if origin and origin in allowed_origins:
+    # ALWAYS add CORS headers to the response (even on errors)
+    if origin and ("*" in allowed_origins or origin in allowed_origins):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         if debug:
