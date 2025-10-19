@@ -23,8 +23,8 @@ venv/
 fixed_playlist_fetcher.py
 mlb_categories.joblib
 rf_category.joblib
-tensorflow_recommendation_model.h5
-tensorflow_mlb_categories.joblib
+# tensorflow_recommendation_model.h5
+# tensorflow_mlb_categories.joblib
 tensorflow_recommendation_model_categories.json
 
 # Environment folders
