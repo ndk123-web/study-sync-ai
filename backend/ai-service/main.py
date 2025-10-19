@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.db.db import ping_server
 from contextlib import asynccontextmanager
 import asyncio
@@ -55,13 +56,64 @@ print("Cloudinary Configured with env variables")
 app = FastAPI(lifespan=lifespan)
 
 # setup middlewares
+# Build allowed origins from env or fallback to common dev + prod origins
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS")
+if ALLOWED_ORIGINS:
+    allowed_origins = [o.strip() for o in ALLOWED_ORIGINS.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://192.168.0.103:5173",
+        "https://study-sync-ai.vercel.app",
+    ]
+
+# Add FastAPI's CORSMiddleware to handle most CORS behavior
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:5173','http://127.0.0.1:5173','http://192.168.0.103:5173'],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def cors_preflight_middleware(request: Request, call_next):
+    """Explicit preflight handling + response header reflection.
+    - If OPTIONS and origin allowed -> return 204 with CORS headers
+    - Otherwise proceed and attach CORS headers on the response when origin allowed
+    This complements CORSMiddleware and gives debug visibility.
+    """
+    origin = request.headers.get("origin")
+    debug = os.getenv("CORS_DEBUG") == "true"
+
+    if debug:
+        print("[CORS] incoming request", {"method": request.method, "origin": origin, "path": request.url.path})
+
+    # Preflight
+    if request.method == "OPTIONS":
+        if origin and origin in allowed_origins:
+            headers = {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+                "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            }
+            if debug:
+                print("[CORS] preflight accepted for", origin, "path", request.url.path)
+            return Response(status_code=204, headers=headers)
+        else:
+            if debug:
+                print("[CORS] preflight rejected for", origin, "path", request.url.path)
+            return JSONResponse({"success": False, "message": "CORS origin not allowed"}, status_code=403)
+
+    # For non-preflight requests, call next and attach CORS headers if origin allowed
+    response = await call_next(request)
+    if origin and origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # Setup DB CONNECTION
 
