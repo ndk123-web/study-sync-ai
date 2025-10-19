@@ -1,10 +1,16 @@
 # ✅ middleware/auth_middleware.py
-from fastapi import Request
-# from jose import jwt
-import os
+from fastapi import HTTPException, Request
 from firebase_admin import auth
-from app.utils.ApiError import ApiError
-from app.utils.ApiResponse import ApiResponse
+
+
+def _build_auth_error(message: str) -> dict:
+    """Standardize authentication error payload."""
+    return {
+        "statusCode": 401,
+        "message": message,
+        "data": {},
+    }
+
 
 async def verifyJWT(request: Request):
     try:
@@ -19,22 +25,16 @@ async def verifyJWT(request: Request):
             token = request.cookies.get("token")
 
         if not token:
-            return ApiError.send(
-                statusCode=401,
-                data={},
-                message="Token Not Found"
-            )
+            raise HTTPException(status_code=401, detail=_build_auth_error("Token Not Found"))
 
         decoded = auth.verify_id_token(token)
         if not decoded:
-            return ApiError.send(
-                401,
-                data={},
-                message="Invalid Token"
-            )
+            raise HTTPException(status_code=401, detail=_build_auth_error("Invalid Token"))
 
         print("Verify By Firebase: ", decoded)
         return decoded
 
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=401, detail=_build_auth_error("Authentication Failed")) from e

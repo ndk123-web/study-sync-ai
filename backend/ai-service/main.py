@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.db.db import ping_server
@@ -133,6 +133,35 @@ async def cors_preflight_middleware(request: Request, call_next):
 # Setup DB CONNECTION
 
 # Global exception handler to ensure all errors return with proper formatting
+# Dedicated handler for HTTPException to preserve intended status codes
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    origin = request.headers.get("origin")
+    debug = os.getenv("CORS_DEBUG") == "true"
+
+    if isinstance(exc.detail, dict):
+        content = {**exc.detail}
+        content.setdefault("statusCode", exc.status_code)
+        content.setdefault("message", content.get("message", ""))
+        content.setdefault("data", content.get("data", {}))
+    else:
+        content = {
+            "statusCode": exc.status_code,
+            "message": str(exc.detail) if exc.detail else "Error",
+            "data": {},
+        }
+
+    response = JSONResponse(content, status_code=exc.status_code, headers=getattr(exc, "headers", None))
+
+    if origin and ("*" in allowed_origins or origin in allowed_origins):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        if debug:
+            print(f"[CORS] Added error response headers for origin: {origin}")
+
+    return response
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch any unhandled exceptions and return JSON error with CORS headers."""
