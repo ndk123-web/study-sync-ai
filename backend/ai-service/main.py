@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI , Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.db.db import ping_server
@@ -55,136 +55,18 @@ print("Cloudinary Configured with env variables")
 
 app = FastAPI(lifespan=lifespan)
 
-# setup middlewares
-# Build allowed origins from env or fallback to common dev + prod origins
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS")
-if ALLOWED_ORIGINS:
-    allowed_origins = [o.strip() for o in ALLOWED_ORIGINS.split(",") if o.strip()]
-else:
-    allowed_origins = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://192.168.0.103:5173",
-        "https://study-sync-ai.vercel.app",
-        "https://studysync.ndkdev.me"
-    ]
-
-print("Allowed origins:", allowed_origins)
-
-# Add FastAPI's CORSMiddleware to handle most CORS behavior
+# It will handle Preflight Request As well as Actual Request
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://study-sync-ai.vercel.app",
+        "https://studysync.ndkdev.me"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def cors_preflight_middleware(request: Request, call_next):
-    """Explicit preflight handling + response header reflection.
-    - If OPTIONS and origin allowed -> return 204 with CORS headers
-    - Otherwise proceed and attach CORS headers on the response when origin allowed
-    This complements CORSMiddleware and gives debug visibility.
-    """
-    origin = request.headers.get("origin")
-    debug = os.getenv("CORS_DEBUG") == "true"
-
-    if debug:
-        print("[CORS] incoming request", {"method": request.method, "origin": origin, "path": request.url.path})
-
-    # Preflight
-    if request.method == "OPTIONS":
-        # Allow if origin matches allowed list or wildcard is present
-        if origin and ("*" in allowed_origins or origin in allowed_origins):
-            headers = {
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-                "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            }
-            if debug:
-                print("[CORS] preflight accepted for", origin, "path", request.url.path)
-            return Response(status_code=204, headers=headers)
-        else:
-            if debug:
-                print("[CORS] preflight rejected for", origin, "path", request.url.path)
-            return JSONResponse({"success": False, "message": "CORS origin not allowed"}, status_code=403)
-
-    # For non-preflight requests, wrap to catch exceptions and ensure CORS headers always present
-    try:
-        response = await call_next(request)
-    except Exception as e:
-        # If an unhandled exception occurs, return 500 with CORS headers
-        print(f"[CORS Middleware] Caught unhandled exception: {str(e)}")
-        response = JSONResponse({"error": "Internal Server Error"}, status_code=500)
-    
-    # ALWAYS add CORS headers to the response (even on errors)
-    # ALWAYS add CORS headers to the response (even on errors)
-    if origin and ("*" in allowed_origins or origin in allowed_origins):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        if debug:
-            print(f"[CORS] Added headers to response for origin: {origin}")
-    
-    return response
-
-# Setup DB CONNECTION
-
-# Global exception handler to ensure all errors return with proper formatting
-# Dedicated handler for HTTPException to preserve intended status codes
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    origin = request.headers.get("origin")
-    debug = os.getenv("CORS_DEBUG") == "true"
-
-    if isinstance(exc.detail, dict):
-        content = {**exc.detail}
-        content.setdefault("statusCode", exc.status_code)
-        content.setdefault("message", content.get("message", ""))
-        content.setdefault("data", content.get("data", {}))
-    else:
-        content = {
-            "statusCode": exc.status_code,
-            "message": str(exc.detail) if exc.detail else "Error",
-            "data": {},
-        }
-
-    response = JSONResponse(content, status_code=exc.status_code, headers=getattr(exc, "headers", None))
-
-    if origin and ("*" in allowed_origins or origin in allowed_origins):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        if debug:
-            print(f"[CORS] Added error response headers for origin: {origin}")
-
-    return response
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Catch any unhandled exceptions and return JSON error with CORS headers."""
-    print(f"[ERROR] Unhandled exception: {str(exc)}")
-    import traceback
-    traceback.print_exc()
-    
-    origin = request.headers.get("origin")
-    debug = os.getenv("CORS_DEBUG") == "true"
-    
-    response = JSONResponse(
-        {"success": False, "error": str(exc), "message": "Internal Server Error"},
-        status_code=500
-    )
-    
-    # Add CORS headers to error response
-    if origin and origin in allowed_origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        if debug:
-            print(f"[CORS] Added error response headers for origin: {origin}")
-    
-    return response
 
 # Setup DB CONNECTION
 
