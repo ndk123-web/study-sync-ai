@@ -24,11 +24,12 @@ async def getTranscriptController(videoId: str, languages: Optional[List[str]] =
             languages=preferred  # Keyword arguments for the method
         )
 
+        # youtube_transcript_api returns a list of dicts: {"text", "start", "duration"}
         formatted_transcript = [
             {
-                "startTime": snippet.start,
-                "endTime": snippet.start + snippet.duration,
-                "text": snippet.text.strip(),
+                "startTime": float(snippet.get("start", 0)),
+                "endTime": float(snippet.get("start", 0)) + float(snippet.get("duration", 0)),
+                "text": (snippet.get("text") or "").strip(),
             }
             for snippet in raw_transcript
         ]

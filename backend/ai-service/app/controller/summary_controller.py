@@ -61,7 +61,10 @@ async def get_summary_controller( payload: summaryRequest ):
             )
 
         # Extract text from first 20 transcript snippets and join them
-        context_texts = [snippet.text.strip() for snippet in raw_transcript[:20]]
+        context_texts = [
+            (snippet.get("text") or "").strip() if isinstance(snippet, dict) else str(snippet)
+            for snippet in (raw_transcript[:20] if isinstance(raw_transcript, list) else [])
+        ]
         context = " ".join(context_texts)
 
         prompt_text = f"""Please provide a concise summary of the following video transcript content:
@@ -125,13 +128,19 @@ async def get_video_summary_controller(payload: videoSummaryRequest):
             return ApiError.send(400, {"error": "Invalid YouTube URL"}, message="Could not extract video ID")
         
         response = await getTranscriptController(videoId=proper_video_id)
-        data = json.loads(response.body.decode("utf-8"))
-        
+        data = json.loads(response.body.decode("utf-8")) if hasattr(response, "body") else {}
+        transcript_items = data.get("data", {}).get("transcript", [])
+        # Build context from first 20 transcript items' text
+        context_texts = [
+            (item.get("text") or "").strip() for item in (transcript_items[:20] if isinstance(transcript_items, list) else [])
+        ]
+        context = " ".join(context_texts)
+
         prompt_text = f"""Please provide a concise summary of the following video transcript content:
-         {data['data']['transcript'][:20]}
-        Summary should be:
-        - Clear and informative
-        - Focus on key points and main topics discussed"""
+    {context}
+    Summary should be:
+    - Clear and informative
+    - Focus on key points and main topics discussed"""
         
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
