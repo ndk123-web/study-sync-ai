@@ -2,9 +2,12 @@ import axios from "axios";
 import { AES } from "crypto-js";
 import CryptoJS from "crypto-js";
 import { AI_SERVICE_URL as BaseUrl } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const GetVideoSummaryApi = async ({ courseId, videoId }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${BaseUrl}/api/v1/summaries/get-video-summary`,
       {
@@ -13,12 +16,7 @@ const GetVideoSummaryApi = async ({ courseId, videoId }) => {
           import.meta.env.VITE_ENCRYPTION_SECRET
         ).toString(CryptoJS.enc.Utf8),
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log(

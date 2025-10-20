@@ -1,20 +1,18 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const SendCourseQuizApi = async ({ level, courseId }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/quiz/generate-quiz`,
       {
         level,
         courseId,
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse for SendPdfChatApi: ", backendResponse);

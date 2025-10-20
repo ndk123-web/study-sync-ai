@@ -1,5 +1,6 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const LoadPdfFileApi = async ({ pdfFile }) => {
   try {
@@ -9,12 +10,15 @@ const LoadPdfFileApi = async ({ pdfFile }) => {
 
     console.log("📄 Sending PDF file:", pdfFile.name, "Size:", pdfFile.size);
 
+      const authConfig = await getAuthConfig();
+
       const backendResponse = await axios.post(
         `${AI_SERVICE_URL}/api/v1/pdf/load-pdf`,
         formData,
         {
-          withCredentials: true,
+          ...authConfig,
           headers: {
+            ...authConfig.headers,
             "Content-Type": "multipart/form-data",
           },
         }

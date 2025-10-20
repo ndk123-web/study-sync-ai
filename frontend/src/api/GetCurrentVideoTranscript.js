@@ -1,5 +1,6 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL, AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const extractVideoId = (urlOrId) => {
   const regex =
@@ -13,17 +14,14 @@ const GetCurrentVideoTranscriptApi = async ({ currentVideoId }) => {
     // 🟢 Pehle ID extract karo
     const properVideoId = extractVideoId(currentVideoId);
 
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/transcripts/get-transcript`,
       {
         videoId: properVideoId, // ✅ Ab backend ko sirf ID bhej raha hai
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse for transcript: ", backendResponse);

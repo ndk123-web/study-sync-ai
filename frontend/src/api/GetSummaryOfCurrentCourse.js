@@ -1,20 +1,18 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const GetSummaryOfCurrentCourse = async ({ courseId, videoId }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/summaries/get-summary`,
       {
         courseId,
         videoId
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse for Getting Summary of Current Course: ", backendResponse);

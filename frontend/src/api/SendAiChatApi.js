@@ -1,8 +1,11 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const SendAiChatApi = async ({ type , courseId , prompt }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/chat/send-chat`,
       {
@@ -10,12 +13,7 @@ const SendAiChatApi = async ({ type , courseId , prompt }) => {
         courseId: courseId,
         prompt: prompt
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse for SaveCourseNotesApi: ", backendResponse);

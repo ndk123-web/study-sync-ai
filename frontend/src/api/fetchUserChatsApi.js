@@ -1,16 +1,16 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const FetchUserChatsApi = async ({ courseId , role  }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.get(
       `${AI_SERVICE_URL}/api/v1/chat/fetch-chats`,
       {
+        ...authConfig,
         params: { courseId , role },
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }
     );
 

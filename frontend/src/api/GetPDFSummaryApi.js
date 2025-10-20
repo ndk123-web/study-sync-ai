@@ -1,19 +1,17 @@
 import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const GetPDFSummaryApi = async ({ pdfId }) => {
   try {
+    const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/pdf/get-pdf-summary`,
       {
         pdfId,
       },
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      authConfig
     );
 
     console.log("backendApiResponse for GetPDFSummaryApi: ", backendResponse);
