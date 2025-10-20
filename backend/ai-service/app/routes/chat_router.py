@@ -15,7 +15,11 @@ class ChatPostReqData(BaseModel):
 async def send_chat(payload: ChatPostReqData , userData = Depends(verifyJWT)):
     print("Course id for chat: ",payload.courseId)
 
-    args = ChatRequest(courseId=payload.courseId, userData=userData, prompt=payload.prompt, role=payload.role)
+    role_norm = (payload.role or "").strip().lower()
+    if role_norm == "courses":
+        role_norm = "course"
+
+    args = ChatRequest(courseId=payload.courseId, userData=userData, prompt=payload.prompt, role=role_norm)
     print("args: ",args)
 
     response = await get_chat_response(args)
@@ -23,6 +27,9 @@ async def send_chat(payload: ChatPostReqData , userData = Depends(verifyJWT)):
 
 @chatRouter.get('/fetch-chats')
 async def fetch_chats(courseId=Query(...), role=Query(...), userData = Depends(verifyJWT)):
-    args = FetchChatsRequest(courseId=courseId, userData=userData, role=role)
+    role_norm = (role or "").strip().lower()
+    if role_norm == "courses":
+        role_norm = "course"
+    args = FetchChatsRequest(courseId=courseId, userData=userData, role=role_norm)
     response = await fetch_user_chat(args)  
     return response 

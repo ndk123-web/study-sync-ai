@@ -1,39 +1,38 @@
-from fastapi import Request
-# from jose import jwt
-import os
+from fastapi import HTTPException, Request
 from firebase_admin import auth
-from app.utils.ApiError import ApiError
-from app.utils.ApiResponse import ApiResponse
+
+
+def _build_auth_error(message: str) -> dict:
+    return {"statusCode": 401, "message": message, "data": {}}
+
 
 async def verifyJWT(request: Request):
     try:
-        auth_header = request.headers.get("Authorization")
+        # Prefer Authorization: Bearer <token>
         token = None
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
 
-        if auth_header:
-            parts = auth_header.split(" ")
-            if len(parts) == 2:
-                token = parts[1]
-        else:
-            token = request.cookies.get("token")
+        # Fallback to cookie named "token"
+        if not token:
+            cookie_token = request.cookies.get("token")
+            if cookie_token:
+                token = cookie_token.strip()
 
         if not token:
-            return ApiError.send(
-                statusCode=401,
-                data={},
-                message="Token Not Found"
-            )
+            raise HTTPException(status_code=401, detail=_build_auth_error("Token Not Found"))
 
         decoded = auth.verify_id_token(token)
         if not decoded:
-            return ApiError.send(
-                401,
-                data={},
-                message="Invalid Token"
-            )
+            raise HTTPException(status_code=401, detail=_build_auth_error("Invalid Token"))
 
         print("Verify By Firebase: ", decoded)
         return decoded
 
+    except HTTPException:
+        # bubble up to be formatted by global/HTTPException handlers
+        raise
     except Exception as e:
-        return {"error": str(e)}
+        # Any unexpected auth error
+        raise HTTPException(status_code=401, detail=_build_auth_error("Authentication Failed")) from e
