@@ -834,6 +834,8 @@ const CoursesInterface = () => {
           courseId,
           role: "course",
         });
+
+        console.log("🗨️ Fetch User Chats API Response:", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           // alert("Error fetching user chats");
           return;
@@ -873,7 +875,7 @@ const CoursesInterface = () => {
     };
 
     fetchUserChats();
-  }, [courseId]);
+  }, []);
 
   // Simple Prism highlighting on chat message updates
 
@@ -1974,7 +1976,7 @@ const CoursesInterface = () => {
                     },
                     {
                       id: "summary",
-                      label: "Summary",
+                      label: "Summary 🚧",
                       icon: FileText,
                       badge: null,
                       color: "from-orange-500 to-orange-600",
@@ -1982,7 +1984,7 @@ const CoursesInterface = () => {
                     },
                     {
                       id: "transcript",
-                      label: "Transcript",
+                      label: "Transcript 🚧",
                       icon: Mic,
                       badge: null,
                       color: "from-purple-500 to-purple-600",
@@ -2431,428 +2433,53 @@ const CoursesInterface = () => {
                 )}
 
                 {activeTab === "summary" && (
-                  <div>
-                    <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-2xl">📚</span>
-                      <h3 className="text-lg font-semibold">Lesson Summary</h3>
-                      <button
-                        onClick={fetchSummary}
-                        disabled={summaryLoader}
-                        className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-300 flex items-center space-x-1.5 ${
-                          summaryLoader
-                            ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
-                            : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+                  <div className="h-full flex flex-col items-center justify-center p-8">
+                    <div
+                      className={`text-center max-w-md ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      <div className="text-6xl mb-6">🚧</div>
+                      <h3
+                        className={`text-2xl font-bold mb-4 ${
+                          isDark ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        {summaryLoader ? (
-                          <>
-                            <div className="flex items-center space-x-0.5">
-                              <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
-                              <div
-                                className="w-1 h-1 bg-white rounded-full animate-bounce"
-                                style={{ animationDelay: "0.1s" }}
-                              ></div>
-                              <div
-                                className="w-1 h-1 bg-white rounded-full animate-bounce"
-                                style={{ animationDelay: "0.2s" }}
-                              ></div>
-                            </div>
-                            <span>Generating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>🤖</span>
-                            <span>Generate</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <div
-                      className={`p-4 rounded-lg ${
-                        isDark ? "bg-gray-700" : "bg-gray-100"
-                      } max-h-96 overflow-y-auto`}
-                    >
-                      {summaryText ? (
-                        <div className="space-y-4">
-                          {/* Summary Header */}
-                          <div
-                            className={`p-4 rounded-xl border transition-all duration-300 ${
-                              isDark
-                                ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30"
-                                : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
-                                <span className="text-white text-xl">📚</span>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-lg">
-                                  AI Generated Summary
-                                </h4>
-                                <p
-                                  className={`text-sm ${
-                                    isDark
-                                      ? "text-orange-300"
-                                      : "text-orange-600"
-                                  }`}
-                                >
-                                  Key insights from this lesson
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Summary Content */}
-                          <div
-                            className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                              isDark
-                                ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750"
-                                : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-                            }`}
-                          >
-                            {/* Copy Button */}
-                            <button
-                              onClick={() =>
-                                navigator.clipboard.writeText(summaryText)
-                              }
-                              className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                isDark
-                                  ? "hover:bg-gray-700 text-gray-400 hover:text-white"
-                                  : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                              }`}
-                              title="Copy summary"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </button>
-
-                            {/* Summary Badge */}
-                            <div className="flex items-center space-x-2 mb-4">
-                              <div
-                                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                  isDark
-                                    ? "bg-orange-900/30 text-orange-400 border border-orange-700"
-                                    : "bg-orange-100 text-orange-700 border border-orange-200"
-                                }`}
-                              >
-                                AI Summary
-                              </div>
-                              <div
-                                className={`px-2 py-1 rounded text-xs ${
-                                  isDark
-                                    ? "bg-gray-700 text-gray-300"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                Auto-generated
-                              </div>
-                            </div>
-
-                            {/* Summary Text */}
-                            <div
-                              className={`text-sm leading-relaxed ${
-                                isDark ? "text-gray-100" : "text-gray-800"
-                              }`}
-                            >
-                              <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
-                                {summaryText.split("\n").map(
-                                  (paragraph, index) =>
-                                    paragraph.trim() && (
-                                      <p key={index} className="mb-3 last:mb-0">
-                                        {paragraph}
-                                      </p>
-                                    )
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Summary Stats */}
-                            <div
-                              className={`mt-4 pt-4 border-t flex items-center justify-between ${
-                                isDark ? "border-gray-700" : "border-gray-200"
-                              }`}
-                            >
-                              <div className="flex items-center space-x-4 text-xs">
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-orange-500">📊</span>
-                                  <span
-                                    className={
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }
-                                  >
-                                    {summaryText.split(" ").length} words
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-orange-500">⏱️</span>
-                                  <span
-                                    className={
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }
-                                  >
-                                    ~
-                                    {Math.ceil(
-                                      summaryText.split(" ").length / 200
-                                    )}{" "}
-                                    min read
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
-                                    isDark
-                                      ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                                      : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                                  }`}
-                                  onClick={fetchSummary}
-                                >
-                                  🔄 Regenerate
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className={`text-center py-12 ${
-                            isDark ? "text-gray-400" : "text-gray-500"
-                          }`}
-                        >
-                          <div className="text-4xl mb-4">📚</div>
-                          <p className="text-lg font-medium mb-2">
-                            No summary available
-                          </p>
-                          <p className="text-sm">
-                            Click "Generate Summary" to create an AI-powered
-                            lesson summary
-                          </p>
-                        </div>
-                      )}
+                        Under Construction
+                      </h3>
+                      <p className="text-lg mb-2">
+                        AI lesson summary generation coming soon!
+                      </p>
+                      <p className="text-sm">
+                        We're building intelligent summarization to enhance your
+                        learning experience.
+                      </p>
                     </div>
                   </div>
                 )}
 
                 {activeTab === "transcript" && (
-                  <div>
-                    <div className="flex items-center space-x-2 mb-4">
-                      <span className="text-2xl">📜</span>
-                      <h3 className="text-lg font-semibold">Transcript</h3>
-                      <button
-                        onClick={fetchTranscript}
-                        disabled={transcriptLoader}
-                        className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-300 flex items-center space-x-1.5 ${
-                          transcriptLoader
-                            ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
-                            : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+                  <div className="h-full flex flex-col items-center justify-center p-8">
+                    <div
+                      className={`text-center max-w-md ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      <div className="text-6xl mb-6">🚧</div>
+                      <h3
+                        className={`text-2xl font-bold mb-4 ${
+                          isDark ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        {transcriptLoader ? (
-                          <>
-                            <div className="flex items-center space-x-0.5">
-                              <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
-                              <div
-                                className="w-1 h-1 bg-white rounded-full animate-bounce"
-                                style={{ animationDelay: "0.1s" }}
-                              ></div>
-                              <div
-                                className="w-1 h-1 bg-white rounded-full animate-bounce"
-                                style={{ animationDelay: "0.2s" }}
-                              ></div>
-                            </div>
-                            <span>Fetching...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>📜</span>
-                            <span>Fetch</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <div
-                      className={`p-4 rounded-lg ${
-                        isDark ? "bg-gray-700" : "bg-gray-100"
-                      } max-h-64 overflow-y-auto`}
-                    >
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          {transcriptText && transcriptText.length > 0 ? (
-                            <div className="space-y-3">
-                              {(showAllTranscript
-                                ? transcriptText
-                                : transcriptText.slice(0, 3)
-                              ).map((snippet, index) => (
-                                <div
-                                  key={index}
-                                  className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                                    isDark
-                                      ? "bg-gray-800 border-gray-600 hover:border-emerald-500 hover:bg-gray-750"
-                                      : "bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"
-                                  }`}
-                                >
-                                  {/* Timestamp Badge */}
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                      <div
-                                        className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
-                                          isDark
-                                            ? "bg-emerald-900/30 text-emerald-400 border border-emerald-700"
-                                            : "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                        }`}
-                                      >
-                                        {Math.floor(snippet.startTime)}s -{" "}
-                                        {Math.floor(snippet.endTime)}s
-                                      </div>
-                                      <div
-                                        className={`px-2 py-1 rounded text-xs ${
-                                          isDark
-                                            ? "bg-gray-700 text-gray-300"
-                                            : "bg-gray-100 text-gray-600"
-                                        }`}
-                                      >
-                                        #
-                                        {showAllTranscript
-                                          ? index + 1
-                                          : index + 1}
-                                      </div>
-                                    </div>
-                                    {/* Copy Button */}
-                                    <button
-                                      onClick={() =>
-                                        navigator.clipboard.writeText(
-                                          snippet.text
-                                        )
-                                      }
-                                      className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                        isDark
-                                          ? "hover:bg-gray-700 text-gray-400 hover:text-white"
-                                          : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                                      }`}
-                                      title="Copy text"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </div>
-
-                                  {/* Transcript Text */}
-                                  <div
-                                    className={`text-sm leading-relaxed ${
-                                      isDark ? "text-gray-100" : "text-gray-800"
-                                    }`}
-                                  >
-                                    <p className="selection:bg-emerald-200 selection:text-emerald-900">
-                                      {snippet.text}
-                                    </p>
-                                  </div>
-
-                                  {/* Progress Bar */}
-                                  <div
-                                    className={`mt-3 h-1 rounded-full overflow-hidden ${
-                                      isDark ? "bg-gray-700" : "bg-gray-200"
-                                    }`}
-                                  >
-                                    <div
-                                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300"
-                                      style={{
-                                        width: `${
-                                          ((snippet.endTime -
-                                            snippet.startTime) /
-                                            Math.max(
-                                              ...transcriptText.map(
-                                                (s) => s.endTime
-                                              )
-                                            )) *
-                                          100
-                                        }%`,
-                                      }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              ))}
-
-                              {/* Mobile Show More/Less Button */}
-                              {transcriptText.length > 3 && (
-                                <div className="flex justify-center pt-2">
-                                  <button
-                                    onClick={() =>
-                                      setShowAllTranscript(!showAllTranscript)
-                                    }
-                                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all duration-300 ${
-                                      isDark
-                                        ? "border-emerald-600 bg-emerald-900/20 hover:bg-emerald-800/30 text-emerald-400"
-                                        : "border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
-                                    }`}
-                                  >
-                                    <span className="text-sm">
-                                      {showAllTranscript ? "📋" : "📜"}
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {showAllTranscript
-                                        ? `Show Less`
-                                        : `+${transcriptText.length - 3} More`}
-                                    </span>
-                                    <svg
-                                      className={`w-3 h-3 transition-transform duration-300 ${
-                                        showAllTranscript ? "rotate-180" : ""
-                                      }`}
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 9l-7 7-7-7"
-                                      />
-                                    </svg>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div
-                              className={`text-center py-12 ${
-                                isDark ? "text-gray-400" : "text-gray-500"
-                              }`}
-                            >
-                              <div className="text-4xl mb-4">📜</div>
-                              <p className="text-lg font-medium mb-2">
-                                No transcript available
-                              </p>
-                              <p className="text-sm">
-                                Click "Fetch Transcript" to load the video
-                                transcript
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                        Under Construction
+                      </h3>
+                      <p className="text-lg mb-2">
+                        Video transcript feature coming soon!
+                      </p>
+                      <p className="text-sm">
+                        We're working on automatic transcript generation for all
+                        videos.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -2934,14 +2561,14 @@ const CoursesInterface = () => {
                 },
                 {
                   id: "transcript",
-                  label: "Transcript",
+                  label: "Transcript 🚧",
                   icon: Mic,
                   badge: null,
                   color: "bg-purple-500",
                 },
                 {
                   id: "summary",
-                  label: "Summary",
+                  label: "Summary 🚧",
                   icon: FileText,
                   badge: null,
                   color: "bg-orange-500",
@@ -3921,449 +3548,58 @@ const example = 'This is important';
                 )}
               </div>
             )}
+            {activeTab === "summary" && (
+              <div className="flex-1 flex items-center justify-center p-40">
+                <div
+                  className={`text-center max-w-md ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  <div className="text-6xl mb-6">🚧</div>
+                  <h3
+                    className={`text-2xl font-bold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Under Construction
+                  </h3>
+                  <p className="text-lg mb-2">
+                    AI lesson summary generation coming soon!
+                  </p>
+                  <p className="text-sm">
+                    We're building intelligent summarization to enhance your
+                    learning experience.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {activeTab === "transcript" && (
-              <div className="space-y-4 max-w-full">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">Video Transcript 📜</h3>
-                  <button
-                    onClick={fetchTranscript}
-                    disabled={transcriptLoader}
-                    className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center space-x-2 ${
-                      transcriptLoader
-                        ? "bg-gradient-to-r from-purple-400 to-indigo-400 text-white cursor-not-allowed"
-                        : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600"
+              <div className="flex-1 flex items-center justify-center p-40">
+                <div
+                  className={`text-center max-w-md ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  <div className="text-6xl mb-6">🚧</div>
+                  <h3
+                    className={`text-2xl font-bold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    {transcriptLoader ? (
-                      <>
-                        <div className="flex items-center space-x-1">
-                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
-                          <div
-                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
-                        </div>
-                        <span>Fetching...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>📜</span>
-                        <span>Fetch Transcript</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div
-                  className={`p-4 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-gray-100"
-                  } max-h-96 overflow-y-auto`}
-                >
-                  {transcriptText && transcriptText.length > 0 ? (
-                    <div className="space-y-4">
-                      {/* Transcript Header */}
-                      <div
-                        className={`p-4 rounded-xl border transition-all duration-300 ${
-                          isDark
-                            ? "bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/30"
-                            : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-                            <span className="text-white text-xl">📜</span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-lg">
-                              Video Transcript
-                            </h4>
-                            <p
-                              className={`text-sm ${
-                                isDark ? "text-purple-300" : "text-purple-600"
-                              }`}
-                            >
-                              {transcriptText.length} segments • Auto-generated
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Transcript Segments */}
-                      <div className="space-y-3">
-                        {(showAllTranscript
-                          ? transcriptText
-                          : transcriptText.slice(0, 5)
-                        ).map((item, index) => (
-                          <div
-                            key={index}
-                            className={`group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                              isDark
-                                ? "bg-gray-800 border-gray-600 hover:border-purple-500 hover:bg-gray-750"
-                                : "bg-white border-gray-200 hover:border-purple-400 hover:bg-purple-50"
-                            }`}
-                          >
-                            {/* Timestamp Badge */}
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center space-x-2">
-                                <div
-                                  className={`px-3 py-1 rounded-full text-xs font-mono font-medium ${
-                                    isDark
-                                      ? "bg-purple-900/30 text-purple-400 border border-purple-700"
-                                      : "bg-purple-100 text-purple-700 border border-purple-200"
-                                  }`}
-                                >
-                                  {Math.floor(item.startTime)}s -{" "}
-                                  {Math.floor(item.endTime)}s
-                                </div>
-                                <div
-                                  className={`px-2 py-1 rounded text-xs ${
-                                    isDark
-                                      ? "bg-gray-700 text-gray-300"
-                                      : "bg-gray-100 text-gray-600"
-                                  }`}
-                                >
-                                  #{showAllTranscript ? index + 1 : index + 1}
-                                </div>
-                              </div>
-                              {/* Copy Button */}
-                              <button
-                                onClick={() =>
-                                  navigator.clipboard.writeText(item.text)
-                                }
-                                className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                                  isDark
-                                    ? "hover:bg-gray-700 text-gray-400 hover:text-white"
-                                    : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                                }`}
-                                title="Copy text"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-
-                            {/* Transcript Text */}
-                            <div
-                              className={`text-sm leading-relaxed ${
-                                isDark ? "text-gray-100" : "text-gray-800"
-                              }`}
-                            >
-                              <p className="selection:bg-purple-200 selection:text-purple-900">
-                                {item.text}
-                              </p>
-                            </div>
-
-                            {/* Duration Indicator */}
-                            <div
-                              className={`mt-3 flex items-center justify-between text-xs ${
-                                isDark ? "text-gray-400" : "text-gray-600"
-                              }`}
-                            >
-                              <div className="flex items-center space-x-2">
-                                <span className="text-purple-500">⏱️</span>
-                                <span>
-                                  {(item.endTime - item.startTime).toFixed(1)}s
-                                  duration
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-purple-500">📝</span>
-                                <span>{item.text.split(" ").length} words</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Show More/Less Button */}
-                        {transcriptText.length > 5 && (
-                          <div className="flex justify-center pt-4">
-                            <button
-                              onClick={() =>
-                                setShowAllTranscript(!showAllTranscript)
-                              }
-                              className={`flex items-center space-x-2 px-6 py-3 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-                                isDark
-                                  ? "border-purple-600 bg-purple-900/20 hover:bg-purple-800/30 text-purple-400 hover:text-purple-300"
-                                  : "border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-600 hover:text-purple-700"
-                              }`}
-                            >
-                              <span className="text-lg">
-                                {showAllTranscript ? "📋" : "📜"}
-                              </span>
-                              <span className="font-medium">
-                                {showAllTranscript
-                                  ? `Show Less (${
-                                      transcriptText.length - 5
-                                    } hidden)`
-                                  : `Show More (${
-                                      transcriptText.length - 5
-                                    } remaining)`}
-                              </span>
-                              <svg
-                                className={`w-4 h-4 transition-transform duration-300 ${
-                                  showAllTranscript ? "rotate-180" : ""
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={`text-center py-12 ${
-                        isDark ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      <div className="text-4xl mb-4">📜</div>
-                      <p className="text-lg font-medium mb-2">
-                        No transcript available
-                      </p>
-                      <p className="text-sm">
-                        Click "Fetch Transcript" to load the video transcript
-                      </p>
-                    </div>
-                  )}
+                    Under Construction
+                  </h3>
+                  <p className="text-lg mb-2">
+                    Video transcript feature coming soon!
+                  </p>
+                  <p className="text-sm">
+                    We're working on automatic transcript generation for all
+                    videos.
+                  </p>
                 </div>
               </div>
             )}
 
-            {activeTab === "summary" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">Lesson Summary 📚</h3>
-                  <button
-                    onClick={fetchSummary}
-                    disabled={summaryLoader}
-                    className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center space-x-2 ${
-                      summaryLoader
-                        ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white cursor-not-allowed"
-                        : "bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
-                    }`}
-                  >
-                    {summaryLoader ? (
-                      <>
-                        <div className="flex items-center space-x-1">
-                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
-                          <div
-                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
-                        </div>
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>🤖</span>
-                        <span>Generate Summary</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div
-                  className={`p-4 rounded-lg ${
-                    isDark ? "bg-gray-700" : "bg-gray-100"
-                  } max-h-96 overflow-y-auto`}
-                >
-                  {summaryText ? (
-                    <div className="space-y-4">
-                      {/* Summary Header */}
-                      <div
-                        className={`p-4 rounded-xl border transition-all duration-300 ${
-                          isDark
-                            ? "bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-orange-500/30"
-                            : "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
-                            <span className="text-white text-xl">📚</span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-lg">
-                              AI Generated Summary
-                            </h4>
-                            <p
-                              className={`text-sm ${
-                                isDark ? "text-orange-300" : "text-orange-600"
-                              }`}
-                            >
-                              Key insights from this lesson
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Summary Content */}
-                      <div
-                        className={`group relative p-6 rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                          isDark
-                            ? "bg-gray-800 border-gray-600 hover:border-orange-500 hover:bg-gray-750"
-                            : "bg-white border-gray-200 hover:border-orange-400 hover:bg-orange-50"
-                        }`}
-                      >
-                        {/* Copy Button */}
-                        <button
-                          onClick={() =>
-                            navigator.clipboard.writeText(summaryText)
-                          }
-                          className={`absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 rounded-lg transition-all duration-200 ${
-                            isDark
-                              ? "hover:bg-gray-700 text-gray-400 hover:text-white"
-                              : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                          }`}
-                          title="Copy summary"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </button>
-
-                        {/* Summary Badge */}
-                        <div className="flex items-center space-x-2 mb-4">
-                          <div
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              isDark
-                                ? "bg-orange-900/30 text-orange-400 border border-orange-700"
-                                : "bg-orange-100 text-orange-700 border border-orange-200"
-                            }`}
-                          >
-                            AI Summary
-                          </div>
-                          <div
-                            className={`px-2 py-1 rounded text-xs ${
-                              isDark
-                                ? "bg-gray-700 text-gray-300"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            Auto-generated
-                          </div>
-                        </div>
-
-                        {/* Summary Text */}
-                        <div
-                          className={`text-sm leading-relaxed ${
-                            isDark ? "text-gray-100" : "text-gray-800"
-                          }`}
-                        >
-                          <div className="prose prose-sm max-w-none selection:bg-orange-200 selection:text-orange-900">
-                            {summaryText.split("\n").map(
-                              (paragraph, index) =>
-                                paragraph.trim() && (
-                                  <p key={index} className="mb-3 last:mb-0">
-                                    {paragraph}
-                                  </p>
-                                )
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Summary Stats */}
-                        <div
-                          className={`mt-4 pt-4 border-t flex items-center justify-between ${
-                            isDark ? "border-gray-700" : "border-gray-200"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-4 text-xs">
-                            <div className="flex items-center space-x-1">
-                              <span className="text-orange-500">📊</span>
-                              <span
-                                className={
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }
-                              >
-                                {summaryText.split(" ").length} words
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <span className="text-orange-500">⏱️</span>
-                              <span
-                                className={
-                                  isDark ? "text-gray-400" : "text-gray-600"
-                                }
-                              >
-                                ~
-                                {Math.ceil(summaryText.split(" ").length / 200)}{" "}
-                                min read
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              className={`px-3 py-1 rounded-full text-xs transition-all duration-200 ${
-                                isDark
-                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                              }`}
-                              onClick={fetchSummary}
-                            >
-                              🔄 Regenerate
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={`text-center py-12 ${
-                        isDark ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      <div className="text-4xl mb-4">📚</div>
-                      <p className="text-lg font-medium mb-2">
-                        No summary available
-                      </p>
-                      <p className="text-sm">
-                        Click "Generate Summary" to create an AI-powered lesson
-                        summary
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

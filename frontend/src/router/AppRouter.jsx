@@ -17,6 +17,8 @@ import CoursesInterface from "../components/CoursesInterface";
 import EnrolledCourses from "../components/EnrolledCourses";
 import HelpSupport from "../pages/HelpSupport.jsx";
 import MyCertificates from "../pages/MyCertificates.jsx";
+import PrivacyPolicy from "../pages/Policy.jsx";
+import TermsOfService from "../pages/TermsOfService.jsx";
 
 const AppRouter = createBrowserRouter([
   {
@@ -146,6 +148,14 @@ const AppRouter = createBrowserRouter([
   {
     path: "/demo-courses",
     element: <CoursesInterface />,
+  },
+  {
+    path: "/privacy-policy",
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfService />,
   },
 ]);
 

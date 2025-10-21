@@ -492,7 +492,7 @@ const VideoInteraction = () => {
     };
 
     fetchUserChats();
-  }, [encryptedVideoUrl]);
+  }, []);
 
   // Auto-save notes with debounce (2 seconds like CourseInterface)
   useEffect(() => {
@@ -723,8 +723,8 @@ const VideoInteraction = () => {
   const tabs = [
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "notes", label: "Notes", icon: StickyNote },
-    { id: "transcript", label: "Transcript", icon: FileText },
-    { id: "summary", label: "Summary", icon: BookOpen },
+    { id: "transcript", label: "Transcript 🚧", icon: FileText },
+    { id: "summary", label: "Summary 🚧", icon: BookOpen },
   ];
 
   // // Apply Prism syntax highlighting when chat messages change
@@ -1400,7 +1400,25 @@ const VideoInteraction = () => {
                     </div>
                   )}
 
-                  {/* Summary Tab */}
+                  {/* Summary Tab - UNDER CONSTRUCTION */}
+                  {activeTab === "summary" && (
+                    <div className="h-full flex flex-col items-center justify-center p-8">
+                      <div className={`text-center max-w-md ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <div className="text-6xl mb-6">🚧</div>
+                        <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          Under Construction
+                        </h3>
+                        <p className="text-lg mb-2">
+                          AI-powered video summaries coming soon!
+                        </p>
+                        <p className="text-sm">
+                          We're building intelligent summary generation for better learning.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {/* 
+                  🚧 FUTURE CODE - UNCOMMENT WHEN READY
                   {activeTab === "summary" && (
                     <div className="h-full flex flex-col p-4">
                       <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -1481,8 +1499,27 @@ const VideoInteraction = () => {
                       </div>
                     </div>
                   )}
+                  */}
 
-                  {/* Transcript Tab */}
+                  {/* Transcript Tab - UNDER CONSTRUCTION */}
+                  {activeTab === "transcript" && (
+                    <div className="h-full flex flex-col items-center justify-center p-8">
+                      <div className={`text-center max-w-md ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <div className="text-6xl mb-6">🚧</div>
+                        <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          Under Construction
+                        </h3>
+                        <p className="text-lg mb-2">
+                          Video transcript fetching coming soon!
+                        </p>
+                        <p className="text-sm">
+                          We're building advanced transcript extraction for enhanced learning.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {/* 
+                  🚧 FUTURE CODE - UNCOMMENT WHEN READY
                   {activeTab === "transcript" && (
                     <div className="h-full flex flex-col p-4">
                       <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -1578,6 +1615,8 @@ const VideoInteraction = () => {
                       </div>
                     </div>
                   )}
+                  */}
+
 
                   {/* Assessment Tab */}
                   {activeTab === "assessment" && (
@@ -1689,6 +1728,265 @@ const VideoInteraction = () => {
               </div>
             </div>
           )}
+
+          {/* 📱 Mobile Tabs Section - Simple tabs below video */}
+          <div className="lg:hidden mt-6">
+            {/* Mobile Tab Navigation */}
+            <div
+              className={`border-b ${
+                isDark ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              <div className="flex overflow-x-auto scrollbar-hide px-4 py-2">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-col items-center space-y-1 px-4 py-3 rounded-xl transition-all duration-300 whitespace-nowrap flex-shrink-0 mr-2 ${
+                        activeTab === tab.id
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
+                          : `${
+                              isDark
+                                ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                                : "bg-white text-gray-600 hover:bg-gray-50"
+                            } border ${
+                              isDark ? "border-gray-700" : "border-gray-200"
+                            }`
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-xs font-medium">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mobile Tab Content */}
+            <div className="p-4">
+              {/* Chat Tab - Mobile */}
+              {activeTab === "chat" && (
+                <div className="space-y-4">
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                    {chatMessages.length === 0 && (
+                      <div className="text-center py-8">
+                        <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                          <MessageSquare className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-base font-bold mb-1 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                          Start a Conversation
+                        </h3>
+                        <p
+                          className={`text-xs ${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          Ask about the video content
+                        </p>
+                      </div>
+                    )}
+                    {chatMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${
+                          msg.type === "user" ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-xl p-3 ${
+                            msg.type === "user"
+                              ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
+                              : isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-50 border border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2">
+                            {msg.type === "bot" && (
+                              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white text-xs">🤖</span>
+                              </div>
+                            )}
+                            {msg.type === "user" && (
+                              <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            )}
+                            <div className="flex-1">
+                              <div
+                                className="text-xs leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: formatChatMessageHTML(
+                                    msg.message,
+                                    isDark
+                                  ),
+                                }}
+                              />
+                              <p className="text-[10px] mt-1 opacity-70">
+                                {msg.timestamp}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {chatLoader && (
+                      <div className="flex justify-start">
+                        <div
+                          className={`rounded-xl p-3 ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-50 border border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-start space-x-2">
+                            <div className="w-5 h-5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                              <span className="text-white text-xs">🤖</span>
+                            </div>
+                            <div className="flex space-x-1">
+                              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></div>
+                              <div
+                                className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.1s" }}
+                              ></div>
+                              <div
+                                className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"
+                                style={{ animationDelay: "0.2s" }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Chat Input - Mobile */}
+                  <div className="sticky bottom-0 pt-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && handleSendMessage()
+                        }
+                        placeholder="Ask about the video..."
+                        disabled={chatLoader}
+                        className={`w-full pl-4 pr-12 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm ${
+                          isDark
+                            ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500"
+                            : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+                        }`}
+                      />
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!messageInput.trim() || chatLoader}
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all duration-200 ${
+                          messageInput.trim() && !chatLoader
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes Tab - Mobile */}
+              {activeTab === "notes" && (
+                <div className="space-y-4">
+                  <div
+                    className={`rounded-xl border ${
+                      isDark
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-white border-gray-200"
+                    } overflow-hidden`}
+                  >
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="✍️ Type your notes here... (Auto-saves in 2 seconds)"
+                      className={`w-full h-[60vh] p-4 resize-none focus:outline-none text-sm ${
+                        isDark
+                          ? "bg-gray-800 text-white placeholder-gray-500"
+                          : "bg-white text-gray-900 placeholder-gray-400"
+                      }`}
+                    />
+                  </div>
+                  {notesLoader && (
+                    <div className="flex items-center justify-center space-x-2 text-emerald-500 text-sm">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                      <span>Saving...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Transcript Tab - Mobile (Under Construction) */}
+              {activeTab === "transcript" && (
+                <div
+                  className={`text-center py-12 rounded-xl border ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="text-4xl mb-3">🚧</div>
+                  <h3
+                    className={`text-lg font-bold mb-2 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Under Construction
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    Video transcript feature coming soon!
+                  </p>
+                </div>
+              )}
+
+              {/* Summary Tab - Mobile (Under Construction) */}
+              {activeTab === "summary" && (
+                <div
+                  className={`text-center py-12 rounded-xl border ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="text-4xl mb-3">🚧</div>
+                  <h3
+                    className={`text-lg font-bold mb-2 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Under Construction
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    AI summary generation coming soon!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

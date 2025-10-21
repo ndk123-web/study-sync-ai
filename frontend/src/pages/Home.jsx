@@ -84,7 +84,7 @@ const Home = () => {
       setIsTyping(true);
       timer = setTimeout(() => {
         setDisplayedText(currentText.slice(0, displayedText.length + 1));
-      }, 150); // Slower typing speed
+      }, 70); // Faster typing speed
     } else if (!isDeleting && displayedText.length === currentText.length) {
       // Pause before deleting
       timer = setTimeout(() => {
@@ -184,40 +184,40 @@ const Home = () => {
 
   const stats = [
     {
-      number: "50K+",
-      label: "Videos Processed",
+      number: "Coming",
+      label: "Soon",
       icon: <Play className="w-6 h-6" />,
       color: "from-emerald-500 to-teal-500",
       bgColor: "bg-emerald-500/10",
       shadowColor: "shadow-emerald-500/20",
-      description: "Hours of educational content analyzed",
+      description: "15+ Countries",
     },
     {
-      number: "25K+",
-      label: "Active Learners",
+      number: "Coming",
+      label: "Soon",
       icon: <Users className="w-6 h-6" />,
       color: "from-violet-500 to-purple-500",
       bgColor: "bg-violet-500/10",
       shadowColor: "shadow-violet-500/20",
-      description: "Students improving their grades",
+      description: "500+ Universities",
     },
     {
-      number: "150K+",
-      label: "AI Summaries",
+      number: "4.9★",
+      label: "Rating",
       icon: <Brain className="w-6 h-6" />,
       color: "from-amber-500 to-orange-500",
       bgColor: "bg-amber-500/10",
       shadowColor: "shadow-amber-500/20",
-      description: "Intelligent summaries generated",
+      description: "Early adopter feedback",
     },
     {
-      number: "99.8%",
-      label: "Success Rate",
+      number: "24/7",
+      label: "AI Support",
       icon: <Award className="w-6 h-6" />,
       color: "from-rose-500 to-pink-500",
       bgColor: "bg-rose-500/10",
       shadowColor: "shadow-rose-500/20",
-      description: "Student satisfaction score",
+      description: "Always available",
     },
   ];
 
@@ -406,16 +406,6 @@ const Home = () => {
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <button
-              className={`group px-10 py-5 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 font-semibold text-lg hover-lift ${
-                isDark
-                  ? "border-gray-600 hover:bg-gray-800 hover:border-emerald-500"
-                  : "border-gray-300 hover:bg-white hover:shadow-xl hover:border-emerald-300"
-              }`}
-            >
-              <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              <span>Watch Demo</span>
-            </button>
           </div>
 
           {/* Trust Indicators */}
@@ -1068,16 +1058,6 @@ const Home = () => {
                   <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
-              <button
-                className={`group px-12 py-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 font-semibold text-lg hover-lift flex items-center justify-center space-x-3 ${
-                  isDark
-                    ? "border-gray-600 hover:bg-gray-800 hover:border-emerald-500 text-gray-300"
-                    : "border-gray-300 hover:bg-white hover:shadow-xl hover:border-emerald-300 text-gray-700"
-                }`}
-              >
-                <span>Schedule Demo</span>
-                <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              </button>
             </div>
 
             {/* Trust indicators */}

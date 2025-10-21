@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Brain } from 'lucide-react';
 import { useThemeStore } from '../store/slices/useThemeStore';
 import CryptoJs from 'crypto-js';
@@ -89,12 +90,12 @@ const Footer = () => {
               © 2025 StudySync AI. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+              <Link to="/privacy-policy" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
                 Privacy Policy
-              </a>
-              <a href="#" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+              </Link>
+              <Link to="/terms-of-service" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
                 Terms of Service
-              </a>
+              </Link>
             </div>
           </div>
         </div>
