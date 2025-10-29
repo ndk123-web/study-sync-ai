@@ -1,6 +1,7 @@
 import joblib
 import numpy as np
 import os
+import tensorflow as tf
 from datetime import datetime
 from app.db.db import db
 from app.utils.ApiResponse import ApiResponse
@@ -12,44 +13,36 @@ quiz_collection = db["quizzes"]
 enrollment_collection = db["enrollmentcourses"]
 courses_collection = db["courses"]
 
-# Load models (prefer TensorFlow if available, otherwise fallback to scikit-learn)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-model = None
-mlb_model = None
-MODEL_TYPE = None
-
+# Load TensorFlow models once when module is imported
 try:
-    # Try to import TensorFlow and load TF models. If TensorFlow isn't installed
-    # or model loading fails, fall through to the scikit-learn fallback below.
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
+    # Load TensorFlow model
+    tf_model = tf.keras.models.load_model(os.path.join(BASE_DIR, "tensorflow_recommendation_model.h5"))
+    tf_mlb = joblib.load(os.path.join(BASE_DIR, "tensorflow_mlb_categories.joblib"))
+    print("✅ TensorFlow models loaded successfully!")
+    
+    # Set as primary models
+    model = tf_model
+    mlb_model = tf_mlb
+    MODEL_TYPE = "tensorflow"
+    
+except Exception as e:
+    print(f"❌ Error loading TensorFlow models: {e}")
+    # Fallback to scikit-learn models
     try:
-        import tensorflow as tf
-
-        tf_model = tf.keras.models.load_model(os.path.join(BASE_DIR, "tensorflow_recommendation_model.h5"))
-        tf_mlb = joblib.load(os.path.join(BASE_DIR, "tensorflow_mlb_categories.joblib"))
-        print("✅ TensorFlow models loaded successfully!")
-
-        model = tf_model
-        mlb_model = tf_mlb
-        MODEL_TYPE = "tensorflow"
-
-    except Exception as tf_err:
-        # TensorFlow not available or model load failed — log and attempt sklearn fallback
-        print(f"❌ TensorFlow unavailable or failed to load: {tf_err}")
-        # Fallback to scikit-learn models
         rf_model = joblib.load(os.path.join(BASE_DIR, "rf_category.joblib"))
         sk_mlb = joblib.load(os.path.join(BASE_DIR, "mlb_categories.joblib"))
         print("✅ Fallback: Scikit-learn models loaded successfully!")
-
+        
         model = rf_model
         mlb_model = sk_mlb
         MODEL_TYPE = "sklearn"
-
-except Exception as e:
-    # Any unexpected error loading models
-    print(f"❌ Error loading ML models: {e}")
-    model = None
-    mlb_model = None
-    MODEL_TYPE = None
+    except Exception as e2:
+        print(f"❌ Error loading fallback models: {e2}")
+        model = None
+        mlb_model = None
+        MODEL_TYPE = None
 
 # Master courses list (must match training data)
 MASTER_COURSES = [
