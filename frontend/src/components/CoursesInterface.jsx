@@ -3792,7 +3792,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
     };
 
     fetchRecommendedCourses();
-  }, []);
+  }, [chatMessages]);
 
   // Handle enrollment modal
   const handleEnrollClick = (course) => {
