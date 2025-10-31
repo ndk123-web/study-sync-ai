@@ -3615,7 +3615,7 @@ const example = 'This is important';
 };
 
 // Recommended Courses Component
-const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
+const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages }) => {
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
