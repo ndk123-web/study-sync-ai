@@ -1,14 +1,17 @@
 import axios from "axios";
+import { AI_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const GetRecommendedCoursesApi = async () => {
   try {
+
+     const authConfig = await getAuthConfig();
+
     const backendResponse = await axios.get(
-      "http://localhost:8000/api/v1/recommend/recommend-courses",
+      `${AI_SERVICE_URL}/api/v1/recommend/recommend-courses`,
       {
         withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        ...authConfig
       }
     );
 
