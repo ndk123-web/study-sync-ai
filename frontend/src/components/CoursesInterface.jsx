@@ -3608,6 +3608,7 @@ const example = 'This is important';
       <RecommendedCoursesSection
         isDark={isDark}
         onTitleUpdate={handleRecommendationTitleUpdate}
+        chatMessages={chatMessages}
       />
     </div>
   );
