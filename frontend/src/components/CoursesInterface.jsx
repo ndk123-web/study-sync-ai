@@ -3711,6 +3711,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages }) => {
 
   // Fetch real recommendations from TensorFlow model
   useEffect(() => {
+    // Only fetch recommendations on initial load and progress changes
     const fetchRecommendedCourses = async () => {
       setIsLoading(true);
 
@@ -3793,7 +3794,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages }) => {
     };
 
     fetchRecommendedCourses();
-  }, [chatMessages]);
+  }, [progress]); // Only re-fetch when progress changes
 
   // Handle enrollment modal
   const handleEnrollClick = (course) => {
