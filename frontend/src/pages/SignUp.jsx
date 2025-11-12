@@ -78,6 +78,8 @@ const SignUp = () => {
   });
 
   useEffect(() => {
+    unsetGithubLoader();
+    unsetGoogleLoader();
     console.log("Username: ", username, email, photoURL, isPremium);
   }, [isAuth]);
 
