@@ -99,6 +99,8 @@ const SignIn = () => {
   // Check on mount
   useEffect(() => {
     // Small delay to ensure component is fully mounted
+    unsetGithubLoader();
+    unsetGoogleLoader();
     setTimeout(() => {
       checkLogoutNotification();
     }, 100);
