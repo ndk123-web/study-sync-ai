@@ -21,8 +21,7 @@ venv/
 # study-sync-ai-1cbc2-firebase-adminsdk-fbsvc-74bc02dd8e.json
 # study-sync.json  
 fixed_playlist_fetcher.py
-mlb_categories.joblib
-rf_category.joblib
+
 # tensorflow_recommendation_model.h5
 # tensorflow_mlb_categories.joblib
 tensorflow_recommendation_model_categories.json

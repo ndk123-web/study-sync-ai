@@ -11,7 +11,7 @@ async def verifyJWT(request: Request):
         # Prefer Authorization: Bearer <token>
         token = None
         auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.lower().startswith("bearer "):
+        if auth_header and auth_header.lower().startswith("Bearer "):
             token = auth_header.split(" ", 1)[1].strip()
 
         # Fallback to cookie named "token"

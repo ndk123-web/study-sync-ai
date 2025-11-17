@@ -35,4 +35,4 @@ Allow: /certificates/
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://studysyncai.com/sitemap.xml
+Sitemap: https://studysync.ndkdev.me/sitemap.xml

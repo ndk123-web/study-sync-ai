@@ -6,7 +6,7 @@
 
     <!-- Homepage - Highest Priority -->
     <url>
-        <loc>https://studysyncai.com/</loc>
+        <loc>https://studysync.ndkdev.me/</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
@@ -14,28 +14,28 @@
 
     <!-- Main Pages - High Priority -->
     <url>
-        <loc>https://studysyncai.com/courses</loc>
+        <loc>https://studysync.ndkdev.me/courses</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
 
     <url>
-        <loc>https://studysyncai.com/about</loc>
+        <loc>https://studysync.ndkdev.me/about</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
-        <loc>https://studysyncai.com/features</loc>
+        <loc>https://studysync.ndkdev.me/features</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
 
     <url>
-        <loc>https://studysyncai.com/contact</loc>
+        <loc>https://studysync.ndkdev.me/contact</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
@@ -43,96 +43,17 @@
 
     <!-- Authentication Pages -->
     <url>
-        <loc>https://studysyncai.com/signin</loc>
+        <loc>https://studysync.ndkdev.me/signin</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
     </url>
 
     <url>
-        <loc>https://studysyncai.com/signup</loc>
+        <loc>https://studysync.ndkdev.me/signup</loc>
         <lastmod>2025-01-19</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.6</priority>
-    </url>
-
-    <!-- Support Pages -->
-    <url>
-        <loc>https://studysyncai.com/help-support</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-
-    <!-- Course Category Pages (Add specific course pages as needed) -->
-    <url>
-        <loc>https://studysyncai.com/courses/python</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/javascript</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/react</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/nodejs</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/machine-learning</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/ai</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/flutter</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/devops</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/git</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://studysyncai.com/courses/ui-ux</loc>
-        <lastmod>2025-01-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
     </url>
 
 </urlset>

@@ -3608,13 +3608,15 @@ const example = 'This is important';
       <RecommendedCoursesSection
         isDark={isDark}
         onTitleUpdate={handleRecommendationTitleUpdate}
+        chatMessages={chatMessages}
+        progress={progress}
       />
     </div>
   );
 };
 
 // Recommended Courses Component
-const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
+const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages, progress }) => {
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
@@ -3710,6 +3712,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
 
   // Fetch real recommendations from TensorFlow model
   useEffect(() => {
+    // Only fetch recommendations on initial load and progress changes
     const fetchRecommendedCourses = async () => {
       setIsLoading(true);
 
@@ -3792,7 +3795,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate }) => {
     };
 
     fetchRecommendedCourses();
-  }, []);
+  }, [progress]); // Only re-fetch when progress changes
 
   // Handle enrollment modal
   const handleEnrollClick = (course) => {
