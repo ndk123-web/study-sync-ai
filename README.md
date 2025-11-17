@@ -1,7 +1,7 @@
-<div align="center">
+<p align="center">
+  <img src="./frontend/public/zap.png" width="100" alt="TaskPlexus">
+</p>
 
-<img src="./frontend/public/zap.png" width="100" alt="TaskPlexus" style="filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6));" />
-/>
 
 
 # 🎓 StudySync AI - Intelligent Learning Platform
@@ -2518,3 +2518,4 @@ Become the leading AI-powered learning platform that adapts to each student's un
 [⬆ Back to Top](#-studysync-ai---intelligent-learning-platform)
 
 </div>
+
