@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="./frontend/public/zap.png" width="100" alt="TaskPlexus">
+</p>
+
+
+
 # 🎓 StudySync AI - Intelligent Learning Platform
 
 **StudySync AI** is a comprehensive AI-powered learning management system that transforms YouTube videos, PDFs, and study content into personalized, interactive learning experiences. The platform features real-time AI chat, quiz generation, progress tracking, intelligent course recommendations, and real-time notifications — all powered by Ollama AI, TensorFlow, and modern full-stack technologies.
@@ -2512,3 +2518,4 @@ Become the leading AI-powered learning platform that adapts to each student's un
 [⬆ Back to Top](#-studysync-ai---intelligent-learning-platform)
 
 </div>
+
