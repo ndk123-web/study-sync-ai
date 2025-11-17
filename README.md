@@ -1,6 +1,7 @@
 <div align="center">
 
 <img src="./frontend/public/zap.png" width="100" alt="TaskPlexus" style="filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6));" />
+/>
 
 
 # 🎓 StudySync AI - Intelligent Learning Platform
