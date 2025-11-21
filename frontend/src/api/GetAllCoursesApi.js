@@ -9,7 +9,11 @@ const getAllCoursesApi = async () => {
 
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/courses/`,
-        authConfig
+        {
+           withCredentials: true,
+           headers: {
+             "Content-Type": "application/json",
+           },
     );
 
     console.log("backendApiResponse: ", backendResponse);
