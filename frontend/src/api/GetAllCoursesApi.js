@@ -14,6 +14,7 @@ const getAllCoursesApi = async () => {
            headers: {
              "Content-Type": "application/json",
            },
+        }
     );
 
     console.log("backendApiResponse: ", backendResponse);
