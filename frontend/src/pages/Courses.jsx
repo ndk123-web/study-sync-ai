@@ -213,14 +213,14 @@ const Courses = () => {
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           // if JWT fails
           alert("Failed to fetch courses: " + apiResponse.message);
-          removeAuth();
+          // removeAuth();
         }
         console.log(apiResponse.data);
         setCourses(() => [...apiResponse.data]);
       } catch (err) {
         // if JWT fails or error came
         alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
-        removeAuth();
+        // removeAuth();
       }
     };
 
