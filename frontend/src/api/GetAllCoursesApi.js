@@ -4,14 +4,12 @@ import { getAuthConfig } from "./authUtils.js";
 
 const getAllCoursesApi = async () => {
   try {
-    
+    // auth config where all the info is attached and give to the backend 
     const authConfig = await getAuthConfig();
 
     const backendResponse = await axios.get(
-      `${AUTH_SERVICE_URL}/api/v1/courses/`,
-      {
-        authConfig
-      }
+      `${AUTH_SERVICE_URL}/api/v1/courses/`,
+        authConfig
     );
 
     console.log("backendApiResponse: ", backendResponse);
