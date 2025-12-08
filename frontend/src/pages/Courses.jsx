@@ -268,7 +268,7 @@ const Courses = () => {
       const courseIdToUse = course.courseId || course.id;
       console.log("📝 Using course ID for API:", courseIdToUse);
 
-      const apiResponse = await EnrollmentCourseApi(courseIdToUse);
+      const apiResponse = await EnrollmentCourseApi(courseIdToUse, token);
       console.log("📡 API Response:", apiResponse);
       console.log("📊 API Status:", apiResponse.status);
 
@@ -366,9 +366,10 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* Price Tag */}
-        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-xl font-bold text-sm shadow-lg border border-white/20">
-          {course.price}
+        {/* Enrolled Students Tag */}
+        <div className="absolute top-4 right-4 bg-emerald-500/95 backdrop-blur-sm text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center space-x-2">
+          <Users className="w-4 h-4" />
+          <span>{course.likes || "0"} enrolled</span>
         </div>
 
         {/* Level Badge */}
@@ -446,7 +447,7 @@ const Courses = () => {
               <div className="flex space-x-1">
                 {[...Array(5)].map((_, i) => (
                   <Star
-                    key={i}
+                    key={`star-${course.id}-${i}`}
                     className={`w-4 h-4 ${
                       i < Math.floor(course.rating)
                         ? "text-yellow-500 fill-current"
@@ -482,9 +483,9 @@ const Courses = () => {
       className={`${
         isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
       } 
-                     border rounded-xl p-6 hover:shadow-lg transition-all duration-300 group`}
+                     border rounded-xl p-6 hover:shadow-lg transition-all duration-300 group relative`}
     >
-      <div className="flex items-start space-x-6">
+      <div className="flex items-start space-x-6 relative z-10">
         {/* Thumbnail */}
         <div className="relative overflow-hidden rounded-lg flex-shrink-0">
           <img
@@ -517,8 +518,14 @@ const Courses = () => {
               </h3>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-emerald-500">
-                {course.price}
+              <div className="flex items-center space-x-2 px-3 py-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                <Users className="w-5 h-5 text-emerald-500" />
+                <div className="text-right">
+                  <div className="text-sm font-bold text-emerald-500">
+                    {course.students || "0"}
+                  </div>
+                  <div className="text-xs text-gray-500">enrolled</div>
+                </div>
               </div>
             </div>
           </div>
@@ -563,10 +570,13 @@ const Courses = () => {
             </div>
 
             <button
-              onClick={() => handleEnrollClick(course)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEnrollClick(course);
+              }}
               className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2 px-6 rounded-lg 
                        hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 font-medium 
-                       flex items-center space-x-2 group"
+                       flex items-center space-x-2 group relative z-20 cursor-pointer"
             >
               <span>Enroll Now</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -731,13 +741,15 @@ const Courses = () => {
           {/* Professional Loader */}
           {coursesLoader && (
             <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-              <div className={`relative p-8 rounded-3xl ${
-                isDark 
-                  ? "bg-gradient-to-br from-gray-800 to-gray-900" 
-                  : "bg-gradient-to-br from-white to-gray-50"
-              } shadow-2xl border-2 ${
-                isDark ? "border-gray-700" : "border-gray-200"
-              }`}>
+              <div
+                className={`relative p-8 rounded-3xl ${
+                  isDark
+                    ? "bg-gradient-to-br from-gray-800 to-gray-900"
+                    : "bg-gradient-to-br from-white to-gray-50"
+                } shadow-2xl border-2 ${
+                  isDark ? "border-gray-700" : "border-gray-200"
+                }`}
+              >
                 {/* Animated Book Icon */}
                 <div className="flex flex-col items-center space-y-6">
                   <div className="relative">
@@ -754,24 +766,35 @@ const Courses = () => {
                       <BookOpen className="w-12 h-12 text-emerald-500 animate-pulse" />
                     </div>
                   </div>
-                  
+
                   {/* Loading Text */}
                   <div className="text-center">
                     <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent mb-2">
                       Loading Courses
                     </h3>
-                    <p className={`text-sm ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       Preparing amazing content for you...
                     </p>
                   </div>
-                  
+
                   {/* Animated Dots */}
                   <div className="flex space-x-2">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    <div
+                      className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="w-3 h-3 bg-teal-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -843,13 +866,19 @@ const Courses = () => {
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredCourses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
+                  <CourseCard
+                    key={course.id + course.courseId}
+                    course={course}
+                  />
                 ))}
               </div>
             ) : (
               <div className="space-y-6">
                 {filteredCourses.map((course) => (
-                  <CourseListItem key={course.id} course={course} />
+                  <CourseListItem
+                    key={course.id + course.courseId}
+                    course={course}
+                  />
                 ))}
               </div>
             )}

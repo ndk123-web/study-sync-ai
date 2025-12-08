@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
-const EnrollmentCourseApi = async (courseId) => {
+const EnrollmentCourseApi = async (courseId, token) => {
   try {
     const backendResponse = await axios.post(
       `${AUTH_SERVICE_URL}/api/v1/courses/enroll-course`,
@@ -12,6 +12,7 @@ const EnrollmentCourseApi = async (courseId) => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
