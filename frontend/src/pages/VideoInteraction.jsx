@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useLoaders } from "../store/slices/useLoaders.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -297,6 +298,8 @@ const VideoInteraction = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const token = useUserStore((state) => state._accessToken);
+
   const chatLoader = useLoaders((state) => state.chatLoader);
   const setChatLoader = useLoaders((state) => state.setChatLoader);
   const unsetChatLoader = useLoaders((state) => state.unsetChatLoader);
@@ -508,6 +511,7 @@ const VideoInteraction = () => {
           type: "video",
           courseId: encryptedVideoUrl, // Send encrypted URL for video
           notes: notes,
+          token,
         });
 
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -541,6 +545,7 @@ const VideoInteraction = () => {
         const apiResponse = await GetCurrentNotesApi({
           courseId: encryptedVideoUrl,
           type: "video", // Add type parameter
+          token,
         });
 
         console.log("🚀 API Response for GetCurrentNotesApi:", apiResponse);

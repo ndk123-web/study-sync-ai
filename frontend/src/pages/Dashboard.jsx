@@ -79,10 +79,11 @@ const Dashboard = () => {
 
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
-  const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
+  const { username, email, photoURL, isPremium, logoutUser, _accessToken } = useUserStore();
   const clearNotifications = useNotifications(
     (state) => state.clearNotifications
   );
+  const token = _accessToken;
 
   const [signInNotification, setSignInNotification] = useState(false);
   const [availableUserYears, setAvailableUserYears] = useState([]);
@@ -268,7 +269,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTrendAnalysisData = async () => {
       const defaultYear = new Date().getFullYear();
-      const apiResponse = await GetTrendAnalysisApi({ year: defaultYear });
+      const apiResponse = await GetTrendAnalysisApi({ year: defaultYear, token });
 
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         console.log("Error fetching trend analysis data: ", apiResponse);
@@ -287,7 +288,7 @@ const Dashboard = () => {
     try {
       setCategoryLoader(true);
       const fetchTopicsWiseProgress = async () => {
-        const apiResponse = await GetTopicsWiseProgressApi();
+        const apiResponse = await GetTopicsWiseProgressApi({ token });
         console.log("Topics Wise Progress Data: ", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log(
@@ -316,7 +317,7 @@ const Dashboard = () => {
     try {
       setQuizLoader(true);
       const fetchQuizPerformance = async () => {
-        const apiResponse = await GetQuizPerformanceApi();
+        const apiResponse = await GetQuizPerformanceApi({ token });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching Quiz Performance data: ", apiResponse);
           // alert("Error fetching Quiz Performance data");
@@ -338,7 +339,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchPerformanceData = async () => {
       try {
-        const apiResponse = await GetPerformanceApi();
+        const apiResponse = await GetPerformanceApi({ token });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching Performance data: ", apiResponse);
         }
@@ -369,7 +370,7 @@ const Dashboard = () => {
     try {
       setActivitiesLoader(true);
       const fetchUserActivities = async () => {
-        const apiResponse = await GetUserActivitiesApi();
+        const apiResponse = await GetUserActivitiesApi({ token });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error fetching User Activities data: ", apiResponse);
           // alert("Error fetching User Activities data");

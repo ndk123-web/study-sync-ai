@@ -43,7 +43,8 @@ const MyCertificates = () => {
 
   // App stores
   const { isAuth, removeAuth } = useIsAuth();
-  const { username, email, photoURL, isPremium, logoutUser } = useUserStore();
+  const { username, email, photoURL, isPremium, logoutUser, _accessToken } = useUserStore();
+  const token = _accessToken;
   const clearNotifications = useNotifications(
     (state) => state.clearNotifications
   );
@@ -77,7 +78,7 @@ const MyCertificates = () => {
     const GetUserCertificates = async () => {
       try {
         setIsLoading(true);
-        const apiResponse = await GetUserCertificatesApi();
+        const apiResponse = await GetUserCertificatesApi({ token });
         console.log(
           "GetUserCertificates apiResponse: ",
           apiResponse?.data?.certificates

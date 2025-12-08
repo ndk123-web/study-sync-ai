@@ -52,7 +52,8 @@ const AdminDashboard = () => {
   );
   const setMode = useThemeStore((state) => state.setMode);
   const { isAuth, removeAuth, removeAdmin } = useIsAuth();
-  const { username, logoutUser } = useUserStore();
+  const { username, logoutUser, _accessToken } = useUserStore();
+  const token = _accessToken;
 
   const isDark = theme === "dark";
 
@@ -199,7 +200,7 @@ const AdminDashboard = () => {
 
     const fetchUserActivities = async () => {
       try {
-        const apiResponse = await GetUserActivitiesApi();
+        const apiResponse = await GetUserActivitiesApi({ token });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           console.log("Error in fetching user activities: ", apiResponse);
           return;

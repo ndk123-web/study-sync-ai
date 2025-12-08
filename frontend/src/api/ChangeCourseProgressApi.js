@@ -1,9 +1,7 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
-import { useUserStore } from "../store/slices/useUserStore.js";
 
-const ChangeCourseProgressApi = async (courseId, currentIndex) => {
-  const token = useUserStore().getState()._acccessToken;
+const ChangeCourseProgressApi = async ({ courseId, currentIndex, token }) => {
   try {
     const backendResponse = await axios.post(
       `${AUTH_SERVICE_URL}/api/v1/courses/change-course-progress`,

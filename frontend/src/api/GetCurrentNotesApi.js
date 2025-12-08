@@ -1,9 +1,7 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
-import { useUserStore } from "../store/slices/useUserStore.js";
 
-const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
-  const token = useUserStore().getState()._acccessToken;
+const GetCurrentNotesApi = async ({ courseId, type = "course", token }) => {
   try {
     console.log("🚀 Calling notes API with courseId:", courseId, "type:", type);
     

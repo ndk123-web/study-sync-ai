@@ -1,9 +1,7 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
-import { useUserStore } from "../store/slices/useUserStore.js";
 
-const GetUserActivitiesApi = async () => {
-  const token = useUserStore().getState()._acccessToken;
+const GetUserActivitiesApi = async ({ token }) => {
   try {
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/dashboard/get-user-activities/`,
