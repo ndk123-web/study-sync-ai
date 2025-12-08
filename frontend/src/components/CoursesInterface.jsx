@@ -3599,7 +3599,6 @@ const example = 'This is important';
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -3616,7 +3615,12 @@ const example = 'This is important';
 };
 
 // Recommended Courses Component
-const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages, progress }) => {
+const RecommendedCoursesSection = ({
+  isDark,
+  onTitleUpdate,
+  chatMessages,
+  progress,
+}) => {
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
@@ -3777,7 +3781,7 @@ const RecommendedCoursesSection = ({ isDark, onTitleUpdate, chatMessages, progre
           console.log("🔄 Falling back to dummy data...");
           setRecommendedCourses(dummyRecommendedCourses);
           setRecommendationMeta({
-            reason: "Using fallback data due to API error",
+            reason: "We Were Working On It Below Are Some Interesting Courses",
           });
         }
       } catch (error) {
