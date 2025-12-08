@@ -2,7 +2,7 @@ import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 import { getAuthConfig } from "./authUtils.js";
 
-const SendAiChatApi = async ({ type , courseId , prompt }) => {
+const SendAiChatApi = async ({ type, courseId, prompt, token }) => {
   try {
     const authConfig = await getAuthConfig();
 
@@ -11,9 +11,15 @@ const SendAiChatApi = async ({ type , courseId , prompt }) => {
       {
         role: type,
         courseId: courseId,
-        prompt: prompt
+        prompt: prompt,
       },
-      authConfig
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
     console.log("backendApiResponse for SaveCourseNotesApi: ", backendResponse);
@@ -33,5 +39,3 @@ const SendAiChatApi = async ({ type , courseId , prompt }) => {
 };
 
 export { SendAiChatApi };
-
-    
