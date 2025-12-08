@@ -28,6 +28,7 @@ import { app } from "../firebase/firebase.js";
 import { useIsAuth } from "../store/slices/useIsAuth.js";
 import { useUserStore } from "../store/slices/useUserStore.js";
 import { useCurrentPlaylist } from "../store/slices/useCurrentPlaylist.js";
+import { useLoaders } from "../store/slices/useLoaders.js";
 import { useNavigate } from "react-router-dom";
 import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
 import { Helmet } from "react-helmet";
@@ -69,6 +70,11 @@ const Courses = () => {
   const removeCourseId = useCurrentPlaylist((state) => state.removeCourseId);
 
   const currentPlaylist = useCurrentPlaylist((state) => state.currentPlaylist);
+
+  // Loader state
+  const coursesLoader = useLoaders((state) => state.pageLoader);
+  const setCoursesLoader = useLoaders((state) => state.setPageLoader);
+  const unsetCoursesLoader = useLoaders((state) => state.unsetPageLoader);
 
   const [courses, setCourses] = useState([]);
 
@@ -201,16 +207,12 @@ const Courses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        // setCourses(sample_courses);
-
-        // Check if there's a current playlist then use it from localstorage
-        // if (currentPlaylist.length > 0){
-        //   setCourses(currentPlaylist);
-        //   return;
-        // }
+        setCoursesLoader(); // Start loader
 
         if (!token) {
           alert("No Token");
+          unsetCoursesLoader();
+          return;
         }
 
         console.log("Token: ", token);
@@ -220,15 +222,17 @@ const Courses = () => {
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           // if JWT fails
           alert("Failed to fetch courses: " + apiResponse.message);
-          // removeAuth();
+          unsetCoursesLoader();
           navigate("/dashboard");
+          return;
         }
         console.log(apiResponse.data);
         setCourses(() => [...apiResponse.data]);
+        unsetCoursesLoader(); // Stop loader after success
       } catch (err) {
         // if JWT fails or error came
-        alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
-        // removeAuth();
+        alert("Error fetching courses: " + err.message);
+        unsetCoursesLoader(); // Stop loader on error
       }
     };
 
@@ -724,6 +728,55 @@ const Courses = () => {
 
         {/* Main Content */}
         <div className="flex-1 lg:ml-0">
+          {/* Professional Loader */}
+          {coursesLoader && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+              <div className={`relative p-8 rounded-3xl ${
+                isDark 
+                  ? "bg-gradient-to-br from-gray-800 to-gray-900" 
+                  : "bg-gradient-to-br from-white to-gray-50"
+              } shadow-2xl border-2 ${
+                isDark ? "border-gray-700" : "border-gray-200"
+              }`}>
+                {/* Animated Book Icon */}
+                <div className="flex flex-col items-center space-y-6">
+                  <div className="relative">
+                    {/* Rotating Ring */}
+                    <div className="absolute inset-0 animate-spin">
+                      <div className="w-24 h-24 border-4 border-transparent border-t-emerald-500 border-r-teal-500 rounded-full"></div>
+                    </div>
+                    {/* Inner Pulsing Circle */}
+                    <div className="absolute inset-0 animate-ping opacity-20">
+                      <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+                    </div>
+                    {/* Center Icon */}
+                    <div className="relative w-24 h-24 flex items-center justify-center">
+                      <BookOpen className="w-12 h-12 text-emerald-500 animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  {/* Loading Text */}
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent mb-2">
+                      Loading Courses
+                    </h3>
+                    <p className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}>
+                      Preparing amazing content for you...
+                    </p>
+                  </div>
+                  
+                  {/* Animated Dots */}
+                  <div className="flex space-x-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                    <div className="w-3 h-3 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Top Bar */}
           <div
             className={`sticky top-20 z-20 ${
