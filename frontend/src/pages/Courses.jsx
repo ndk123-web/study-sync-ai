@@ -59,6 +59,7 @@ const Courses = () => {
   const isAuth = useIsAuth((state) => state.isAuth);
   const removeAuth = useIsAuth((state) => state.removeAuth);
   const logoutUser = useUserStore((state) => state.logoutUser);
+  const token = useUserStore((state) => state._accessToken);
   const removeCurrentPlaylist = useCurrentPlaylist(
     (state) => state.removeCurrentPlaylist
   );
@@ -208,19 +209,26 @@ const Courses = () => {
         //   return;
         // }
 
-        const apiResponse = await getAllCoursesApi();
+        if (!token) {
+          alert("No Token");
+        }
+
+        console.log("Token: ", token);
+
+        const apiResponse = await getAllCoursesApi({ token });
         console.log("apiResponse: ", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           // if JWT fails
           alert("Failed to fetch courses: " + apiResponse.message);
-          removeAuth();
+          // removeAuth();
+          navigate("/dashboard");
         }
         console.log(apiResponse.data);
         setCourses(() => [...apiResponse.data]);
       } catch (err) {
         // if JWT fails or error came
         alert("Error fetching courses: " + err.message); // if err because JWT fails then go to login page
-        removeAuth();
+        // removeAuth();
       }
     };
 

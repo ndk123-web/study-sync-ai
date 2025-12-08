@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
-const getAllCoursesApi = async () => {
+const getAllCoursesApi = async ({ token }) => {
   try {
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/courses/`,
@@ -9,6 +9,7 @@ const getAllCoursesApi = async () => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Beared ${token}`,
         },
       }
     );

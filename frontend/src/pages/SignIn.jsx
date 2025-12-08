@@ -197,6 +197,7 @@ const SignIn = () => {
         photoURL: apiResponse.data.photoURL,
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
+        _accessToken: token,
       });
 
       // Set welcome message for dashboard
@@ -275,6 +276,7 @@ const SignIn = () => {
         photoURL: apiResponse.data.photoURL,
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
+        _accessToken: token,
       });
 
       // Set welcome message for dashboard (Google)
@@ -353,6 +355,7 @@ const SignIn = () => {
         photoURL: apiResponse.data.photoURL,
         bio: apiResponse.data.bio,
         isPremium: apiResponse.data.isPremium,
+        _accessToken: token,
       });
 
       // Set welcome message for dashboard (GitHub)
