@@ -1080,6 +1080,7 @@ const CoursesInterface = () => {
           type: "course",
           courseId,
           notes: notStoreNotes,
+          token
         });
 
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -1248,6 +1249,7 @@ const CoursesInterface = () => {
         type: "course",
         prompt: currentMessage,
         courseId,
+        token,
       });
 
       console.log("Api Response for send Chat: ", apiResponse);
@@ -1288,6 +1290,7 @@ const CoursesInterface = () => {
       const apiResponse = await SendCourseQuizApi({
         level: selectedDifficulty,
         courseId: courseId,
+        token,
       });
 
       console.log("Api Response for Quiz: ", apiResponse);

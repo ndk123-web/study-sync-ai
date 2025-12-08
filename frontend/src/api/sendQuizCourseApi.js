@@ -2,7 +2,7 @@ import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 import { getAuthConfig } from "./authUtils.js";
 
-const SendCourseQuizApi = async ({ level, courseId }) => {
+const SendCourseQuizApi = async ({ level, courseId, token }) => {
   try {
     const authConfig = await getAuthConfig();
 
@@ -12,7 +12,13 @@ const SendCourseQuizApi = async ({ level, courseId }) => {
         level,
         courseId,
       },
-      authConfig
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
     console.log("backendApiResponse for SendPdfChatApi: ", backendResponse);
