@@ -64,6 +64,7 @@ const EnrolledCoursesSample = () => {
   const photoURL = useUserStore((state) => state.photoURL);
   const isPremium = useUserStore((state) => state.isPremium);
   const logoutUser = useUserStore((state) => state.logoutUser);
+  const token = useUserStore((state) => state._accessToken);
 
   const isDark = theme === "dark";
 
@@ -91,7 +92,7 @@ const EnrolledCoursesSample = () => {
     };
 
     const fetchUserEnrollCourses = async () => {
-      const apiResponse = await GetEnrolledCourseApi();
+      const apiResponse = await GetEnrolledCourseApi({ token });
       if (apiResponse.status !== 200 && apiResponse.status !== 201) {
         alert("Something wrong in GetEnrolledCourseApi");
         return;

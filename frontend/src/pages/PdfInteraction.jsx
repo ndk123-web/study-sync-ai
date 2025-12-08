@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useThemeStore } from "../store/slices/useThemeStore";
 import { useLoaders } from "../store/slices/useLoaders.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 import CryptoJS from "crypto-js";
 import Header from "../components/Header";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -316,6 +317,7 @@ const PdfInteraction = () => {
   );
   const isDark = theme === "dark";
   const navigate = useNavigate();
+  const token = useUserStore((state) => state._accessToken);
 
   const [uploadedPdf, setUploadedPdf] = useState(null);
   const [activeTab, setActiveTab] = useState("chat");
@@ -576,6 +578,7 @@ const PdfInteraction = () => {
           type: "pdf",
           courseId: pdf, // Send pdfId for PDF
           notes: notes,
+          token,
         });
 
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -612,6 +615,7 @@ const PdfInteraction = () => {
         const apiResponse = await GetCurrentNotesApi({
           courseId: pdf,
           type: "pdf", // Add type parameter for PDF
+          token,
         });
 
         console.log(

@@ -894,7 +894,7 @@ const CoursesInterface = () => {
       try {
         // If no Zustand data, then fetch from backend
         console.log("🌐 Fetching notes from backend...");
-        const apiResponse = await GetCurrentNotesApi({ courseId });
+        const apiResponse = await GetCurrentNotesApi({ courseId, token });
         console.log("📝 Notes API Response:", apiResponse);
 
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -938,7 +938,7 @@ const CoursesInterface = () => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
       try {
-        const apiResponse = await GetPlayListApi(courseId, token);
+        const apiResponse = await GetPlayListApi({ courseId, token });
         const playlist = apiResponse?.data?.[0]?.videoLinks;
 
         if (apiResponse.status === 200 || apiResponse.status === 201) {
@@ -974,7 +974,7 @@ const CoursesInterface = () => {
 
     const getCurrentCourseProgress = async (playlistData = coursePlaylist) => {
       try {
-        const apiResponse = await GetCurrentCourseProgressApi(courseId);
+        const apiResponse = await GetCurrentCourseProgressApi({ courseId, token });
         console.log("Api Response to get progress: ", apiResponse);
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
           alert(
@@ -1022,7 +1022,7 @@ const CoursesInterface = () => {
   useEffect(() => {
     const trackPlaylistIndex = async () => {
       try {
-        const apiResponse = await TrackPlaylistIndexApi(courseId);
+        const apiResponse = await TrackPlaylistIndexApi({ courseId, token });
         console.log(
           "Api Response in TrackPlaylistIndexController:",
           apiResponse
@@ -1192,7 +1192,7 @@ const CoursesInterface = () => {
     if (currentIndex < coursePlaylist.length - 1) {
       const nextVideo = coursePlaylist[currentIndex + 1];
 
-      const apiResponse = await ChangeCourseProgressApi(courseId, currentIndex);
+      const apiResponse = await ChangeCourseProgressApi({ courseId, currentIndex, token });
       if (apiResponse.status !== 200 || apiResponse.status !== 201) {
         // Logic For Error Notification
       }
