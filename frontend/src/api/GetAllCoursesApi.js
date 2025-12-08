@@ -1,5 +1,6 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
+import { getAuthConfig } from "./authUtils.js";
 
 const getAllCoursesApi = async ({ token }) => {
   try {
