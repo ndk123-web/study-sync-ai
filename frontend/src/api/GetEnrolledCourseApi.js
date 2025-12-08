@@ -1,7 +1,9 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 
 const GetEnrolledCourseApi = async () => {
+  const token = useUserStore().getState()._acccessToken;
   try {
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/courses/get-enrolled-courses`,
@@ -9,6 +11,7 @@ const GetEnrolledCourseApi = async () => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
