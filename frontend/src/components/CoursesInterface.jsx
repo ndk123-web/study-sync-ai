@@ -59,6 +59,7 @@ import { EnrollmentCourseApi } from "../api/EnrollmentCourseApi.js";
 import EnrollmentModal from "./EnrollmentModal";
 import SuccessNotification from "./SuccessNotification";
 import { Helmet } from "react-helmet";
+import { useUserStore } from "../store/slices/useUserStore.js";
 
 // Notion-style formatting function
 const formatNotesToHTML = (text, isDark = false) => {
@@ -363,6 +364,7 @@ const CoursesInterface = () => {
   const { courseId } = useParams();
   const [searchParams] = useSearchParams();
   const isDark = theme === "dark";
+  const token = useUserStore((state) => state._accessToken);
 
   // Add shimmer animation styles
   useEffect(() => {
@@ -935,9 +937,8 @@ const CoursesInterface = () => {
   useEffect(() => {
     const getPlaylist = async () => {
       console.log("Course ID:", courseId);
-
       try {
-        const apiResponse = await GetPlayListApi(courseId);
+        const apiResponse = await GetPlayListApi(courseId, token);
         const playlist = apiResponse?.data?.[0]?.videoLinks;
 
         if (apiResponse.status === 200 || apiResponse.status === 201) {

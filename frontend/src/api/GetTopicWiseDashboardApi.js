@@ -1,7 +1,9 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 
 const GetTopicsWiseProgressApi = async () => {
+  const token = useUserStore().getState()._acccessToken;
   try {
     const backendResponse = await axios.get(
       `${AUTH_SERVICE_URL}/api/v1/dashboard/get-topics-wise-progress/`,
@@ -9,6 +11,7 @@ const GetTopicsWiseProgressApi = async () => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );

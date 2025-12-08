@@ -1,7 +1,9 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
 
 const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
+  const token = useUserStore().getState()._acccessToken;
   try {
     console.log("🚀 Calling notes API with courseId:", courseId, "type:", type);
     
@@ -15,6 +17,7 @@ const GetCurrentNotesApi = async ({ courseId, type = "course" }) => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       }
     );
