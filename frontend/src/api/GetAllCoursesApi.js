@@ -10,7 +10,7 @@ const getAllCoursesApi = async ({ token }) => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Beared ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );

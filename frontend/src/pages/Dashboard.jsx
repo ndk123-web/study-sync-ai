@@ -1560,6 +1560,8 @@ const Dashboard = () => {
                     label: "Dashboard",
                     icon: <Home className="w-5 h-5" />,
                     emoji: "🏠",
+                    href: "/dashboard",
+                    isLink: true,
                   },
                   {
                     id: "all-courses",
@@ -1606,15 +1608,17 @@ const Dashboard = () => {
                   },
                 ].map((item, index) =>
                   item.isLink || item.href ? (
-                    <a
+                    <button
                       key={item.id}
-                      href={item.href}
+                      onClick={() => {
+                        navigate(item.href);
+                        setIsSidebarOpen(false);
+                      }}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 animate-fade-in ${
                         isDark
                           ? "hover:bg-gray-800 text-gray-300"
                           : "hover:bg-gray-100 text-gray-700"
                       }`}
-                      onClick={() => setIsSidebarOpen(false)}
                       style={{ animationDelay: `${0.3 + index * 0.05}s` }}
                     >
                       <span
@@ -1625,7 +1629,7 @@ const Dashboard = () => {
                       </span>
                       <span className="font-medium">{item.label}</span>
                       <ChevronRight className="w-4 h-4 ml-auto" />
-                    </a>
+                    </button>
                   ) : (
                     <button
                       key={item.id}
@@ -1773,9 +1777,9 @@ const Dashboard = () => {
               },
             ].map((item, index) =>
               item.isLink || item.href ? (
-                <a
+                <button
                   key={item.id}
-                  href={item.href}
+                  onClick={() => navigate(item.href)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
                     isDark
                       ? "hover:bg-gray-800 text-gray-300"
@@ -1786,7 +1790,7 @@ const Dashboard = () => {
                   <span className="text-lg">{item.emoji}</span>
                   <span className="font-medium">{item.label}</span>
                   <ChevronRight className="w-4 h-4 ml-auto" />
-                </a>
+                </button>
               ) : (
                 <button
                   key={item.id}
