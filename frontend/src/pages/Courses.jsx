@@ -192,7 +192,7 @@ const Courses = () => {
   const categories = [
     "All",
     "Frontend",
-    "Backend",
+    "Development",
     "Full Stack",
     "Data Science",
     "AI/ML",
