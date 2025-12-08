@@ -62,6 +62,7 @@ const Header = () => {
   const photoURL = useUserStore((state) => state.photoURL);
   const isPremium = useUserStore((state) => state.isPremium);
   const logoutUser = useUserStore((state) => state.logoutUser);
+  const token = useUserStore((state) => state._accessToken);
 
   const removeCurrentPlaylist = useCurrentPlaylist(
     (state) => state.removeCurrentPlaylist
@@ -85,7 +86,7 @@ const Header = () => {
     removeCourseId();
     clearNotifications();
     try {
-      const isRemoveCookie = await logoutUserApi();
+      const isRemoveCookie = await logoutUserApi({ token });
       if (isRemoveCookie.status === 200 || isRemoveCookie.status === 201) {
         localStorage.setItem("logoutUser", JSON.stringify({ username }));
       }
