@@ -1,8 +1,16 @@
 import axios from "axios";
 import { AUTH_SERVICE_URL } from "./BaseApiUrl.js";
 
-const logoutUserApi = async ({ token }) => {
+const logoutUserApi = async ({ token } = {}) => {
   try {
+    if (!token) {
+      return {
+        status: 401,
+        data: {},
+        message: "Missing auth token for logout",
+      };
+    }
+
     const backendResponse = await axios.post(
       `${AUTH_SERVICE_URL}/api/v1/user/logout-user`,
       {},
