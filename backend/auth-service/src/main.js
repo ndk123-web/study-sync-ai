@@ -117,6 +117,10 @@ app.use("/api/v1/video", videoRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/certificate", certificateRouter);
 
+app.get("/api/v1/test", (req, res) => {
+  res.send("Hello World");
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
