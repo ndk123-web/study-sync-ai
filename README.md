@@ -15,6 +15,40 @@
 
 ---
 
+## 🖼️ UI Screenshots
+
+- Dashboard
+
+![Dashboard](./public/Dashboard.png)
+
+- Home
+
+![Home](./public/Home.png)
+
+- Courses
+
+![Courses](./public/courses.png)
+
+- Course Interface
+
+![Course Interface](./public/CourseInterface.png)
+
+- Notes
+
+![Notes](./public/Notes.png)
+
+- Playlist
+
+![Playlist](./public/Playlist.png)
+
+- Summary
+
+![Summary](./public/Summary.png)
+
+- Transcript
+
+![Transcript](./public/Transcript.png)
+
 ## ✨ Features
 
 ### 🎥 **Video Learning & Analysis**
