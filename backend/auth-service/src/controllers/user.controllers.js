@@ -92,22 +92,43 @@ const signInController = wrapper(async (req, res) => {
         .status(200)
         .cookie("token", firebaseSignUpUser.token, {
           httpOnly: true,
-          sameSite: "None", // prevent by CSRF Attack
+          sameSite: "None",
           secure: true,
-          maxAge: 30 * 24 * 60 * 60 * 1000,  // 1 month
+          maxAge: 30 * 24 * 60 * 60 * 1000,
         })
         .json(new ApiResponse(200, existingUser));
     } else {
-      throw new ApiError(400, "User Doesnt exist");
+      // Auto-create user if they sign in via Google/Github or don't exist
+      const newUser = await User.create({
+        uid: firebaseSignUpUser.uid,
+        username: firebaseSignUpUser.name || firebaseSignUpUser.email.split('@')[0],
+        photoURL: firebaseSignUpUser.picture || null,
+        email: firebaseSignUpUser.email,
+        theme: "dark",
+      });
+
+      return res
+        .status(201)
+        .cookie("token", firebaseSignUpUser.token, {
+          httpOnly: true,
+          sameSite: "None",
+          secure: true,
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        })
+        .json(new ApiResponse(201, newUser));
     }
   } catch (err) {
     console.error("❌ Error in MongoDB:", err.message);
+
+    if (err instanceof ApiError) {
+      throw err;
+    }
 
     if (err.code === 11000 || err.name === "ValidationError") {
       throw new ApiError(400, "User data validation failed");
     }
 
-    throw new ApiError(500, "Account creation failed");
+    throw new ApiError(500, "Sign in failed");
   }
 });
 

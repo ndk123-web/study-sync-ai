@@ -79,7 +79,7 @@ Summary should be:
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=prompt_text
         )
 
@@ -145,7 +145,7 @@ async def get_video_summary_controller(payload: videoSummaryRequest):
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=prompt_text
         )
         

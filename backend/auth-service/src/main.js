@@ -17,8 +17,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:5173",
       "http://127.0.0.1:5173",
       "https://localhost:5173",
-      "http://localhost:3000",
-      "https://localhost:3000",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "http://localhost:5000",
+      "https://localhost:5000",
       "https://study-sync-ai.vercel.app",
       "http://study-sync-ai.vercel.app",
       "https://studysync.ndkdev.me",
@@ -124,7 +126,7 @@ app.get("/api/v1/test", (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
-    return res.status(401).json({
+    return res.status(err.statusCode || 401).json({
       success: false,
       message: err.message,
       errors: err.errors,

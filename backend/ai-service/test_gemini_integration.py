@@ -30,7 +30,7 @@ async def test_gemini_api():
         
         response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=test_prompt
         )
         
@@ -66,7 +66,7 @@ if user asks anything other than course related queries then politely refuse and
         
         response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=content
         )
         

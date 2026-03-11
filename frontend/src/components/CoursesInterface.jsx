@@ -1399,10 +1399,10 @@ const CoursesInterface = () => {
         quizId
       );
 
-      // Ensure score is an integer and quizId is a string
       const payload = {
         score: parseInt(score),
         quizId: String(quizId),
+        token: token,
       };
 
       console.log("📊 Final payload to send:", payload);

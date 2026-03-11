@@ -2,17 +2,21 @@ import axios from "axios";
 import { AI_SERVICE_URL } from "./BaseApiUrl.js";
 import { getAuthConfig } from "./authUtils.js";
 
-const SendCourseQuizCompletedApi = async ({ score, quizId }) => {
+const SendCourseQuizCompletedApi = async ({ score, quizId, token }) => {
   try {
-    const authConfig = await getAuthConfig();
-
     const backendResponse = await axios.post(
       `${AI_SERVICE_URL}/api/v1/quiz/complete-quiz`,
       {
         score: score,
         quizId: quizId,
       },
-      authConfig
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
     console.log(
