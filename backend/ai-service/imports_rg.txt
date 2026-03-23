@@ -1,0 +1,190 @@
+backend/ai-service\test_tensorflow_model.py:5:import joblib
+backend/ai-service\test_tensorflow_model.py:6:import tensorflow as tf
+backend/ai-service\test_tensorflow_model.py:7:import numpy as np
+backend/ai-service\test_tensorflow_model.py:8:from tensorflow_recommendation_model import TensorFlowRecommendationModel
+backend/ai-service\langchain_huggingface.py:12:from typing import List, Optional, Any
+backend/ai-service\langchain_huggingface.py:25:                from sentence_transformers import SentenceTransformer
+backend/ai-service\main.py:1:from fastapi import FastAPI , Request
+backend/ai-service\main.py:2:from fastapi.middleware.cors import CORSMiddleware
+backend/ai-service\main.py:3:from fastapi.responses import JSONResponse
+backend/ai-service\main.py:4:from app.db.db import ping_server
+backend/ai-service\main.py:5:from contextlib import asynccontextmanager
+backend/ai-service\main.py:6:import asyncio
+backend/ai-service\main.py:7:import cloudinary
+backend/ai-service\main.py:8:import joblib 
+backend/ai-service\main.py:10:from app.routes.transcript_router import transcriptRouter
+backend/ai-service\main.py:11:from app.routes.summary_router import summaryRouter
+backend/ai-service\main.py:12:from app.routes.chat_router import chatRouter
+backend/ai-service\main.py:13:from app.routes.pdf_router import pdfRouter
+backend/ai-service\main.py:14:from app.routes.quiz_router import quizRouter
+backend/ai-service\main.py:15:from app.routes.recommend_router import recommendRouter
+backend/ai-service\main.py:18:from app.config.firebase import initialize_firebase , check_firebase_connection
+backend/ai-service\main.py:19:from dotenv import load_dotenv
+backend/ai-service\main.py:20:import os
+backend/ai-service\model\generate_dummy_ds.py:1:import pandas as pd
+backend/ai-service\model\generate_dummy_ds.py:2:import random
+backend/ai-service\model\generate_dummy_ds.py:3:import itertools
+backend/ai-service\model\get_real_data_from_db.py:1:import sys
+backend/ai-service\model\get_real_data_from_db.py:2:import os
+backend/ai-service\model\get_real_data_from_db.py:3:import asyncio
+backend/ai-service\model\get_real_data_from_db.py:4:import pandas as pd
+backend/ai-service\model\get_real_data_from_db.py:5:from datetime import datetime
+backend/ai-service\model\get_real_data_from_db.py:10:from app.db.db import db 
+backend/ai-service\model\get_real_data_from_db.py:20:    from bson import ObjectId
+backend/ai-service\model\get_real_data_from_db.py:327:        import json
+backend/ai-service\model\get_real_data_from_db.py:399:        import json
+backend/ai-service\model\study_sync_recommend.py:4:import numpy as np
+backend/ai-service\model\study_sync_recommend.py:5:import pandas as pd
+backend/ai-service\model\study_sync_recommend.py:6:from sklearn.model_selection import train_test_split
+backend/ai-service\model\study_sync_recommend.py:7:import tensorflow as tf
+backend/ai-service\model\study_sync_recommend.py:8:from tensorflow.keras import Sequential
+backend/ai-service\model\study_sync_recommend.py:9:from tensorflow.keras.layers import Dense, Dropout
+backend/ai-service\model\study_sync_recommend_rf.py:4:import pandas as pd
+backend/ai-service\model\study_sync_recommend_rf.py:5:import numpy as np
+backend/ai-service\model\study_sync_recommend_rf.py:6:from sklearn.ensemble import RandomForestClassifier
+backend/ai-service\model\study_sync_recommend_rf.py:7:from sklearn.preprocessing import MultiLabelBinarizer
+backend/ai-service\model\study_sync_recommend_rf.py:8:import joblib
+backend/ai-service\tensorflow_recommendation_model.py:6:import pandas as pd
+backend/ai-service\tensorflow_recommendation_model.py:7:import numpy as np
+backend/ai-service\tensorflow_recommendation_model.py:8:import tensorflow as tf
+backend/ai-service\tensorflow_recommendation_model.py:9:from tensorflow import keras
+backend/ai-service\tensorflow_recommendation_model.py:10:from sklearn.preprocessing import MultiLabelBinarizer
+backend/ai-service\tensorflow_recommendation_model.py:11:from sklearn.model_selection import train_test_split
+backend/ai-service\tensorflow_recommendation_model.py:12:import joblib
+backend/ai-service\tensorflow_recommendation_model.py:13:import os
+backend/ai-service\tensorflow_recommendation_model.py:14:from typing import List, Tuple
+backend/ai-service\tensorflow_recommendation_model.py:15:import json
+backend/ai-service\test_normalization.py:4:from urllib.parse import unquote
+backend/ai-service\test_recommendations.py:5:import sys
+backend/ai-service\test_recommendations.py:6:import os
+backend/ai-service\test_recommendations.py:9:import joblib
+backend/ai-service\test_recommendations.py:10:import numpy as np
+backend/ai-service\app\config\firebase.py:1:import firebase_admin
+backend/ai-service\app\config\firebase.py:2:from firebase_admin import credentials, auth
+backend/ai-service\app\config\firebase.py:3:import os
+backend/ai-service\app\config\firebase.py:4:import json
+backend/ai-service\app\config\firebase.py:5:from dotenv import load_dotenv
+backend/ai-service\langchain\text_splitter.py:1:from typing import List
+backend/ai-service\app\db\db.py:3:import os
+backend/ai-service\app\db\db.py:4:from motor.motor_asyncio import AsyncIOMotorClient
+backend/ai-service\app\db\db.py:5:from pymongo.server_api import ServerApi
+backend/ai-service\app\db\db.py:6:from dotenv import load_dotenv
+backend/ai-service\app\utils\ApiError.py:1:from fastapi.responses import JSONResponse
+backend/ai-service\app\middleware\verifyJWT.py:1:from fastapi import HTTPException, Request
+backend/ai-service\app\middleware\verifyJWT.py:2:from firebase_admin import auth
+backend/ai-service\app\utils\ApiResponse.py:1:from fastapi.responses import JSONResponse
+backend/ai-service\app\routes\chat_router.py:1:from app.middleware.verifyJWT import verifyJWT
+backend/ai-service\app\routes\chat_router.py:2:from pydantic import BaseModel
+backend/ai-service\app\routes\chat_router.py:3:from fastapi import Depends , Request , Query
+backend/ai-service\app\routes\chat_router.py:4:from fastapi.routing import APIRouter
+backend/ai-service\app\routes\chat_router.py:5:from ..controller.chat_controller import get_chat_response , ChatRequest, FetchChatsRequest, fetch_user_chat
+backend/ai-service\test_gemini_integration.py:5:import asyncio
+backend/ai-service\test_gemini_integration.py:6:import os
+backend/ai-service\test_gemini_integration.py:7:from dotenv import load_dotenv
+backend/ai-service\test_gemini_integration.py:8:from google import genai
+backend/ai-service\app\controller\recommend_controller.py:1:import joblib
+backend/ai-service\app\controller\recommend_controller.py:2:import numpy as np
+backend/ai-service\app\controller\recommend_controller.py:3:import os
+backend/ai-service\app\controller\recommend_controller.py:4:import tensorflow as tf
+backend/ai-service\app\controller\recommend_controller.py:5:from datetime import datetime
+backend/ai-service\app\controller\recommend_controller.py:6:from app.db.db import db
+backend/ai-service\app\controller\recommend_controller.py:7:from app.utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\recommend_controller.py:8:from bson import ObjectId
+backend/ai-service\app\controller\transcript_controller.py:2:import asyncio
+backend/ai-service\app\controller\transcript_controller.py:3:from youtube_transcript_api import YouTubeTranscriptApi
+backend/ai-service\app\controller\transcript_controller.py:4:from youtube_transcript_api._errors import (
+backend/ai-service\app\controller\transcript_controller.py:9:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\transcript_controller.py:10:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\transcript_controller.py:11:from typing import Optional, List
+backend/ai-service\app\controller\chat_controller.py:1:from google import genai
+backend/ai-service\app\controller\chat_controller.py:2:from pydantic import BaseModel
+backend/ai-service\app\controller\chat_controller.py:3:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\chat_controller.py:4:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\chat_controller.py:5:import asyncio
+backend/ai-service\app\controller\chat_controller.py:6:from ..db.db import db  
+backend/ai-service\app\controller\chat_controller.py:7:from fastapi import Query
+backend/ai-service\app\controller\chat_controller.py:8:from urllib.parse import unquote
+backend/ai-service\app\controller\chat_controller.py:9:import re
+backend/ai-service\app\controller\chat_controller.py:10:from bson import ObjectId
+backend/ai-service\app\controller\chat_controller.py:11:import os
+backend/ai-service\app\routes\pdf_router.py:1:from app.middleware.verifyJWT import verifyJWT
+backend/ai-service\app\routes\pdf_router.py:2:from pydantic import BaseModel
+backend/ai-service\app\routes\pdf_router.py:3:from fastapi import Depends , Request , Query , File , UploadFile, Form
+backend/ai-service\app\routes\pdf_router.py:4:from fastapi.routing import APIRouter
+backend/ai-service\app\routes\pdf_router.py:5:from app.utils.Cloudinary import upload_cloudinary
+backend/ai-service\app\routes\pdf_router.py:6:from ..controller.pdf_controller import load_pdf_controller , get_pdf_metadata_controller, pdf_summary_controller , rag_chat_controller, get_pdf_chats_controller
+backend/ai-service\app\routes\pdf_router.py:7:from ..utils.ApiError import ApiError
+backend/ai-service\debug_enrollments.py:4:import asyncio
+backend/ai-service\debug_enrollments.py:5:from app.db.db import db
+backend/ai-service\debug_enrollments.py:6:from urllib.parse import unquote
+backend/ai-service\app\routes\recommend_router.py:1:from app.controller.recommend_controller import get_recommendations
+backend/ai-service\app\routes\recommend_router.py:2:from fastapi import APIRouter
+backend/ai-service\app\routes\recommend_router.py:3:from app.middleware.verifyJWT import verifyJWT
+backend/ai-service\app\routes\recommend_router.py:4:from fastapi import Depends
+backend/ai-service\app\routes\quiz_router.py:1:from fastapi import APIRouter , Depends
+backend/ai-service\app\routes\quiz_router.py:2:from app.middleware.verifyJWT import verifyJWT
+backend/ai-service\app\routes\quiz_router.py:3:from pydantic import BaseModel, Field, validator
+backend/ai-service\app\routes\quiz_router.py:4:from ..controller.quiz_controller import complete_quiz_controller, generate_quiz_controller, complete_quiz_controller
+backend/ai-service\app\routes\quiz_router.py:5:from bson import ObjectId
+backend/ai-service\app\utils\Cloudinary.py:1:import cloudinary
+backend/ai-service\app\utils\Cloudinary.py:2:import cloudinary.uploader
+backend/ai-service\app\utils\Cloudinary.py:3:from ..db.db import db
+backend/ai-service\app\utils\Cloudinary.py:4:import os 
+backend/ai-service\app\utils\Cloudinary.py:5:import tempfile
+backend/ai-service\app\controller\summary_controller.py:1:import asyncio
+backend/ai-service\app\controller\summary_controller.py:2:import json
+backend/ai-service\app\controller\summary_controller.py:3:import re
+backend/ai-service\app\controller\summary_controller.py:4:from google import genai
+backend/ai-service\app\controller\summary_controller.py:5:from app.db import db 
+backend/ai-service\app\controller\summary_controller.py:6:from pydantic import BaseModel
+backend/ai-service\app\controller\summary_controller.py:7:from bson import ObjectId
+backend/ai-service\app\controller\summary_controller.py:8:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\summary_controller.py:9:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\summary_controller.py:10:import os
+backend/ai-service\app\controller\summary_controller.py:11:from youtube_transcript_api import YouTubeTranscriptApi
+backend/ai-service\app\controller\summary_controller.py:12:from youtube_transcript_api._errors import (
+backend/ai-service\app\controller\summary_controller.py:17:from .transcript_controller import getTranscriptController
+backend/ai-service\app\controller\quiz_controller.py:1:from datetime import datetime
+backend/ai-service\app\controller\quiz_controller.py:2:from google import genai
+backend/ai-service\app\controller\quiz_controller.py:3:from ..db.db import db
+backend/ai-service\app\controller\quiz_controller.py:4:import asyncio
+backend/ai-service\app\controller\quiz_controller.py:5:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\quiz_controller.py:6:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\quiz_controller.py:7:import os
+backend/ai-service\app\controller\quiz_controller.py:14:import json
+backend/ai-service\app\controller\quiz_controller.py:15:from ..db.db import db
+backend/ai-service\app\controller\quiz_controller.py:16:import asyncio
+backend/ai-service\app\controller\quiz_controller.py:17:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\quiz_controller.py:18:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\quiz_controller.py:19:import json
+backend/ai-service\app\controller\quiz_controller.py:20:from bson import ObjectId , json_util
+backend/ai-service\app\routes\summary_router.py:1:from fastapi.routing import APIRouter
+backend/ai-service\app\routes\summary_router.py:2:from app.controller.summary_controller import get_summary_controller, summaryRequest , videoSummaryRequest, get_video_summary_controller
+backend/ai-service\app\routes\summary_router.py:3:from fastapi import Depends , Request , Query
+backend/ai-service\app\routes\summary_router.py:4:from app.middleware.verifyJWT import verifyJWT
+backend/ai-service\app\routes\summary_router.py:5:from pydantic import BaseModel
+backend/ai-service\app\controller\pdf_controller.py:1:import fitz  # PyMuPDF
+backend/ai-service\app\controller\pdf_controller.py:2:import pytesseract
+backend/ai-service\app\controller\pdf_controller.py:3:from PIL import Image
+backend/ai-service\app\controller\pdf_controller.py:4:import io
+backend/ai-service\app\controller\pdf_controller.py:5:import requests
+backend/ai-service\app\controller\pdf_controller.py:6:from datetime import datetime
+backend/ai-service\app\controller\pdf_controller.py:7:from ..db.db import db
+backend/ai-service\app\controller\pdf_controller.py:8:from app.utils.Cloudinary import upload_cloudinary
+backend/ai-service\app\controller\pdf_controller.py:9:from ..utils.ApiError import ApiError
+backend/ai-service\app\controller\pdf_controller.py:10:from ..utils.ApiResponse import ApiResponse
+backend/ai-service\app\controller\pdf_controller.py:11:from bson import ObjectId
+backend/ai-service\app\controller\pdf_controller.py:12:import uuid
+backend/ai-service\app\controller\pdf_controller.py:13:from bson import ObjectId , json_util
+backend/ai-service\app\controller\pdf_controller.py:14:import json
+backend/ai-service\app\controller\pdf_controller.py:15:from pinecone import Pinecone, ServerlessSpec
+backend/ai-service\app\controller\pdf_controller.py:16:import os 
+backend/ai-service\app\controller\pdf_controller.py:17:from google import genai
+backend/ai-service\app\controller\pdf_controller.py:18:import asyncio
+backend/ai-service\app\controller\pdf_controller.py:19:from langchain_pinecone import PineconeVectorStore
+backend/ai-service\app\controller\pdf_controller.py:20:from langchain_huggingface import HuggingFaceEmbeddings
+backend/ai-service\app\controller\pdf_controller.py:21:from langchain.text_splitter import RecursiveCharacterTextSplitter
+backend/ai-service\app\routes\transcript_router.py:1:from fastapi import APIRouter, Depends 
+backend/ai-service\app\routes\transcript_router.py:2:from pydantic import BaseModel
+backend/ai-service\app\routes\transcript_router.py:3:from ..controller.transcript_controller import getTranscriptController
+backend/ai-service\app\routes\transcript_router.py:4:from ..middleware.verifyJWT import verifyJWT
