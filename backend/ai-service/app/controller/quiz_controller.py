@@ -47,7 +47,7 @@ async def generate_quiz_controller(courseId: str , level: str, uid: str):
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-3-flash-preview",
             contents=prompt
         )
 
