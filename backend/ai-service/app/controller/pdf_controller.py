@@ -165,6 +165,13 @@ async def load_pdf_controller(userId, pdfFile):
             # Initialize Pinecone with new API
             pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
             index_name = "ndk"
+            
+            '''
+              # Namespace strategy:
+              1. UserId which is consistent across all their PDFs and interactions
+              2. response.inserted_id which is unique consistent identifier for pdf enrollment record in our database             
+            '''
+
             namespace = f"user_{userId}_pdf_{str(response.inserted_id)}"   # 👈 unique per user+pdf (explicit str)
             
             print(f"📥 Upload: Creating namespace: {namespace}")
@@ -321,7 +328,7 @@ Answer (use the markdown formatting above):
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-3-flash-preview",
             contents=user_prompt
         )
 
@@ -422,7 +429,7 @@ Summary:
         client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         ai_response = await asyncio.to_thread(
             client.models.generate_content,
-            model="gemini-2.0-flash-exp",
+            model="gemini-3-flash-preview",
             contents=prompt
         )
 

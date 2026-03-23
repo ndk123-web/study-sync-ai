@@ -10,6 +10,7 @@ The class is intentionally simple and synchronous to match how it's used in the
 project. It lazy-loads heavy dependencies (torch, sentence_transformers).
 """
 from typing import List, Optional, Any
+import os
 
 
 class HuggingFaceEmbeddings:
@@ -22,9 +23,18 @@ class HuggingFaceEmbeddings:
     def _load_model(self):
         if self._model is None:
             try:
+                # sentence-transformers in this project is used with PyTorch only.
+                # Prevent transformers from importing TF/Keras paths that can fail
+                # when Keras 3 is installed without tf-keras compatibility package.
+                os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
+                os.environ.setdefault("USE_TF", "0")
                 from sentence_transformers import SentenceTransformer
             except Exception as e:
-                raise ImportError("sentence-transformers is required for HuggingFaceEmbeddings: pip install sentence-transformers") from e
+                raise ImportError(
+                    "Failed to import sentence-transformers. Root cause: "
+                    f"{type(e).__name__}: {e}. "
+                    "If this mentions Keras/tf_keras, install tf-keras or keep Transformers on PyTorch-only path."
+                ) from e
 
             # SentenceTransformer accepts device via kwargs in the model instantiation
             kwargs = dict(self.model_kwargs or {})
