@@ -4,6 +4,14 @@ import { getAuthConfig } from "./authUtils.js";
 
 const GetPdfMetaDataApi = async ({ pdfId }) => {
   try {
+    if (!pdfId) {
+      return {
+        status: 400,
+        data: {},
+        message: "pdfId is required",
+      };
+    }
+
     console.log("📄 Fetching PDF metadata for ID:", pdfId);
 
     const authConfig = await getAuthConfig();

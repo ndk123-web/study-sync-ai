@@ -53,10 +53,10 @@ const formatNotesToHTML = (text, isDark = false) => {
           isDark ? "border-gray-700" : "border-gray-200"
         } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
           .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")}</code></pre>`
+          .replace(/>/g, "&gt;")}</code></pre>`,
       );
       return placeholder;
-    }
+    },
   );
 
   let html = tempText
@@ -65,33 +65,33 @@ const formatNotesToHTML = (text, isDark = false) => {
       /^### (.*$)/gm,
       `<h3 class="text-lg font-bold mt-3 mb-1 ${
         isDark ? "text-white-400" : "text-dark-600"
-      }">$1</h3>`
+      }">$1</h3>`,
     )
     .replace(
       /^## (.*$)/gm,
       `<h2 class="text-xl font-bold mt-4 mb-2 ${
         isDark ? "text-white-400" : "text-dark-600"
-      }">$1</h2>`
+      }">$1</h2>`,
     )
     .replace(
       /^# (.*$)/gm,
       `<h1 class="text-2xl font-bold mt-5 mb-2 ${
         isDark ? "text-white-400" : "text-dark-600"
-      }">$1</h1>`
+      }">$1</h1>`,
     )
     // Bold text
     .replace(
       /\*\*(.*?)\*\*/g,
       `<strong class="font-bold ${
         isDark ? "text-white-400" : "text-dark-600"
-      }">$1</strong>`
+      }">$1</strong>`,
     )
     // Italic text
     .replace(
       /\*(.*?)\*/g,
       `<em class="italic ${
         isDark ? "text-white-300" : "text-dark-700"
-      }">$1</em>`
+      }">$1</em>`,
     )
     // Timestamps
     .replace(
@@ -100,38 +100,38 @@ const formatNotesToHTML = (text, isDark = false) => {
         isDark
           ? "bg-orange-900/30 text-orange-400 border border-orange-700"
           : "bg-orange-100 text-orange-700 border border-orange-200"
-      }">🕐 $1</span>`
+      }">🕐 $1</span>`,
     )
     // Checkboxes
     .replace(
       /- \[x\] (.*$)/gm,
       `<div class="flex items-center space-x-2 mb-1"><span class="text-green-500">✅</span><span class="line-through ${
         isDark ? "text-gray-400" : "text-gray-500"
-      }">$1</span></div>`
+      }">$1</span></div>`,
     )
     .replace(
       /- \[ \] (.*$)/gm,
       `<div class="flex items-center space-x-2 mb-1"><span class="${
         isDark ? "text-gray-500" : "text-gray-400"
-      }">☐</span><span>$1</span></div>`
+      }">☐</span><span>$1</span></div>`,
     )
     // Nested bullets
     .replace(
       /^  - (.*$)/gm,
       `<div class="ml-6 flex items-start space-x-2 mb-1"><span class="${
         isDark ? "text-gray-400" : "text-gray-500"
-      }">◦</span><span>$1</span></div>`
+      }">◦</span><span>$1</span></div>`,
     )
     .replace(
       /^- (.*$)/gm,
       `<div class="flex items-start space-x-2 mb-1"><span class="${
         isDark ? "text-emerald-400" : "text-emerald-600"
-      }">•</span><span>$1</span></div>`
+      }">•</span><span>$1</span></div>`,
     )
     // Horizontal rules
     .replace(
       /^---$/gm,
-      `<hr class="my-4 ${isDark ? "border-gray-600" : "border-gray-300"}">`
+      `<hr class="my-4 ${isDark ? "border-gray-600" : "border-gray-300"}">`,
     )
     // Inline code
     .replace(
@@ -140,7 +140,7 @@ const formatNotesToHTML = (text, isDark = false) => {
         isDark
           ? "bg-gray-800 text-emerald-400 border border-gray-700"
           : "bg-gray-100 text-emerald-600 border border-gray-200"
-      }">$1</code>`
+      }">$1</code>`,
     )
     // Paragraphs
     .split("\n\n")
@@ -183,10 +183,10 @@ const formatChatMessageHTML = (text, isDark = false) => {
           isDark ? "border-gray-700" : "border-gray-200"
         } my-4"><code class="${langClass} text-sm" data-raw-code="${b64Code}">${code
           .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")}</code></pre>`
+          .replace(/>/g, "&gt;")}</code></pre>`,
       );
       return placeholder;
-    }
+    },
   );
 
   // Also protect inline code blocks
@@ -198,7 +198,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
         isDark
           ? "bg-gray-800 text-emerald-400 border border-gray-700"
           : "bg-gray-100 text-emerald-600 border border-gray-200"
-      }">${code}</code>`
+      }">${code}</code>`,
     );
     return placeholder;
   });
@@ -210,31 +210,31 @@ const formatChatMessageHTML = (text, isDark = false) => {
       /^### (.*$)/gm,
       `<h3 class="text-lg font-bold mt-4 mb-2 ${
         isDark ? "text-blue-400" : "text-blue-600"
-      }">$1</h3>`
+      }">$1</h3>`,
     )
     .replace(
       /^## (.*$)/gm,
       `<h2 class="text-xl font-bold mt-5 mb-2 ${
         isDark ? "text-blue-400" : "text-blue-600"
-      }">$1</h2>`
+      }">$1</h2>`,
     )
     .replace(
       /^# (.*$)/gm,
       `<h1 class="text-2xl font-bold mt-6 mb-3 ${
         isDark ? "text-blue-400" : "text-blue-600"
-      }">$1</h1>`
+      }">$1</h1>`,
     )
     // Bold text
     .replace(
       /\*\*(.*?)\*\*/g,
       `<strong class="font-bold ${
         isDark ? "text-yellow-400" : "text-gray-900"
-      }">$1</strong>`
+      }">$1</strong>`,
     )
     // Italic text
     .replace(
       /\*(.*?)\*/g,
-      `<em class="italic ${isDark ? "text-gray-300" : "text-gray-700"}">$1</em>`
+      `<em class="italic ${isDark ? "text-gray-300" : "text-gray-700"}">$1</em>`,
     );
 
   // Handle bullet lists - process line by line
@@ -250,7 +250,7 @@ const formatChatMessageHTML = (text, isDark = false) => {
       const content = line.replace(/^- /, "");
       if (!inList) {
         processedLines.push(
-          `<ul class="list-disc list-inside ml-4 mb-3 space-y-1">`
+          `<ul class="list-disc list-inside ml-4 mb-3 space-y-1">`,
         );
         inList = true;
       }
@@ -312,8 +312,8 @@ const PdfInteraction = () => {
   const theme = useThemeStore((state) =>
     CryptoJS.AES.decrypt(
       state.mode,
-      import.meta.env.VITE_ENCRYPTION_SECRET
-    ).toString(CryptoJS.enc.Utf8)
+      import.meta.env.VITE_ENCRYPTION_SECRET,
+    ).toString(CryptoJS.enc.Utf8),
   );
   const isDark = theme === "dark";
   const navigate = useNavigate();
@@ -350,7 +350,9 @@ const PdfInteraction = () => {
   const unsetSummaryLoader = useLoaders((state) => state.unsetSummarizeLoader);
 
   const [searchParams] = useSearchParams();
+
   const pdf = searchParams.get("pdf");
+  
   console.log("PDF Param:", pdf);
 
   const tabs = [
@@ -372,7 +374,10 @@ const PdfInteraction = () => {
         if (pdf) {
           setIsUploadingPdf(true);
           setPdfLoader();
-          const apiResponse = await GetPdfMetaDataApi({ pdfId: pdf });
+          const apiResponse = await GetPdfMetaDataApi({
+            pdfId: pdf,
+            token: token,
+          });
           if (apiResponse.status !== 200 && apiResponse.status !== 201) {
             if (pdf) {
               // alert("Failed to fetch PDF metadata. Please try again.");
@@ -404,7 +409,7 @@ const PdfInteraction = () => {
       }
     };
     fetchPdfMetadata();
-  }, []);
+  }, [pdf]);
 
   // Apply Prism syntax highlighting whenever chat messages change
   useEffect(() => {
@@ -413,13 +418,13 @@ const PdfInteraction = () => {
     const timeoutId = setTimeout(() => {
       try {
         const chatElems = Array.from(
-          document.querySelectorAll(".prose code[data-raw-code]")
+          document.querySelectorAll(".prose code[data-raw-code]"),
         ).filter((el) => !el.hasAttribute("data-prism-processed"));
 
         console.log(
           "🎨 Found",
           chatElems.length,
-          "unprocessed chat code blocks"
+          "unprocessed chat code blocks",
         );
 
         chatElems.forEach((el) => {
@@ -447,7 +452,7 @@ const PdfInteraction = () => {
         console.log(
           "🎨 Prism highlighting applied to",
           chatElems.length,
-          "code blocks"
+          "code blocks",
         );
       } catch (error) {
         console.error("Prism highlighting error:", error);
@@ -481,8 +486,8 @@ const PdfInteraction = () => {
       try {
         const notesCodeElems = Array.from(
           document.querySelectorAll(
-            '[data-notes-area="true"] code[data-raw-code]'
-          )
+            '[data-notes-area="true"] code[data-raw-code]',
+          ),
         ).filter((el) => !el.hasAttribute("data-prism-processed"));
 
         notesCodeElems.forEach((el) => {
@@ -519,7 +524,7 @@ const PdfInteraction = () => {
           console.log(
             "🎨 Prism notes highlighting applied to",
             notesCodeElems.length,
-            "code blocks"
+            "code blocks",
           );
         }
       } catch (error) {
@@ -534,6 +539,11 @@ const PdfInteraction = () => {
     // here user chat and ai chat interaction
 
     const fetchPdfChats = async () => {
+      if (!pdf) {
+        console.log("🚫 No pdfId found, skipping PDF chats fetch");
+        return;
+      }
+
       try {
         const apiResponse = await GetPdfChats({ pdfId: pdf });
         if (apiResponse.status !== 200 && apiResponse.status !== 201) {
@@ -562,7 +572,7 @@ const PdfInteraction = () => {
     };
 
     fetchPdfChats();
-  }, []);
+  }, [pdf]);
 
   // Auto-save notes with debounce (2 seconds like VideoInteraction)
   useEffect(() => {
@@ -620,7 +630,7 @@ const PdfInteraction = () => {
 
         console.log(
           "🚀 API Response for GetCurrentNotesApi (PDF):",
-          apiResponse
+          apiResponse,
         );
 
         if (apiResponse.status === 200 || apiResponse.status === 201) {
@@ -649,7 +659,7 @@ const PdfInteraction = () => {
       let maxSizeMB = 100;
       if (file.size > maxSizeMB * 1024 * 1024) {
         alert(
-          `File size exceeds the ${maxSizeMB}MB limit. Please upload a smaller file.`
+          `File size exceeds the ${maxSizeMB}MB limit. Please upload a smaller file.`,
         );
         return;
       }
@@ -851,8 +861,8 @@ const PdfInteraction = () => {
                       ? "border-emerald-500 bg-emerald-900/20"
                       : "border-emerald-500 bg-emerald-50"
                     : isDark
-                    ? "border-gray-600 hover:border-emerald-500 bg-gray-800/50"
-                    : "border-gray-300 hover:border-emerald-500 bg-gray-50/50"
+                      ? "border-gray-600 hover:border-emerald-500 bg-gray-800/50"
+                      : "border-gray-300 hover:border-emerald-500 bg-gray-50/50"
                 }`}
               >
                 <div
@@ -1010,7 +1020,7 @@ const PdfInteraction = () => {
                         ((e.clientX - startX) / window.innerWidth) * 100;
                       const newSize = Math.min(
                         Math.max(startSize + diff, 30),
-                        70
+                        70,
                       );
                       setPdfSize(newSize);
                     };
@@ -1018,7 +1028,7 @@ const PdfInteraction = () => {
                     const handleMouseUp = () => {
                       document.removeEventListener(
                         "mousemove",
-                        handleMouseMove
+                        handleMouseMove,
                       );
                       document.removeEventListener("mouseup", handleMouseUp);
                     };
@@ -1061,8 +1071,8 @@ const PdfInteraction = () => {
                                 ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
                                 : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                               : isDark
-                              ? "text-gray-300 hover:text-white hover:bg-gray-700"
-                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                ? "text-gray-300 hover:text-white hover:bg-gray-700"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                           }`}
                         >
                           <Icon
@@ -1121,8 +1131,8 @@ const PdfInteraction = () => {
                                   msg.type === "user"
                                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
                                     : isDark
-                                    ? "bg-gray-700 border border-gray-600"
-                                    : "bg-gray-50 border border-gray-200"
+                                      ? "bg-gray-700 border border-gray-600"
+                                      : "bg-gray-50 border border-gray-200"
                                 }`}
                               >
                                 <div className="flex items-start space-x-3">
@@ -1142,7 +1152,7 @@ const PdfInteraction = () => {
                                       dangerouslySetInnerHTML={{
                                         __html: formatChatMessageHTML(
                                           msg.message || "",
-                                          isDark
+                                          isDark,
                                         ),
                                       }}
                                     />
@@ -1248,8 +1258,8 @@ const PdfInteraction = () => {
                               notesPreviewMode
                                 ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
                                 : isDark
-                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
                           >
                             {notesPreviewMode ? (
@@ -1424,7 +1434,7 @@ const PdfInteraction = () => {
                               dangerouslySetInnerHTML={{
                                 __html: formatChatMessageHTML(
                                   pdfSummary || "",
-                                  isDark
+                                  isDark,
                                 ),
                               }}
                             />

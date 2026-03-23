@@ -1,5 +1,33 @@
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app } from "../firebase/firebase.js";
+import { useUserStore } from "../store/slices/useUserStore.js";
+
+/**
+ * this is we need to wait for firebase auth state for some time
+ */
+const waitForAuthUser = async (auth, timeoutMs = 1500) => {
+  if (auth.currentUser) return auth.currentUser;
+
+  return new Promise((resolve) => {
+    let done = false;
+
+    const finish = (user) => {
+      if (done) return;
+      done = true;
+      resolve(user || null);
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      finish(user);
+    });
+
+    setTimeout(() => {
+      unsubscribe();
+      finish(null);
+    }, timeoutMs);
+  });
+};
 
 /**
  * Get authenticated headers with fresh Firebase token
@@ -7,14 +35,21 @@ import { app } from "../firebase/firebase.js";
  */
 export const getAuthHeaders = async () => {
   const auth = getAuth(app);
-  const user = auth.currentUser;
-  
-  if (!user) {
+  const user = await waitForAuthUser(auth);
+  let token = "";
+
+  if (user) {
+    // Avoid forced refresh on every call to reduce first-render auth failures.
+    token = await user.getIdToken();
+  }
+
+  if (!token) {
+    token = useUserStore.getState()._accessToken || "";
+  }
+
+  if (!token) {
     throw new Error("User not authenticated - Please sign in again");
   }
-  
-  // Get fresh ID token (force refresh to ensure it's not expired)
-  const token = await user.getIdToken(true);
   
   return {
     "Content-Type": "application/json",
